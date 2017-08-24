@@ -1,0 +1,9 @@
+[submodule "code/dependencies/active_gp_hyperlearning"]
+	path = code/dependencies/active_gp_hyperlearning
+	url = https://github.com/rmgarnett/active_gp_hyperlearning.git
+[submodule "code/dependencies/gpml_extensions"]
+	path = code/dependencies/gpml_extensions
+	url = https://github.com/rmgarnett/gpml_extensions.git
+[submodule "code/dependencies/mgp"]
+	path = code/dependencies/mgp
+	url = https://github.com/rmgarnett/mgp.git
