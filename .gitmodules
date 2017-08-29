@@ -7,3 +7,6 @@
 [submodule "code/dependencies/mgp"]
 	path = code/dependencies/mgp
 	url = https://github.com/rmgarnett/mgp.git
+[submodule "code/dependencies/nextgp"]
+	path = code/dependencies/nextgp
+	url = https://github.com/nxtruong/nextgp.git
