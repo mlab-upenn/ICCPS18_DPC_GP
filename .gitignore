@@ -10,5 +10,6 @@
 *.shd
 *.svg
 *.pickle
+*.pyc
 Output
 *.*~
