@@ -1,11 +1,14 @@
-udit
+*.audit
 *.bnd
 *.csv
 *.eio
 *.err
 *.eso
 *.mtd
+*.mtr
 *.rvaudit
 *.shd
 *.svg
 *.pickle
+Output
+*.*~
