@@ -29,32 +29,20 @@ cov = {'covSEard'};
 hyp0.cov = [...
     zeros(1, D), 0, ...
     ]';
-% cov = {'covProd', {...
-%     {'covSum', {'covConst', 'covSEard'}},...
-%     {'covRQiso'}} ...  % temporal
-%     };
-% hyp0.cov = [...
-%     0, ...
-%     zeros(1, D), 0, ...    % non-temporal
-%     0, 0, 0, ...  % temporal
-%     ]';
 
 % gaussian likelihood function
 lik = @likGauss;
-% prior.lik = {{@priorDelta}};
 hyp0.lik = log(0.01);
 
 % inference method
 inf = @infExact;
-% inf = {@infPrior,@infExact,prior};
 
 % choose mean function
 meanf = @meanConst;
 hyp0.mean = 0;
 
 % solver
-% solver = @minimize_minfunc;
-solver = @minimize;
+solver = @minimize_minfunc;
 maxiter = -100;
 
 % training
