@@ -2,10 +2,8 @@ function hyp = initial_model(file, n_samples)
 
 %% load data
 
-% file = 'constrained-LargeHotel';
 ctrl_horizon = 1;
 order_autoreg = 3;
-% n_samples = 100;
 plot_results = 0;
 
 [X, y] = load_data(file, order_autoreg, ctrl_horizon);

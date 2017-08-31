@@ -4,7 +4,6 @@ rng(0);
 %% laod data
 
 file = 'unconstrained-LargeHotel';
-n_samples_init = 100;
 ctrl_horizon = 1;
 order_autoreg = 3;
 
@@ -23,12 +22,15 @@ model.mean_function       = {@constant_mean};
 model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
-% initial hyperparameters
-% init_hyp = initial_model(file, n_samples_init);
+% used saved initial hyperparameters
 load('init_hyp.mat');
 true_hyp = init_hyp;
 
-% N(0, 1^2) priors on each log covariance parameter
+% uncomment to calculate new initial hyperparams
+% n_samples_init = 1000;
+% init_hyp = initial_model(file, n_samples_init);
+
+% priors on each log covariance parameter
 priors.cov  = ...
     {get_prior(@gaussian_prior, 0, 1), ...
      get_prior(@gaussian_prior, 0, 1), ...
@@ -46,10 +48,10 @@ priors.cov  = ...
      get_prior(@gaussian_prior, 0, 1), ...
      get_prior(@gaussian_prior, 0, 1)};
 
-% N(0.1, 1^2) prior on log noise
+% prior on log noise
 priors.lik  = {get_prior(@gaussian_prior, 0, 1)};
 
-% N(0, 1) prior on constant mean
+% prior on constant mean
 priors.mean = {get_prior(@gaussian_prior, 0, 1)};
 
 model.prior = get_prior(@independent_prior, priors);
@@ -58,11 +60,6 @@ model.inference_method = ...
 
 num_points = size(X_train,1);
 x_star = X_train_norm;
-
-mu = feval(model.mean_function{:},       true_hyp.mean, x_star);
-K  = feval(model.covariance_function{:}, true_hyp.cov,  x_star);
-K = (K + K') / 2;
-
 y_star = y_train_norm;
 
 % setup problem struct

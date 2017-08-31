@@ -17,6 +17,8 @@ addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'lik'))
 addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'mean'))
 addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'util'))
 addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'prior'))
+addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'util', 'minfunc'))
+addpath(fullfile(mydir, 'dependencies', 'gpml-old', 'util', 'minfunc', 'compiled'))
 
 % NEXTGP
 addpath(genpath(fullfile(mydir, 'dependencies', 'nextgp')));
