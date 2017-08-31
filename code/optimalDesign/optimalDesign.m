@@ -100,8 +100,25 @@ loss(y_train, f_star_mean, f_star_variance);
 X_chosen = postNorm(X_chosen, X_train_min, X_train_max);
 y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
 
+% plotgp for active learning
+t = [0:length(y_train)-1]';
+f1=figure('Name', 'active learning');
+f1 = plotgp(f1, t, y_train, f_star_mean_active, sqrt(f_star_variance_active));
+axis1 = findobj(f1,'Type','axes');
+axis1(2).XLim = [0 1000];
+axis1(1).XLim = [0 1000];
 
-idx = 14;
+% plotgp for random sampling
+t = [0:length(y_train)-1]';
+f2=figure('Name', 'random sampling');
+f2 = plotgp(f2, t, y_train, f_star_mean, sqrt(f_star_variance));
+axis1 = findobj(f2,'Type','axes');
+axis1(2).XLim = [0 1000];
+axis1(1).XLim = [0 1000];
+
+
+% plot with input on x axis
+idx = 14; % ChwSP
 
 figure;
 subplot(2, 1, 1);
@@ -119,20 +136,3 @@ plot(X_train(:,idx), f_star_mean, 'm.', 'MarkerSize', 5);
 plot(X_chosen(:,idx), y_chosen, 'k+', 'MarkerSize', 15);
 % axis([22, 32, 0, 5e5]);
 title(report);
-
-
-figure;
-t = [0:length(y_train)-1]';
-f1=figure('Name', 'active learning');
-f1 = plotgp(f1, t, y_train, f_star_mean_active, sqrt(f_star_variance_active));
-axis1 = findobj(f1,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
-
-figure;
-t = [0:length(y_train)-1]';
-f2=figure('Name', 'random sampling');
-f2 = plotgp(f2, t, y_train, f_star_mean, sqrt(f_star_variance));
-axis1 = findobj(f2,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
