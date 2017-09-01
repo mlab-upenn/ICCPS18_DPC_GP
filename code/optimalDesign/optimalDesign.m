@@ -6,15 +6,20 @@ rng(0);
 file = 'unconstrained-LargeHotel';
 ctrl_horizon = 1;
 order_autoreg = 3;
+n_samples = 1000;
 
 [X, y] = load_data(file, order_autoreg, ctrl_horizon);
-X_train = X;
-y_train = y;
+X_train = X(1:n_samples,:);
+y_train = y(1:n_samples);
+X_test = X(n_samples+1:end,:);
+y_test = y(n_samples+1:end);
 
 % standardize the data set
 [X_train_norm, X_train_min, X_train_max] = preNorm(X_train);
 [y_train_norm, y_train_min, y_train_max] = preNorm(y_train);
 
+X_test_norm = preNorm(X_test, X_train_min, X_train_max);
+y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
 %% define model
 
@@ -61,18 +66,18 @@ problem.f = @(x) (y_star(find(all(bsxfun(@eq, x, x_star), 2))));
 % actively learn GP hyperparameters
 results = learn_gp_hyperparameters(problem, model);
 
-[~, ~, f_star_mean_active, f_star_variance_active, log_probabilities] = ...
+[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
     gp(results.map_hyperparameters(end), model.inference_method, ...
        model.mean_function, model.covariance_function, model.likelihood, ...
-       results.chosen_x, results.chosen_y, x_star, y_star);
+       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
 report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_train).^2)));
+                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
 fprintf('%s\n', report_active);
 
-loss(y_train, f_star_mean_active, f_star_variance_active);
+loss(y_test, f_star_mean_active, f_star_variance_active);
 
 X_chosen_active = results.chosen_x;
 y_chosen_active = results.chosen_y;
@@ -87,34 +92,34 @@ y_chosen = y_star(ind);
 
 map_hyperparameters_random = minimize_minFunc(model, X_chosen, y_chosen);
 
-[~, ~, f_star_mean, f_star_variance, log_probabilities] = ...
+[f_star_mean, f_star_variance, ~, ~, log_probabilities] = ...
     gp(map_hyperparameters_random, model.inference_method, ...
        model.mean_function, model.covariance_function, model.likelihood, ...
-       X_chosen, y_chosen, x_star, y_star);
+       X_chosen, y_chosen, X_test_norm, y_test_norm);
 f_star_mean = postNorm(f_star_mean, y_train_min, y_train_max);
 f_star_variance = postNormVar(f_star_variance, y_train_min, y_train_max);
 
 
 report = sprintf('RANDOM:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean-y_train).^2)));
+                 mean(log_probabilities), sqrt(mean((f_star_mean-y_test).^2)));
 fprintf('%s\n', report);
-loss(y_train, f_star_mean, f_star_variance);
+loss(y_test, f_star_mean, f_star_variance);
 
 X_chosen = postNorm(X_chosen, X_train_min, X_train_max);
 y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
 
 % plotgp for active learning
-t = [0:length(y_train)-1]';
+t = [0:length(y_test)-1]';
 f1=figure('Name', 'active learning');
-f1 = plotgp(f1, t, y_train, f_star_mean_active, sqrt(f_star_variance_active));
+f1 = plotgp(f1, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
 axis1 = findobj(f1,'Type','axes');
 axis1(2).XLim = [0 100];
 axis1(1).XLim = [0 100];
 
 % plotgp for random sampling
-t = [0:length(y_train)-1]';
+t = [0:length(y_test)-1]';
 f2=figure('Name', 'random sampling');
-f2 = plotgp(f2, t, y_train, f_star_mean, sqrt(f_star_variance));
+f2 = plotgp(f2, t, y_test, f_star_mean, sqrt(f_star_variance));
 axis1 = findobj(f2,'Type','axes');
 axis1(2).XLim = [0 100];
 axis1(1).XLim = [0 100];
@@ -127,7 +132,7 @@ figure;
 subplot(2, 1, 1);
 hold on;
 plot(X_train(:,idx), y_train, 'r.', 'MarkerSize', 5);
-plot(X_train(:,idx), f_star_mean_active, 'm.', 'MarkerSize', 5);
+% plot(X_test(:,idx), f_star_mean_active, 'm.', 'MarkerSize', 5);
 plot(X_chosen_active(:,idx), y_chosen_active, 'k+', 'MarkerSize', 15);
 % axis([22, 32, 0, 5e5]);
 title(report_active);
@@ -135,7 +140,7 @@ title(report_active);
 subplot(2, 1, 2);
 hold on;
 plot(X_train(:,idx), y_train, 'r.', 'MarkerSize', 5);
-plot(X_train(:,idx), f_star_mean, 'm.', 'MarkerSize', 5);
+% plot(X_train(:,idx), f_star_mean, 'm.', 'MarkerSize', 5);
 plot(X_chosen(:,idx), y_chosen, 'k+', 'MarkerSize', 15);
 % axis([22, 32, 0, 5e5]);
 title(report);
