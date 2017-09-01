@@ -34,10 +34,12 @@ true_hyp = init_hyp;
 priors.cov = cell(1,numel(init_hyp.cov));
 for idc = 1:numel(init_hyp.cov)
     priors.cov{idc}  = get_prior(@gaussian_prior, init_hyp.cov(idc), 1);
+%     priors.cov{idc}  = get_prior(@gaussian_prior, 0, 1);
 end
 
 % prior on log noise
 priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 1)};
+% priors.lik  = {get_prior(@gaussian_prior, 0, 1)};
 
 % prior on constant mean
 priors.mean = {get_prior(@gaussian_prior, 0, 1)};
@@ -66,9 +68,10 @@ results = learn_gp_hyperparameters(problem, model);
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
-report_active = sprintf('ACTIVE:\nE[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
+report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
                  mean(log_probabilities), sqrt(mean((f_star_mean_active-y_train).^2)));
 fprintf('%s\n', report_active);
+
 loss(y_train, f_star_mean_active, f_star_variance_active);
 
 X_chosen_active = results.chosen_x;
@@ -92,7 +95,7 @@ f_star_mean = postNorm(f_star_mean, y_train_min, y_train_max);
 f_star_variance = postNormVar(f_star_variance, y_train_min, y_train_max);
 
 
-report = sprintf('RANDOM:\nE[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
+report = sprintf('RANDOM:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
                  mean(log_probabilities), sqrt(mean((f_star_mean-y_train).^2)));
 fprintf('%s\n', report);
 loss(y_train, f_star_mean, f_star_variance);
@@ -105,16 +108,16 @@ t = [0:length(y_train)-1]';
 f1=figure('Name', 'active learning');
 f1 = plotgp(f1, t, y_train, f_star_mean_active, sqrt(f_star_variance_active));
 axis1 = findobj(f1,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
+axis1(2).XLim = [0 100];
+axis1(1).XLim = [0 100];
 
 % plotgp for random sampling
 t = [0:length(y_train)-1]';
 f2=figure('Name', 'random sampling');
 f2 = plotgp(f2, t, y_train, f_star_mean, sqrt(f_star_variance));
 axis1 = findobj(f2,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
+axis1(2).XLim = [0 100];
+axis1(1).XLim = [0 100];
 
 
 % plot with input on x axis
