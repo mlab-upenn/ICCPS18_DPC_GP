@@ -10,3 +10,6 @@
 [submodule "code/dependencies/nextgp"]
 	path = code/dependencies/nextgp
 	url = https://github.com/nxtruong/nextgp.git
+[submodule "code/dependencies/GPdyn"]
+	path = code/dependencies/GPdyn
+	url = https://github.com/nxtruong/GPdyn.git
