@@ -1,12 +1,10 @@
-function hyp = initial_model(file, n_samples)
+function hyp = initial_model(file, n_samples, order_autoreg, ctrl_variables)
 
 %% load data
 
-ctrl_horizon = 1;
-order_autoreg = 3;
 plot_results = 0;
 
-[X, y] = load_data(file, order_autoreg, ctrl_horizon);
+[X, y] = load_data(file, order_autoreg, ctrl_variables);
 
 X_train = X(1:n_samples,:);
 y_train = y(1:n_samples,:);
@@ -32,7 +30,7 @@ hyp0.cov = [...
 
 % gaussian likelihood function
 lik = @likGauss;
-hyp0.lik = log(0.01);
+hyp0.lik = log(0.0005);
 
 % inference method
 inf = @infExact;

@@ -4,11 +4,11 @@ rng(0);
 %% laod data
 
 file = 'unconstrained-LargeHotel';
-ctrl_horizon = 1;
 order_autoreg = 3;
 n_samples = 1000;
 
-[X, y] = load_data(file, order_autoreg, ctrl_horizon);
+ctrl_variables = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+[X, y] = load_data(file, order_autoreg, ctrl_variables);
 X_train = X(1:n_samples,:);
 y_train = y(1:n_samples);
 X_test = X(n_samples+1:end,:);
@@ -29,11 +29,12 @@ model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
 load('init_hyp.mat');
-true_hyp = init_hyp;
 
 % uncomment to calculate new initial hyperparams
-% n_samples_init = 1000;
-% init_hyp = initial_model(file, n_samples_init);
+n_samples_init = 1000;
+init_hyp = initial_model(file, n_samples_init, order_autoreg, ctrl_variables);
+
+true_hyp = init_hyp;
 
 % priors on each log covariance parameter
 priors.cov = cell(1,numel(init_hyp.cov));
@@ -47,7 +48,8 @@ priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 1)};
 % priors.lik  = {get_prior(@gaussian_prior, 0, 1)};
 
 % prior on constant mean
-priors.mean = {get_prior(@gaussian_prior, 0, 1)};
+priors.mean = {get_prior(@gaussian_prior, init_hyp.mean, 1)};
+% priors.mean = {get_prior(@gaussian_prior, 0, 1)};
 
 model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);

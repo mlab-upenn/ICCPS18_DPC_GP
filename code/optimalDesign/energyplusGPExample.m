@@ -4,8 +4,9 @@ file = 'constrained-LargeHotel';
 ctrl_horizon = 1;
 order_autoreg = 3;
 n_samples = 1000;
+ctrl_variables = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
-[X, y] = load_data(file, order_autoreg, ctrl_horizon);
+[X, y] = load_data(file, order_autoreg, ctrl_variables);
 
 X_train = X(1:n_samples,:);
 y_train = y(1:n_samples,:);
@@ -48,8 +49,8 @@ inf = @infExact;
 % inf = {@infPrior,@infExact,prior};
 
 % choose mean function
-meanf = @meanZero;
-hyp0.mean = [];
+meanf = @meanConst;
+hyp0.mean = 0;
 
 % solver
 solver = @minimize_minfunc;

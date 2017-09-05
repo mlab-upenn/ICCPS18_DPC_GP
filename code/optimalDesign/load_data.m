@@ -1,9 +1,13 @@
-function [X, y] = load_data(file, orderAR, ctrlHzn)
+function [X, y] = load_data(file, orderAR, ctrl_variables)
 
 load(['../data/' file '.mat']);
 
 disturbances = [Ambient, Humidity];
-control = [ClgSP, KitchenClgSP, GuestClgSP, SupplyAirSP, ChwSP];
+
+control = zeros(size(disturbances,1),numel(ctrl_variables));
+for idc = 1:numel(ctrl_variables)
+    control(:,idc) = eval(ctrl_variables{idc});
+end
 output = TotalLoad;
 proxy = [TOD, DOW];
 
