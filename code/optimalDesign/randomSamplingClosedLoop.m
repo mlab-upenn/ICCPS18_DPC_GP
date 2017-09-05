@@ -124,77 +124,35 @@ while kStep <= MAXSTEPS
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
-    % disturbance features
-    if kStep >= order_autoreg
-        TOD = offline_data.TOD(kStep);
-        DOW = offline_data.DOW(kStep);
-        proxy = [TOD, DOW];
-        
-        Ambient = offline_data.Ambient(kStep+1-order_autoreg:kStep)';
-        Humidity = offline_data.Humidity(kStep+1-order_autoreg:kStep)';
-        disturbances = fliplr([Ambient; Humidity]);
-        X_d = [disturbances(:); outputs(9, kStep-1); proxy']';
-        
-    end
-        
-    % let sim run for first few steps to get AR terms
-    if kStep <= order_autoreg
+    % select random point
+    GuestClgSP = 22+(26-22)*rand;
+    SupplyAirSP = 12+(14-12)*rand;
+    ChwSP = 6.7+(9.7-6.7)*rand;
+    
+    % need this because some inputs will follow rule-based schedules
+    if dayTime <= 7*3600
         ClgSP = 30;
         HtgSP = 16;
         KitchenClgSP = 30;
         KitchenHtgSP = 16;
-        GuestClgSP = 24;
+        % GuestClgSP = 24;
         GuestHtgSP = 21;
-        SupplyAirSP = 13;
-        ChwSP = 6.7;
+        % SupplyAirSP = 13;
+        % ChwSP = 6.7;
         
         SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
     else
+        ClgSP = 24;
+        HtgSP = 21;
+        KitchenClgSP = 26;
+        KitchenHtgSP = 19;
+        % GuestClgSP = 24;
+        GuestHtgSP = 21;
+        % SupplyAirSP = 13;
+        % ChwSP = 6.7;
         
-        iter = iter+1;
-        
-        X_d_star = repmat(X_d, [size(X_c_star,1),1]);
-        
-        % define candidate points for DOE (10x10x10)
-        problem.candidate_x_star = [X_d_star, X_c_star];
-        problem.candidate_x_star = preNorm(problem.candidate_x_star, X_train_min, X_train_max);
-
-        % select best point
-        results = learn_gp_hyperparameters_xinit(problem, model, iter, results);
-        X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
-        X_c_next = X_next(end,end-2:end);
-        
-        GuestClgSP = X_c_next(1);
-        SupplyAirSP = X_c_next(2);
-        ChwSP = X_c_next(3);
-        
-        % need this because some inputs will follow rule-based schedules
-        if dayTime <= 7*3600
-            ClgSP = 30;
-            HtgSP = 16;
-            KitchenClgSP = 30;
-            KitchenHtgSP = 16;
-            % GuestClgSP = 24;
-            GuestHtgSP = 21;
-            % SupplyAirSP = 13;
-            % ChwSP = 6.7;
-
-            SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
-            
-        else
-            ClgSP = 24;
-            HtgSP = 21;
-            KitchenClgSP = 26;
-            KitchenHtgSP = 19;
-            % GuestClgSP = 24;
-            GuestHtgSP = 21;
-            % SupplyAirSP = 13;
-            % ChwSP = 6.7;
-
-            SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
-            
-        end
+        SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
     end
     
@@ -213,28 +171,6 @@ while kStep <= MAXSTEPS
     [flag, eptime, outputs(:,kStep)] = mlepDecodePacket(packet);
     if flag ~= 0, break; end
     
-    % initial sample for experiment design
-    if kStep == order_autoreg
-        
-        % extract inputs for control features
-        X_c = zeros(1,numel(ctrl_variables));
-        for idc = 1:numel(ctrl_variables)
-            X_c(idc) = eval(ctrl_variables{idc});
-        end
-
-        X_init = [X_d, X_c];
-        y_init = outputs(9, kStep);
-        problem.x_init = preNorm(X_init, X_train_min, X_train_max);
-        problem.y_init = preNorm(y_init, y_train_min, y_train_max);
-        results.chosen_y = preNorm(y_init, y_train_min, y_train_max);
-        
-    end
-    
-    if kStep > order_autoreg
-        results.chosen_y = [results.chosen_y; ...
-            preNorm(outputs(9, kStep), y_train_min, y_train_max)];
-    end
-    
     kStep = kStep + 1;
     
 end
@@ -247,31 +183,49 @@ cd('../../')
 
 disp(['Stopped with flag ' num2str(flag)]);
 
-%% DOE post processing
 
-[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-    gp(results.map_hyperparameters(end), model.inference_method, ...
+%% random sampling post processing
+
+data.Ambient = outputs(6,:)';
+data.Humidity =  outputs(7,:)';
+data.TotalLoad =  outputs(9,:)';
+data.TOD =  outputs(3,:)';
+data.DOW = outputs(4,:)';
+data.GuestClgSP = inputs(5,:)';
+data.SupplyAirSP = inputs(7,:)';
+data.ChwSP = inputs(8,:)';
+
+[X_train, y_train] = load_data(data, order_autoreg, ctrl_variables);
+X_train_norm = preNorm(X_train, X_train_min, X_train_max);
+y_train_norm = preNorm(y_train, y_train_min, y_train_max);
+
+%% results
+
+X_chosen = X_train_norm;
+y_chosen = y_train_norm;
+
+map_hyperparameters_random = minimize_minFunc(model, X_chosen, y_chosen);
+
+[f_star_mean, f_star_variance, ~, ~, log_probabilities] = ...
+    gp(map_hyperparameters_random, model.inference_method, ...
        model.mean_function, model.covariance_function, model.likelihood, ...
-       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
+       X_chosen, y_chosen, X_test_norm, y_test_norm);
+f_star_mean = postNorm(f_star_mean, y_train_min, y_train_max);
+f_star_variance = postNormVar(f_star_variance, y_train_min, y_train_max);
 
-report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
-fprintf('%s\n', report_active);
+report = sprintf('RANDOM:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
+                 mean(log_probabilities), sqrt(mean((f_star_mean-y_test).^2)));
+fprintf('%s\n', report);
+loss(y_test, f_star_mean, f_star_variance);
 
-loss(y_test, f_star_mean_active, f_star_variance_active);
+X_chosen = postNorm(X_chosen, X_train_min, X_train_max);
+y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
 
-X_chosen_active = results.chosen_x;
-y_chosen_active = results.chosen_y;
-X_chosen_active = postNorm(X_chosen_active, X_train_min, X_train_max);
-y_chosen_active = postNorm(y_chosen_active, y_train_min, y_train_max);
-
-% plotgp for active learning
+% plotgp for random sampling
 t = [0:length(y_test)-1]';
-f1=figure('Name', 'active learning');
-f1 = plotgp(f1, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
-axis1 = findobj(f1,'Type','axes');
+f2=figure('Name', 'random sampling');
+f2 = plotgp(f2, t, y_test, f_star_mean, sqrt(f_star_variance));
+axis1 = findobj(f2,'Type','axes');
 axis1(2).XLim = [0 1000];
 axis1(1).XLim = [0 1000];
 

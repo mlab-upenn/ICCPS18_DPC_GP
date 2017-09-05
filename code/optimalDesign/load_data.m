@@ -1,6 +1,13 @@
 function [X, y] = load_data(file, orderAR, ctrl_variables)
 
-load(['../data/' file '.mat']);
+if isstruct(file)
+    names = fieldnames(file);
+    for i=1:length(names)
+        eval([names{i} '=file.' names{i} ';']);
+    end
+else
+    load(['../data/' file '.mat']);
+end
 
 disturbances = [Ambient, Humidity];
 
