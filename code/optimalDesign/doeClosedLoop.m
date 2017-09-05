@@ -4,7 +4,9 @@ rng(0);
 %% define variables to control
 
 % control variables
-n_steps = 15;
+SimDays = 2;
+n_steps = 20;
+
 ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 ctrl_range = {linspace(22,26,n_steps),...
                 linspace(12,14,n_steps),...
@@ -14,8 +16,19 @@ ctrl_range = {linspace(22,26,n_steps),...
 datafile = 'unconstrained-LargeHotel';
 order_autoreg = 3;
 [X, y] = load_data(datafile, order_autoreg, ctrl_variables);
-[X_norm, X_train_min, X_train_max] = preNorm(X);
-[y_norm, y_train_min, y_train_max] = preNorm(y);
+
+n_samples = SimDays*24*4-order_autoreg;
+X_train = X(1:n_samples,:);
+y_train = y(1:n_samples);
+X_test = X(n_samples+1:end,:);
+y_test = y(n_samples+1:end);
+
+% standardize the data set
+[X_train_norm, X_train_min, X_train_max] = preNorm(X_train);
+[y_train_norm, y_train_min, y_train_max] = preNorm(y_train);
+
+X_test_norm = preNorm(X_test, X_train_min, X_train_max);
+y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
 % offline data for future disturbances
 offline_data = load(['../data/' datafile '.mat']);
@@ -26,7 +39,7 @@ Y_star = Y_grid(:);
 Z_star = Z_grid(:);
 X_c_star = [X_star, Y_star, Z_star];
 
-%% setup DOE model
+%% setup GP model
 
 model.mean_function       = {@constant_mean};
 model.covariance_function = {@ard_sqdexp_covariance};
@@ -59,7 +72,7 @@ priors.mean = {get_prior(@gaussian_prior, init_hyp.mean, 1)};
 model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
 
-problem.num_evaluations = 100;
+problem.num_evaluations = n_samples;
 
 %% create an mlepProcess instance and configure it
 
@@ -83,7 +96,6 @@ end
 %% main simulation loop
 
 EPTimeStep = 4;
-SimDays = 5;
 deltaT = (60/EPTimeStep)*60;
 kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep; 
@@ -147,7 +159,6 @@ while kStep <= MAXSTEPS
 
         % select best point
         results = learn_gp_hyperparameters_xinit(problem, model, iter, results);
-        
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
         X_c_next = X_next(end,end-2:end);
         
@@ -225,7 +236,7 @@ while kStep <= MAXSTEPS
     
 end
 
-% Stop EnergyPlus
+% stop EnergyPlus
 ep.stop;
 toc;
 
@@ -233,20 +244,20 @@ cd('../../')
 
 disp(['Stopped with flag ' num2str(flag)]);
 
-%% post processing
+%% DOE post processing
 
 [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
     gp(results.map_hyperparameters(end), model.inference_method, ...
        model.mean_function, model.covariance_function, model.likelihood, ...
-       results.chosen_x, results.chosen_y, X_norm, y_norm);
+       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
 report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y).^2)));
+                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
 fprintf('%s\n', report_active);
 
-loss(y, f_star_mean_active, f_star_variance_active);
+loss(y_test, f_star_mean_active, f_star_variance_active);
 
 X_chosen_active = results.chosen_x;
 y_chosen_active = results.chosen_y;
@@ -254,12 +265,41 @@ X_chosen_active = postNorm(X_chosen_active, X_train_min, X_train_max);
 y_chosen_active = postNorm(y_chosen_active, y_train_min, y_train_max);
 
 % plotgp for active learning
-t = [0:length(y)-1]';
+t = [0:length(y_test)-1]';
 f1=figure('Name', 'active learning');
-f1 = plotgp(f1, t, y, f_star_mean_active, sqrt(f_star_variance_active));
+f1 = plotgp(f1, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
 axis1 = findobj(f1,'Type','axes');
 axis1(2).XLim = [0 1000];
 axis1(1).XLim = [0 1000];
 
 %% compare to random sampling
+
+X_chosen = X_train_norm;
+y_chosen = y_train_norm;
+
+map_hyperparameters_random = minimize_minFunc(model, X_chosen, y_chosen);
+
+[f_star_mean, f_star_variance, ~, ~, log_probabilities] = ...
+    gp(map_hyperparameters_random, model.inference_method, ...
+       model.mean_function, model.covariance_function, model.likelihood, ...
+       X_chosen, y_chosen, X_test_norm, y_test_norm);
+f_star_mean = postNorm(f_star_mean, y_train_min, y_train_max);
+f_star_variance = postNormVar(f_star_variance, y_train_min, y_train_max);
+
+
+report = sprintf('RANDOM:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
+                 mean(log_probabilities), sqrt(mean((f_star_mean-y_test).^2)));
+fprintf('%s\n', report);
+loss(y_test, f_star_mean, f_star_variance);
+
+X_chosen = postNorm(X_chosen, X_train_min, X_train_max);
+y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
+
+% plotgp for random sampling
+t = [0:length(y_test)-1]';
+f2=figure('Name', 'random sampling');
+f2 = plotgp(f2, t, y_test, f_star_mean, sqrt(f_star_variance));
+axis1 = findobj(f2,'Type','axes');
+axis1(2).XLim = [0 1000];
+axis1(1).XLim = [0 1000];
 
