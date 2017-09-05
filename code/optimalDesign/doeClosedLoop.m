@@ -4,15 +4,21 @@ rng(0);
 %% define variables to control
 
 % control variables
+n_steps = 15;
 ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
-ctrl_range = {linspace(22,26,10),linspace(12,14,10),linspace(3.7,9.7,10)};
+ctrl_range = {linspace(22,26,n_steps),...
+                linspace(12,14,n_steps),...
+                linspace(3.7,9.7,n_steps)};
 
 % normalize data, except for min and max this data won't be used again
-file = 'unconstrained-LargeHotel';
+datafile = 'unconstrained-LargeHotel';
 order_autoreg = 3;
-[X, y] = load_data(file, order_autoreg, ctrl_variables);
+[X, y] = load_data(datafile, order_autoreg, ctrl_variables);
 [X_norm, X_train_min, X_train_max] = preNorm(X);
 [y_norm, y_train_min, y_train_max] = preNorm(y);
+
+% offline data for future disturbances
+offline_data = load(['../data/' datafile '.mat']);
 
 [X_grid, Y_grid, Z_grid] = ndgrid(ctrl_range{1},ctrl_range{2},ctrl_range{3});
 X_star = X_grid(:);
@@ -31,7 +37,7 @@ load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 % n_samples_init = 1000;
-% init_hyp = initial_model(file, n_samples_init);
+% init_hyp = initial_model(file, n_samples_init, order_autoreg, ctrl_variables);
 
 true_hyp = init_hyp;
 
@@ -52,14 +58,16 @@ priors.mean = {get_prior(@gaussian_prior, init_hyp.mean, 1)};
 
 model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
-        
+
+problem.num_evaluations = 100;
+
 %% create an mlepProcess instance and configure it
 
 cd('energyPlusModels/LargeHotel/')
-file = 'Building';
+eplusfile = 'Building';
 
 ep = mlepProcess;
-ep.arguments = {file, 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3'};
+ep.arguments = {eplusfile, 'USA_IL_Chicago-OHare.Intl.AP.725300_TMY3'};
 ep.acceptTimeout = 6000; % in milliseconds
 
 VERNUMBER = 2;  % version number of communication protocol (2 as of
@@ -75,10 +83,10 @@ end
 %% main simulation loop
 
 EPTimeStep = 4;
-SimDays = 10;
+SimDays = 5;
 deltaT = (60/EPTimeStep)*60;
 kStep = 1;  % current simulation step
-MAXSTEPS = SimDays*24*EPTimeStep;  % max simulation time = 7 days
+MAXSTEPS = SimDays*24*EPTimeStep; 
 
 % variables for plotting:
 outputs = nan(9,MAXSTEPS);
@@ -94,17 +102,25 @@ if flag ~= 0, error('check output flag'); end
 
 % DOE in closed loop
 iter = 0;
+tic;
+
 while kStep <= MAXSTEPS    
 
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
     % disturbance features
-    TOD = outputs(3, kStep-1);
-    DOW = outputs(4, kStep-1);
-    proxy = [TOD, DOW];
-    disturbances = fliplr(outputs(1:2, kStep-order_autoreg:kStep-1));
-    X_d = [disturbances(:); outputs(9, kStep-2); proxy']';
+    if kStep >= order_autoreg
+        TOD = offline_data.TOD(kStep);
+        DOW = offline_data.DOW(kStep);
+        proxy = [TOD, DOW];
+        
+        Ambient = offline_data.Ambient(kStep+1-order_autoreg:kStep)';
+        Humidity = offline_data.Humidity(kStep+1-order_autoreg:kStep)';
+        disturbances = fliplr([Ambient; Humidity]);
+        X_d = [disturbances(:); outputs(9, kStep-1); proxy']';
+        
+    end
         
     % let sim run for first few steps to get AR terms
     if kStep <= order_autoreg
@@ -122,11 +138,22 @@ while kStep <= MAXSTEPS
     else
         
         iter = iter+1;
-        X_d_star = repmat(Xd, [size(X_c_star,1),1]);
-        problem.candidate_x_star = [X_d_star, X_c_star];
         
+        X_d_star = repmat(X_d, [size(X_c_star,1),1]);
+        
+        % define candidate points for DOE (10x10x10)
+        problem.candidate_x_star = [X_d_star, X_c_star];
+        problem.candidate_x_star = preNorm(problem.candidate_x_star, X_train_min, X_train_max);
+
+        % select best point
         results = learn_gp_hyperparameters_xinit(problem, model, iter, results);
-        [GuestClgSP, SupplyAirSP, ChwSP] = results.chosen_x(end,:);
+        
+        X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
+        X_c_next = X_next(end,end-2:end);
+        
+        GuestClgSP = X_c_next(1);
+        SupplyAirSP = X_c_next(2);
+        ChwSP = X_c_next(3);
         
         % need this because some inputs will follow rule-based schedules
         if dayTime <= 7*3600
@@ -159,17 +186,18 @@ while kStep <= MAXSTEPS
     
     inputs(:,kStep) = SP;
     
-    % Write to inputs of E+
+    % write to inputs of E+
     ep.write(mlepEncodeRealData(VERNUMBER, 0, (kStep-1)*deltaT, SP));
     
-    % Read a data packet from E+
+    % read a data packet from E+
     packet = ep.read;
     if isempty(packet)
         error('Could not read outputs from E+.');
     end
     
-    % Initialize: parse it to obtain building outputs
+    % initialize: parse it to obtain building outputs
     [flag, eptime, outputs(:,kStep)] = mlepDecodePacket(packet);
+    if flag ~= 0, break; end
     
     % initial sample for experiment design
     if kStep == order_autoreg
@@ -182,29 +210,56 @@ while kStep <= MAXSTEPS
 
         X_init = [X_d, X_c];
         y_init = outputs(9, kStep);
-        problem.x_init = X_init;
-        problem.y_init = y_init;
+        problem.x_init = preNorm(X_init, X_train_min, X_train_max);
+        problem.y_init = preNorm(y_init, y_train_min, y_train_max);
+        results.chosen_y = preNorm(y_init, y_train_min, y_train_max);
         
     end
-        
-    if flag ~= 0, break; end
-
+    
+    if kStep > order_autoreg
+        results.chosen_y = [results.chosen_y; ...
+            preNorm(outputs(9, kStep), y_train_min, y_train_max)];
+    end
+    
     kStep = kStep + 1;
     
 end
 
 % Stop EnergyPlus
 ep.stop;
+toc;
+
+cd('../../')
 
 disp(['Stopped with flag ' num2str(flag)]);
 
+%% post processing
 
-figure
-plot(1:MAXSTEPS,outputs(1,:));
-figure
-plot(1:MAXSTEPS,outputs(2,:));
-figure
-plot(1:MAXSTEPS,outputs(3,:));
-figure
-plot(1:MAXSTEPS,outputs(9,:));
+[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
+    gp(results.map_hyperparameters(end), model.inference_method, ...
+       model.mean_function, model.covariance_function, model.likelihood, ...
+       results.chosen_x, results.chosen_y, X_norm, y_norm);
+f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
+f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
+
+report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f', ...
+                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y).^2)));
+fprintf('%s\n', report_active);
+
+loss(y, f_star_mean_active, f_star_variance_active);
+
+X_chosen_active = results.chosen_x;
+y_chosen_active = results.chosen_y;
+X_chosen_active = postNorm(X_chosen_active, X_train_min, X_train_max);
+y_chosen_active = postNorm(y_chosen_active, y_train_min, y_train_max);
+
+% plotgp for active learning
+t = [0:length(y)-1]';
+f1=figure('Name', 'active learning');
+f1 = plotgp(f1, t, y, f_star_mean_active, sqrt(f_star_variance_active));
+axis1 = findobj(f1,'Type','axes');
+axis1(2).XLim = [0 1000];
+axis1(1).XLim = [0 1000];
+
+%% compare to random sampling
 
