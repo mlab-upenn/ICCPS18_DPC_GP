@@ -3,10 +3,10 @@ rng(0);
 
 %% define variables to control
 
-% control variables
 SimDays = 1;
 n_steps = 20;
 
+% control variables
 ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 ctrl_range = {linspace(22,26,n_steps),...
                 linspace(12,14,n_steps),...
@@ -213,7 +213,7 @@ map_hyperparameters_random = minimize_minFunc(model, X_chosen, y_chosen);
 f_star_mean = postNorm(f_star_mean, y_train_min, y_train_max);
 f_star_variance = postNormVar(f_star_variance, y_train_min, y_train_max);
 
-report = sprintf('RANDOM:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
+report = sprintf('\nRANDOM: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
                  mean(log_probabilities), sqrt(mean((f_star_mean-y_test).^2)));
 fprintf('%s\n', report);
 loss(y_test, f_star_mean, f_star_variance);

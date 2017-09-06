@@ -3,10 +3,10 @@ rng(0);
 
 %% define variables to control
 
-% control variables
 SimDays = 1;
-n_steps = 20;
+n_steps = 30;
 
+% control variables
 ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 ctrl_range = {linspace(22,26,n_steps),...
                 linspace(12,14,n_steps),...
