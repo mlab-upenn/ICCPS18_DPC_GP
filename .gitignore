@@ -1,6 +1,6 @@
 in.*
-socket.*
-utilSocket.*
+socket.cfg
+utilSocket.cfg
 *.dbg
 *.idd
 *.audit
