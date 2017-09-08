@@ -281,13 +281,13 @@ y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
 
 % plotgp for random sampling
 t = [0:length(y_test)-1]';
-f2=figure('Name', 'random sampling');
-f2 = plotgp(f2, t, y_test, f_star_mean, sqrt(f_star_variance));
-axis1 = findobj(f2,'Type','axes');
+f=figure('Name', 'random sampling');
+f = plotgp(f, t, y_test, f_star_mean, sqrt(f_star_variance));
+axis1 = findobj(f,'Type','axes');
 axis1(2).XLim = [0 1000];
 axis1(1).XLim = [0 1000];
 
-figure;
+figure('Name', 'random sampling'); grid on;
 yyaxis left
 plot(LP, 'LineWidth', 2)
 ylabel('log probability')

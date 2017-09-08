@@ -4,7 +4,7 @@ rng(0);
 %% define variables to control
 
 SimDays = 1;
-n_steps = 15;
+n_steps = 20;
 
 % control variables
 ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
@@ -83,6 +83,8 @@ priors.mean = {get_prior(@gaussian_prior, init_hyp.mean, 1)};
 model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
 
+% problem type: 'IG'-information gain or 'MV'-maximum variance
+problem.type = 'MV';
 problem.num_evaluations = n_samples;
 
 %% create an mlepProcess instance and configure it
@@ -339,13 +341,13 @@ y_chosen_active = postNorm(y_chosen_active, y_train_min, y_train_max);
 
 % plotgp for active learning
 t = [0:length(y_test)-1]';
-f1=figure('Name', 'active learning');
-f1 = plotgp(f1, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
-axis1 = findobj(f1,'Type','axes');
+f=figure('Name', 'active learning');
+f = plotgp(f, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
+axis1 = findobj(f,'Type','axes');
 axis1(2).XLim = [0 1000];
 axis1(1).XLim = [0 1000];
 
-figure;
+figure('Name', 'active learning'); grid on;
 yyaxis left
 plot(LP, 'LineWidth', 2)
 ylabel('log probability')
