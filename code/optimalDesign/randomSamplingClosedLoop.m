@@ -15,7 +15,7 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 datafile = 'unconstrained-LargeHotel';
@@ -56,7 +56,7 @@ model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
-load('init_hyp_new.mat');
+load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 % n_samples_init = 1000;
@@ -113,6 +113,8 @@ MAXSTEPS = SimDays*24*EPTimeStep;
 % variables for plotting:
 outputs = nan(9,MAXSTEPS);
 inputs = nan(8,MAXSTEPS);
+LP = zeros(1,n_samples);
+RMSE = zeros(1,n_samples);
 
 % initialize: parse it to obtain building outputs
 packet = ep.read;
@@ -124,6 +126,8 @@ if flag ~= 0, error('check output flag'); end
 
 % DOE in closed loop
 iter = 0;
+results.chosen_x = [];
+results.chosen_y = [];
 tic;
 
 while kStep <= MAXSTEPS    
@@ -131,8 +135,50 @@ while kStep <= MAXSTEPS
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
+    if kStep > order_autoreg
+        
+        iter = iter+1;
+        
+        % extract inputs for control features
+        X_c = zeros(1,numel(ctrl_vars));
+        for idc = 1:numel(ctrl_vars)
+            X_c(idc) = eval(ctrl_vars{idc});
+        end
+        
+        results.chosen_x = [results.chosen_x; ...
+            preNorm([X_d, X_c], X_train_min, X_train_max)];
+        results.chosen_y = [results.chosen_y; ...
+            preNorm(outputs(9, kStep-1), y_train_min, y_train_max)];
+        
+        results = learn_gp_hyperparameters_random(problem, model, iter, results);
+        
+        % save errors
+        [f_star_mean_random, f_star_variance_random, ~, ~, log_probabilities] = ...
+            gp(results.map_hyperparameters(iter), model.inference_method, ...
+            model.mean_function, model.covariance_function, model.likelihood, ...
+            results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
+        f_star_mean_random = postNorm(f_star_mean_random, y_train_min, y_train_max);
+        f_star_variance_random = postNormVar(f_star_variance_random, y_train_min, y_train_max);
+        
+        LP(iter) = mean(log_probabilities);
+        RMSE(iter) = sqrt(mean((f_star_mean_random-y_test).^2));
+        
+    end
+    
+    % disturbance features
+    if kStep >= order_autoreg
+        TOD = offline_data.TOD(kStep);
+        DOW = offline_data.DOW(kStep);
+        proxy = [TOD, DOW];
+        
+        Ambient = offline_data.Ambient(kStep+1-order_autoreg:kStep)';
+        Humidity = offline_data.Humidity(kStep+1-order_autoreg:kStep)';
+        disturbances = fliplr([Ambient; Humidity]);
+        X_d = [disturbances(:); outputs(9, kStep-1); proxy']';
+        
+    end
+    
     % select random point
-    rand;
     ClgSP = 22+(32-22)*rand;
     KitchenClgSP = 24+(32-24)*rand;
     GuestClgSP = 22+(26-22)*rand;
@@ -241,3 +287,10 @@ axis1 = findobj(f2,'Type','axes');
 axis1(2).XLim = [0 1000];
 axis1(1).XLim = [0 1000];
 
+figure;
+yyaxis left
+plot(LP, 'LineWidth', 2)
+ylabel('log probability')
+yyaxis right
+plot(RMSE, 'LineWidth', 2)
+ylabel('RMSE')

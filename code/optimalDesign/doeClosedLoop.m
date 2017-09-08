@@ -15,7 +15,7 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 datafile = 'unconstrained-LargeHotel';
@@ -56,7 +56,7 @@ model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
-load('init_hyp_new.mat');
+load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 % n_samples_init = 1000;
@@ -171,7 +171,7 @@ while kStep <= MAXSTEPS
         problem.candidate_x_star = preNorm(problem.candidate_x_star, X_train_min, X_train_max);
 
         % select best point
-        results = learn_gp_hyperparameters_xinit(problem, model, iter, results);
+        results = learn_gp_hyperparameters_doe(problem, model, iter, results);
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
         X_c_next = X_next(end,end-2:end);
         
