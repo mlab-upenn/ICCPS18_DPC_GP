@@ -4,18 +4,23 @@ rng(0);
 %% define variables to control
 
 SimDays = 1;
-n_steps = 30;
+n_steps = 15;
 
 % control variables
-ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
-ctrl_range = {linspace(22,26,n_steps),...
-                linspace(12,14,n_steps),...
-                linspace(3.7,9.7,n_steps)};
+ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
+                       'KitchenClgSP', linspace(24,32,n_steps),...
+                       'GuestClgSP', linspace(22,26,n_steps),...
+                       'SupplyAirSP', linspace(12,14,n_steps),...
+                       'ChwSP', linspace(3.7,9.7,n_steps));
+
+% control features will be in same order
+% select only 3 at a time
+ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 datafile = 'unconstrained-LargeHotel';
 order_autoreg = 3;
-[X, y] = load_data(datafile, order_autoreg, ctrl_variables);
+[X, y] = load_data(datafile, order_autoreg, ctrl_vars);
 
 n_samples = SimDays*24*4-order_autoreg;
 X_train = X(1:n_samples,:);
@@ -36,7 +41,9 @@ y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 % offline data for future disturbances
 offline_data = load(['../data/' datafile '.mat']);
 
-[X_grid, Y_grid, Z_grid] = ndgrid(ctrl_range{1},ctrl_range{2},ctrl_range{3});
+[X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{3}]));
 X_star = X_grid(:);
 Y_star = Y_grid(:);
 Z_star = Z_grid(:);
@@ -49,11 +56,12 @@ model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
-load('init_hyp.mat');
+load('init_hyp_new.mat');
 
 % uncomment to calculate new initial hyperparams
 % n_samples_init = 1000;
-% init_hyp = initial_model(file, n_samples_init, order_autoreg, ctrl_variables);
+% init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
+% save('init_hyp', 'init_hyp')
 
 true_hyp = init_hyp;
 
@@ -165,32 +173,80 @@ while kStep <= MAXSTEPS
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
         X_c_next = X_next(end,end-2:end);
         
-        GuestClgSP = X_c_next(1);
-        SupplyAirSP = X_c_next(2);
-        ChwSP = X_c_next(3);
-        
         % need this because some inputs will follow rule-based schedules
         if dayTime <= 7*3600
-            ClgSP = 30;
+            
+            if ~any(strcmp('ClgSP',ctrl_vars))
+                ClgSP = 30;
+            else
+                ClgSP = X_c_next((strcmp('ClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('KitchenClgSP',ctrl_vars))
+                KitchenClgSP = 30;
+            else
+                KitchenClgSP = X_c_next((strcmp('KitchenClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('GuestClgSP',ctrl_vars))
+                GuestClgSP = 24;
+            else
+                GuestClgSP = X_c_next((strcmp('GuestClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('SupplyAirSP',ctrl_vars))
+                SupplyAirSP = 13;
+            else
+                SupplyAirSP = X_c_next((strcmp('SupplyAirSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('ChwSP',ctrl_vars))
+                ChwSP = 6.7;
+            else
+                ChwSP = X_c_next((strcmp('ChwSP',ctrl_vars)));
+            end
+            
             HtgSP = 16;
-            KitchenClgSP = 30;
             KitchenHtgSP = 16;
-            % GuestClgSP = 24;
             GuestHtgSP = 21;
-            % SupplyAirSP = 13;
-            % ChwSP = 6.7;
 
             SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
             
         else
-            ClgSP = 24;
+            
+            if ~any(strcmp('ClgSP',ctrl_vars))
+                ClgSP = 24;
+            else
+                ClgSP = X_c_next((strcmp('ClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('KitchenClgSP',ctrl_vars))
+                KitchenClgSP = 26;
+            else
+                KitchenClgSP = X_c_next((strcmp('KitchenClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('GuestClgSP',ctrl_vars))
+                GuestClgSP = 24;
+            else
+                GuestClgSP = X_c_next((strcmp('GuestClgSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('SupplyAirSP',ctrl_vars))
+                SupplyAirSP = 13;
+            else
+                SupplyAirSP = X_c_next((strcmp('SupplyAirSP',ctrl_vars)));
+            end
+            
+            if ~any(strcmp('ChwSP',ctrl_vars))
+                ChwSP = 6.7;
+            else
+                ChwSP = X_c_next((strcmp('ChwSP',ctrl_vars)));
+            end
+            
             HtgSP = 21;
-            KitchenClgSP = 26;
             KitchenHtgSP = 19;
-            % GuestClgSP = 24;
             GuestHtgSP = 21;
-            % SupplyAirSP = 13;
-            % ChwSP = 6.7;
 
             SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
             
@@ -217,9 +273,9 @@ while kStep <= MAXSTEPS
     if kStep == order_autoreg
         
         % extract inputs for control features
-        X_c = zeros(1,numel(ctrl_variables));
-        for idc = 1:numel(ctrl_variables)
-            X_c(idc) = eval(ctrl_variables{idc});
+        X_c = zeros(1,numel(ctrl_vars));
+        for idc = 1:numel(ctrl_vars)
+            X_c(idc) = eval(ctrl_vars{idc});
         end
 
         X_init = [X_d, X_c];
@@ -256,7 +312,7 @@ disp(['Stopped with flag ' num2str(flag)]);
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
-report_active = sprintf('ACTIVE:\n E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
+report_active = sprintf('\nACTIVE: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
                  mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
 fprintf('%s\n', report_active);
 

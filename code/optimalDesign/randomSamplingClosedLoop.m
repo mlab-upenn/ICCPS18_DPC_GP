@@ -7,15 +7,20 @@ SimDays = 1;
 n_steps = 20;
 
 % control variables
-ctrl_variables = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
-ctrl_range = {linspace(22,26,n_steps),...
-                linspace(12,14,n_steps),...
-                linspace(3.7,9.7,n_steps)};
+ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
+                       'KitchenClgSP', linspace(24,32,n_steps),...
+                       'GuestClgSP', linspace(22,26,n_steps),...
+                       'SupplyAirSP', linspace(12,14,n_steps),...
+                       'ChwSP', linspace(3.7,9.7,n_steps));
+
+% control features will be in same order
+% select only 3 at a time
+ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 datafile = 'unconstrained-LargeHotel';
 order_autoreg = 3;
-[X, y] = load_data(datafile, order_autoreg, ctrl_variables);
+[X, y] = load_data(datafile, order_autoreg, ctrl_vars);
 
 n_samples = SimDays*24*4-order_autoreg;
 X_train = X(1:n_samples,:);
@@ -36,7 +41,9 @@ y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 % offline data for future disturbances
 offline_data = load(['../data/' datafile '.mat']);
 
-[X_grid, Y_grid, Z_grid] = ndgrid(ctrl_range{1},ctrl_range{2},ctrl_range{3});
+[X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{3}]));
 X_star = X_grid(:);
 Y_star = Y_grid(:);
 Z_star = Z_grid(:);
@@ -49,11 +56,11 @@ model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
-load('init_hyp.mat');
+load('init_hyp_new.mat');
 
 % uncomment to calculate new initial hyperparams
 % n_samples_init = 1000;
-% init_hyp = initial_model(file, n_samples_init, order_autoreg, ctrl_variables);
+% init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 
 true_hyp = init_hyp;
 
@@ -125,32 +132,35 @@ while kStep <= MAXSTEPS
     dayTime = mod(eptime, 86400);  % time in current day
     
     % select random point
+    rand;
+    ClgSP = 22+(32-22)*rand;
+    KitchenClgSP = 24+(32-24)*rand;
     GuestClgSP = 22+(26-22)*rand;
     SupplyAirSP = 12+(14-12)*rand;
     ChwSP = 6.7+(9.7-6.7)*rand;
     
     % need this because some inputs will follow rule-based schedules
     if dayTime <= 7*3600
-        ClgSP = 30;
+        if ~any(strcmp('ClgSP',ctrl_vars)), ClgSP = 30; end;
+        if ~any(strcmp('KitchenClgSP',ctrl_vars)), KitchenClgSP = 30; end;
+        if ~any(strcmp('GuestClgSP',ctrl_vars)), GuestClgSP = 24; end;
+        if ~any(strcmp('SupplyAirSP',ctrl_vars)), SupplyAirSP = 13; end;
+        if ~any(strcmp('ChwSP',ctrl_vars)), ChwSP = 6.7; end;
         HtgSP = 16;
-        KitchenClgSP = 30;
         KitchenHtgSP = 16;
-        % GuestClgSP = 24;
         GuestHtgSP = 21;
-        % SupplyAirSP = 13;
-        % ChwSP = 6.7;
         
         SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
     else
-        ClgSP = 24;
+        if ~any(strcmp('ClgSP',ctrl_vars)), ClgSP = 24; end;
+        if ~any(strcmp('KitchenClgSP',ctrl_vars)), KitchenClgSP = 26; end;
+        if ~any(strcmp('GuestClgSP',ctrl_vars)), GuestClgSP = 24; end;
+        if ~any(strcmp('SupplyAirSP',ctrl_vars)), SupplyAirSP = 13; end;
+        if ~any(strcmp('ChwSP',ctrl_vars)), ChwSP = 6.7; end;
         HtgSP = 21;
-        KitchenClgSP = 26;
         KitchenHtgSP = 19;
-        % GuestClgSP = 24;
         GuestHtgSP = 21;
-        % SupplyAirSP = 13;
-        % ChwSP = 6.7;
         
         SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
@@ -191,11 +201,13 @@ data.Humidity =  outputs(7,:)';
 data.TotalLoad =  outputs(9,:)';
 data.TOD =  outputs(3,:)';
 data.DOW = outputs(4,:)';
+data.ClgSP = inputs(1,:)';
+data.KitchenClgSP = inputs(3,:)';
 data.GuestClgSP = inputs(5,:)';
 data.SupplyAirSP = inputs(7,:)';
 data.ChwSP = inputs(8,:)';
 
-[X_train, y_train] = load_data(data, order_autoreg, ctrl_variables);
+[X_train, y_train] = load_data(data, order_autoreg, ctrl_vars);
 X_train_norm = preNorm(X_train, X_train_min, X_train_max);
 y_train_norm = preNorm(y_train, y_train_min, y_train_max);
 

@@ -104,4 +104,4 @@ plot(1:MAXSTEPS,outputs(3,:));
 figure
 plot(1:MAXSTEPS,outputs(9,:));
 
-save_results(data_type, 'train', 1, 1)
+% save_results(data_type, 'train', 1, 1)
