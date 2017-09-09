@@ -84,7 +84,7 @@ model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
 
 % problem type: 'IG'-information gain or 'MV'-maximum variance
-problem.type = 'MV';
+problem.type = 'IG';
 problem.num_evaluations = n_samples;
 
 %% create an mlepProcess instance and configure it

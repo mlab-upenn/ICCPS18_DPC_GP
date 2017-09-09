@@ -183,7 +183,7 @@ while kStep <= MAXSTEPS
     KitchenClgSP = 24+(32-24)*rand;
     GuestClgSP = 22+(26-22)*rand;
     SupplyAirSP = 12+(14-12)*rand;
-    ChwSP = 6.7+(9.7-6.7)*rand;
+    ChwSP = 3.7+(9.7-3.7)*rand;
     
     % need this because some inputs will follow rule-based schedules
     if dayTime <= 7*3600
