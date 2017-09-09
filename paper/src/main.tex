@@ -2,8 +2,7 @@
 
 \begin{document}
 
-\title{A Sample {\ttlit ACM} SIG Proceedings Paper in LaTeX
-Format\titlenote{(Does NOT produce the permission block, copyright information nor page numbering). Supported by ACM.}}
+\title{End-to-end Modeling and Control with Gaussian Processes}
 %
 % You need the command \numberofauthors to handle the 'placement
 % and alignment' of the authors beneath the title.
@@ -29,7 +28,7 @@ Format\titlenote{(Does NOT produce the permission block, copyright information n
 % without further effort on your part as the last section in
 % the body of your article BEFORE References or any Appendices.
 
-\numberofauthors{8} %  in this sample file, there are a *total*
+\numberofauthors{4} %  in this sample file, there are a *total*
 % of EIGHT authors. SIX appear on the 'first-page' (for formatting
 % reasons) and the remaining two appear in the \additionalauthors section.
 %
@@ -46,102 +45,71 @@ Format\titlenote{(Does NOT produce the permission block, copyright information n
 %
 % 1st. author
 \alignauthor
-Ben Trovato\titlenote{Dr.~Trovato insisted his name be first.}\\
-       \affaddr{Institute for Clarity in Documentation}\\
-       \affaddr{1932 Wallamaloo Lane}\\
-       \affaddr{Wallamaloo, New Zealand}\\
-       \email{trovato@corporation.com}
+Achin Jain\\
+%\titlenote{Dr.~Trovato insisted his name be first.}\\
+       \affaddr{University of Pennsylvania}\\
+       \affaddr{Philadelphia, USA}\\
+       \email{achinj@seas.upenn.edu}
 % 2nd. author
+\vspace{0.2cm}
 \alignauthor
-G.K.M. Tobin\titlenote{The secretary disavows
-any knowledge of this author's actions.}\\
-       \affaddr{Institute for Clarity in Documentation}\\
-       \affaddr{P.O. Box 1212}\\
-       \affaddr{Dublin, Ohio 43017-6221}\\
-       \email{webmaster@marysville-ohio.com}
+Truong X. Nghiem\\
+       \affaddr{University of Pennsylvania}\\
+       \affaddr{Philadelphia, USA}\\       
+       \email{nghiem@seas.upenn.edu}
+\and  % use '\and' if you need 'another row' of author names 
 % 3rd. author
-\alignauthor Lars Th{\o}rv{\"a}ld\titlenote{This author is the
-one who did all the really hard work.}\\
-       \affaddr{The Th{\o}rv{\"a}ld Group}\\
-       \affaddr{1 Th{\o}rv{\"a}ld Circle}\\
-       \affaddr{Hekla, Iceland}\\
-       \email{larst@affiliation.org}
-\and  % use '\and' if you need 'another row' of author names
-% 4th. author
-\alignauthor Lawrence P. Leipuner\\
-       \affaddr{Brookhaven Laboratories}\\
-       \affaddr{Brookhaven National Lab}\\
-       \affaddr{P.O. Box 5000}\\
-       \email{lleipuner@researchlabs.org}
-% 5th. author
-\alignauthor Sean Fogarty\\
-       \affaddr{NASA Ames Research Center}\\
-       \affaddr{Moffett Field}\\
-       \affaddr{California 94035}\\
-       \email{fogartys@amesres.org}
-% 6th. author
-\alignauthor Charles Palmer\\
-       \affaddr{Palmer Research Laboratories}\\
-       \affaddr{8600 Datapoint Drive}\\
-       \affaddr{San Antonio, Texas 78229}\\
-       \email{cpalmer@prl.com}
+\alignauthor Rahul Mangharam\\
+       \affaddr{University of Pennsylvania}\\
+       \affaddr{Philadelphia, USA}\\
+       \email{rahulm@seas.upenn.edu}
+% 4th. author        
+\alignauthor Manfred Morari\\
+\affaddr{University of Pennsylvania}\\
+\affaddr{Philadelphia, USA}\\
+\email{morari@seas.upenn.edu}       
 }
 % There's nothing stopping you putting the seventh, eighth, etc.
 % author on the opening page (as the 'third row') but we ask,
 % for aesthetic reasons that you place these 'additional authors'
 % in the \additional authors block, viz.
-\additionalauthors{Additional authors: John Smith (The Th{\o}rv{\"a}ld Group,
-email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
-(The Kumquat Consortium, email: {\texttt{jpkumquat@consortium.net}}).}
-\date{30 July 1999}
+%\additionalauthors{Additional authors: John Smith (The Th{\o}rv{\"a}ld Group,
+%email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
+%(The Kumquat Consortium, email: {\texttt{jpkumquat@consortium.net}}).}
+
+\date{\today}
+
 % Just remember to make sure that the TOTAL number of authors
 % is the number that will appear on the first page PLUS the
 % number that will appear in the \additionalauthors section.
 
 \maketitle
-\begin{abstract}
 
-This sample.tex file is modified from the sigproc-sp.tex file supported by ACM, serving as a simple example of the tex file used for IPSN'13 submissions.
+%% ABSTRACT
+\input{abstract.tex}
 
-\end{abstract}
 
-\section{Introduction}
+%% SECTIONS
+\input{intro.tex}
+\input{doe.tex}
+\input{dpc.tex}
 
-Sections go here.  An example of figures is shown in Figure~\ref{fig:example}.
 
-\begin{figure}
-\centering
-\epsfig{file=fly.eps}
-\caption{A sample black and white graphic (.eps format).}
-\label{fig:example}
-\end{figure}
+%% CONCLUSION
+\input{conclusion.tex}
 
-\section{Conclusions}
-Conclusion goes here.
 
-%ACKNOWLEDGMENTS are optional
-\section*{Acknowledgments}
-Acknowledgement goes here.
+%ACKNOWLEDGMENTS
+%\input{ack.tex}
 
-%
-% The following two commands are all you need in the
-% initial runs of your .tex file to
-% produce the bibliography for the citations in your paper.
+
+%% BIBLIOGRAPHY
 \bibliographystyle{abbrv}
-\bibliography{sigproc}  % sigproc.bib is the name of the Bibliography in this case
-% You must have a proper ".bib" file
-%  and remember to run:
-% latex bibtex latex latex
-% to resolve all references
-%
-% ACM needs 'a single self-contained file'!
-%
-%APPENDICES are optional
+\bibliography{references} 
+
+%% APPENDIX
 %\balancecolumns
-\appendix
-%Appendix A
+%\appendix
 
-Appendix goes here.
 
-% That's all folks!
 \end{document}

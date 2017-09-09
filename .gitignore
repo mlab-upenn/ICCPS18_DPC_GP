@@ -1,6 +1,12 @@
 in.*
 socket.cfg
 utilSocket.cfg
+*.log
+*.aux
+*.blg
+*.out
+*.pdf
+*.gz
 *.dbg
 *.idd
 *.audit
