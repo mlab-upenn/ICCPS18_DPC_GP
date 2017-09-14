@@ -3,7 +3,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 1;
+SimDays = 2;
 n_steps = 20;
 
 % control variables
@@ -15,7 +15,7 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'GuestClgSP'};
+ctrl_vars = {'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;
@@ -332,8 +332,8 @@ t = [0:length(y_test)-1]';
 f=figure('Name', 'active learning');
 f = plotgp(f, t, y_test, f_star_mean_active, sqrt(f_star_variance_active));
 axis1 = findobj(f,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
+axis1(2).XLim = [0 size(X_test,1)];
+axis1(1).XLim = [0 size(X_test,1)];
 
 figure('Name', 'active learning'); grid on;
 yyaxis left
@@ -342,3 +342,11 @@ ylabel('log probability')
 yyaxis right
 plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
+
+ctrl_vars_all = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_idx = [1, 3, 5, 7, 8];
+figure('Name', 'active learning'); grid on;
+plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
+ylabel(ctrl_vars{1})
+xlabel('sample number')
+
