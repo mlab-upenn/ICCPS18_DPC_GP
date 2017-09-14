@@ -1,20 +1,24 @@
-function hyp = initial_model(file, n_samples, order_autoreg, ctrl_variables)
+function hyp = initial_model(file, n_samples, order_autoreg, ctrl_vars)
 
 %% load data
 
 plot_results = 0;
 
-[X, y] = load_data(file, order_autoreg, ctrl_variables);
-
-X_train = X(1:n_samples,:);
-y_train = y(1:n_samples,:);
-X_test = X(n_samples+1:2*n_samples,:);
-y_test = y(n_samples+1:2*n_samples,:);
+[X, y] = load_data(file, order_autoreg, ctrl_vars);
 
 % standardize the data set
-[X_train_norm, X_train_min, X_train_max] = preNorm(X_train);
-[y_train_norm, y_train_min, y_train_max] = preNorm(y_train);
+[X_train_norm, X_train_min, X_train_max] = preNorm(X);
+[y_train_norm, y_train_min, y_train_max] = preNorm(y);
 
+X_train = X(1:n_samples,:);
+y_train = y(1:n_samples);
+X_train_norm = X_train_norm(1:n_samples,:);
+y_train_norm = y_train_norm(1:n_samples,:);
+
+% X_test = X(n_samples+1:2*n_samples,:);
+% y_test = y(n_samples+1:2*n_samples,:);
+datafile = 'test-LargeHotel';
+[X_test, y_test] = load_data(datafile, order_autoreg, ctrl_vars);
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
@@ -44,7 +48,7 @@ solver = @minimize_minfunc;
 maxiter = -100;
 
 % training
-[hyp, flogtheta, ~] = trainGParx(hyp0, inf, meanf, cov, lik, X_train_norm, y_train_norm, solver, -100);
+[hyp, flogtheta, ~] = trainGParx(hyp0, inf, meanf, cov, lik, X_train_norm, y_train_norm, solver, maxiter);
 
 % prediction on training data
 [mu_train, var_train, muf_train, varf_train] = gp(hyp, inf, meanf, cov, lik, X_train_norm, y_train_norm, X_train_norm);

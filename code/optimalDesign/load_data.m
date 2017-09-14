@@ -18,7 +18,7 @@ end
 output = TotalLoad;
 proxy = [TOD, DOW];
 
-X_d = [lagmatrix(disturbances, 0:1:orderAR-1), lagmatrix(output, 1), proxy];
+X_d = [lagmatrix(Ambient, [0,1]), lagmatrix(Humidity, 1), lagmatrix(output, 1), proxy];
 X_c = control;
 y = output;
 

@@ -1,5 +1,5 @@
 
-rng(0);
+rng(1);
 
 %% define variables to control
 
@@ -18,27 +18,21 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
-datafile = 'unconstrained-LargeHotel';
 order_autoreg = 3;
-[X, y] = load_data(datafile, order_autoreg, ctrl_vars);
-
 n_samples = SimDays*24*4-order_autoreg;
-X_train = X(1:n_samples,:);
-y_train = y(1:n_samples);
-X_test = X(n_samples+1:end,:);
-y_test = y(n_samples+1:end);
 
-% standardize the data set
+datafile = 'unconstrained-LargeHotel';
+[X, y] = load_data(datafile, order_autoreg, ctrl_vars);
 [~, X_train_min, X_train_max] = preNorm(X);
 [~, y_train_min, y_train_max] = preNorm(y);
 
-X_train_norm = preNorm(X_train, X_train_min, X_train_max);
-y_train_norm = preNorm(y_train, y_train_min, y_train_max);
-
+datafile = 'test-LargeHotel';
+[X_test, y_test] = load_data(datafile, order_autoreg, ctrl_vars);
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
 % offline data for future disturbances
+datafile = 'unconstrained-LargeHotel';
 offline_data = load(['../data/' datafile '.mat']);
 
 [X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
@@ -59,8 +53,8 @@ model.likelihood          = @likGauss;
 load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-% n_samples_init = 1000;
-% init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
+n_samples_init = 500;
+init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
 
 true_hyp = init_hyp;
@@ -142,10 +136,10 @@ while kStep <= MAXSTEPS
         DOW = offline_data.DOW(kStep);
         proxy = [TOD, DOW];
         
-        Ambient = offline_data.Ambient(kStep+1-order_autoreg:kStep)';
-        Humidity = offline_data.Humidity(kStep+1-order_autoreg:kStep)';
-        disturbances = fliplr([Ambient; Humidity]);
-        X_d = [disturbances(:); outputs(9, kStep-1); proxy']';
+        Ambient = offline_data.Ambient(kStep+2-order_autoreg:kStep);
+        Humidity = offline_data.Humidity(kStep-1);
+        disturbances = [fliplr(Ambient'), Humidity];
+        X_d = [disturbances, outputs(9, kStep-1), proxy];
         
     end
         
