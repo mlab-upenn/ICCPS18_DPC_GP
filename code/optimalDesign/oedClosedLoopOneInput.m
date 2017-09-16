@@ -4,7 +4,7 @@ rng(1);
 %% define variables to control
 
 SimDays = 2;
-n_steps = 20;
+n_steps = 25;
 
 % control variables
 ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
@@ -15,7 +15,7 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'ChwSP'};
+ctrl_vars = {'SupplyAirSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;

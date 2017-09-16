@@ -1,0 +1,17 @@
+\section{Optimal Experiment Design}
+\label{S:oed}
+
+\subsection{Batch update: selecting most informative data for periodic model update}
+
+The data from a real system are often noisy and contain outliers. 
+It is therefore essential to filter the most \textit{informative} data that best explain the dynamics from the available pool of data.
+Further, for both training time and real-time control, the computational complexity of Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. Thus, obtaining the best GP model with least data is highly desired.
+
+The goal of this section is to outline a systematic procedure for optimal experiment design that can be employed to select best $k$ samples from given $n$ observations.
+
+
+We use the concept of approximate marginalization in \cite{Garnett2013}.
+
+What is the optimal procedure to select data for model training for large data
+
+\subsection{Online update: recommending control strategies for experiment design }

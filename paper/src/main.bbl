@@ -1,3 +1,67 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{10}
+
+\bibitem{Berkenkamp2015}
+F.~Berkenkamp and A.~P. Schoellig.
+\newblock Safe and robust learning control with gaussian processes.
+\newblock In {\em Control Conference (ECC), 2015 European}, pages 2496--2501.
+  IEEE, 2015.
+
+\bibitem{Bojarski2016}
+M.~Bojarski, D.~Del~Testa, D.~Dworakowski, B.~Firner, B.~Flepp, P.~Goyal, L.~D.
+  Jackel, M.~Monfort, U.~Muller, J.~Zhang, et~al.
+\newblock End to end learning for self-driving cars.
+\newblock {\em arXiv preprint arXiv:1604.07316}, 2016.
+
+\bibitem{Desaraju2016}
+V.~R. Desaraju and N.~Michael.
+\newblock Experience-driven predictive control.
+\newblock {\em Robot Learning and Planning (RLP 2016)}, page~29, 2016.
+
+\bibitem{Emery1998}
+A.~Emery and A.~V. Nenarokomov.
+\newblock Optimal experiment design.
+\newblock {\em Measurement Science and Technology}, 9(6):864, 1998.
+
+\bibitem{Fedorov2010}
+V.~Fedorov.
+\newblock Optimal experimental design.
+\newblock {\em Wiley Interdisciplinary Reviews: Computational Statistics},
+  2(5):581--589, 2010.
+
+\bibitem{Friedman2001}
+J.~Friedman, T.~Hastie, and R.~Tibshirani.
+\newblock {\em The elements of statistical learning}, volume~1.
+\newblock Springer series in statistics Springer, Berlin, 2001.
+
+\bibitem{Garnett2013}
+R.~Garnett, M.~A. Osborne, and P.~Hennig.
+\newblock Active learning of linear embeddings for gaussian processes.
+\newblock {\em arXiv preprint arXiv:1310.6740}, 2013.
+
+\bibitem{JainACC2017}
+A.~Jain, M.~Behl, and R.~Mangharam.
+\newblock {D}ata {P}redictive {C}ontrol for building energy management.
+\newblock In {\em Proceedings of the 2017 American Control Conference}. IEEE,
+  2017.
+
+\bibitem{JainCDC2017}
+A.~Jain, F.~Smarra, and R.~Mangharam.
+\newblock {D}ata {P}redictive {C}ontrol using {R}egression {T}rees and
+  {E}nsemble {L}earning.
+\newblock In {\em Proceedings of the 2017 Conference on Decision and Control}.
+  IEEE, 2017.
+
+\bibitem{Sturzenegger2016}
+D.~Sturzenegger, D.~Gyalistras, M.~Morari, and R.~S. Smith.
+\newblock Model predictive climate control of a swiss office building:
+  Implementation, results, and cost--benefit analysis.
+\newblock {\em IEEE Transactions on Control Systems Technology}, 24(1):1--12,
+  2016.
+
+\bibitem{vzavcekova2014}
+E.~{\v{Z}}{\'a}{\v{c}}ekov{\'a}, Z.~V{\'a}{\v{n}}a, and J.~Cigler.
+\newblock Towards the real-life implementation of {MPC} for an office building:
+  Identification issues.
+\newblock {\em Applied Energy}, 135:53--62, 2014.
 
 \end{thebibliography}
