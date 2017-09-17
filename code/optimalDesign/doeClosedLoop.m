@@ -23,10 +23,11 @@ order_autoreg = 3;
 [X, y] = load_data(datafile, order_autoreg, ctrl_vars);
 
 n_samples = SimDays*24*4-order_autoreg;
+n_test = 24*4*7;
 X_train = X(1:n_samples,:);
 y_train = y(1:n_samples);
-X_test = X(n_samples+1:end,:);
-y_test = y(n_samples+1:end);
+X_test = X(n_samples+n_test:end,:);
+y_test = y(n_samples+n_test:end);
 
 % standardize the data set
 [~, X_train_min, X_train_max] = preNorm(X);
@@ -354,3 +355,10 @@ ylabel('log probability')
 yyaxis right
 plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
+
+%% Save results
+map_hyperparameters = results.map_hyperparameters(end);
+X_chosen = X_chosen_active;
+y_chosen = y_chosen_active;
+
+save doe_sampling_ig map_hyperparameters model X_chosen y_chosen
