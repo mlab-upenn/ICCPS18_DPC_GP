@@ -1,21 +1,30 @@
 
-rng(1);
+rng(0);
 
 %% define variables to control
 
-SimDays = 2;
+SimDays = 1;
 n_steps = 25;
 
-% control variables
-ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
-                       'KitchenClgSP', linspace(24,32,n_steps),...
-                       'GuestClgSP', linspace(22,26,n_steps),...
-                       'SupplyAirSP', linspace(12,14,n_steps),...
-                       'ChwSP', linspace(3.7,9.7,n_steps));
-
+ClgMin = 22;
+ClgMax = 32;
+KitchenClgMin = 24;
+KitchenClgMax = 32;
+GuestClgMin = 22;
+GuestClgMax = 26;
+SupplyAirMin = 12;
+SupplyAirMax = 14;
+ChwMin = 3.7;
+ChwMax = 9.7;
+ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
+                       'KitchenClgSP', linspace(KitchenClgMin,KitchenClgMax,n_steps),...
+                       'GuestClgSP', linspace(GuestClgMin,GuestClgMax,n_steps),...
+                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
+                       'ChwSP', linspace(ChwMin,ChwMax,n_steps));
+                   
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'SupplyAirSP'};
+ctrl_vars = {'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;

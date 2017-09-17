@@ -7,15 +7,25 @@ SimDays = 2;
 n_steps = 25;
 
 % control variables
-ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
-                       'KitchenClgSP', linspace(24,32,n_steps),...
-                       'GuestClgSP', linspace(22,26,n_steps),...
-                       'SupplyAirSP', linspace(12,14,n_steps),...
-                       'ChwSP', linspace(3.7,9.7,n_steps));
+ClgMin = 22;
+ClgMax = 32;
+KitchenClgMin = 24;
+KitchenClgMax = 32;
+GuestClgMin = 22;
+GuestClgMax = 26;
+SupplyAirMin = 12;
+SupplyAirMax = 14;
+ChwMin = 3.7;
+ChwMax = 9.7;
+ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
+                       'KitchenClgSP', linspace(KitchenClgMin,KitchenClgMax,n_steps),...
+                       'GuestClgSP', linspace(GuestClgMin,GuestClgMax,n_steps),...
+                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
+                       'ChwSP', linspace(ChwMin,ChwMax,n_steps));
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'SupplyAirSP'};
+ctrl_vars = {'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;
@@ -98,11 +108,30 @@ deltaT = (60/EPTimeStep)*60;
 kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep; 
 
+% type of random sampling
+sample_type = 'prbs';
+switch sample_type
+    case 'uniform'
+        ClgSPrand = ClgMin+(ClgMax-ClgMin)*rand(1,MAXSTEPS);
+        KitchenClgSPrand = KitchenClgMin+(KitchenClgMax-KitchenClgMin)*rand(1,MAXSTEPS);
+        GuestClgSPrand = GuestClgMin+(GuestClgMax-GuestClgMin)*rand(1,MAXSTEPS);
+        SupplyAirSPrand = SupplyAirMin+(SupplyAirMax-SupplyAirMin)*rand(1,MAXSTEPS);
+        ChwSPrand = ChwMin+(ChwMax-ChwMin)*rand(1,MAXSTEPS);
+    case 'prbs'
+        ClgSPrand = postNorm(idinput(MAXSTEPS,'prbs')', ClgMin, ClgMax);
+        KitchenClgSPrand = postNorm(idinput(MAXSTEPS,'prbs')', KitchenClgMin,KitchenClgMax);
+        GuestClgSPrand = postNorm(idinput(MAXSTEPS,'prbs')', GuestClgMin, GuestClgMax);
+        SupplyAirSPrand = postNorm(idinput(MAXSTEPS,'prbs')', SupplyAirMin, SupplyAirMax);
+        ChwSPrand = postNorm(idinput(MAXSTEPS,'prbs')', ChwMin, ChwMax);
+end
+
+    
 % variables for plotting:
 outputs = nan(9,MAXSTEPS);
 inputs = nan(8,MAXSTEPS);
 LP = zeros(1,n_samples);
 RMSE = zeros(1,n_samples);
+
 
 % initialize: parse it to obtain building outputs
 packet = ep.read;
@@ -167,11 +196,12 @@ while kStep <= MAXSTEPS
     end
     
     % select random point
-    ClgSP = 22+(32-22)*rand;
-    KitchenClgSP = 24+(32-24)*rand;
-    GuestClgSP = 22+(26-22)*rand;
-    SupplyAirSP = 12+(14-12)*rand;
-    ChwSP = 3.7+(9.7-3.7)*rand;
+    ClgSP = ClgSPrand(kStep);
+    KitchenClgSP = KitchenClgSPrand(kStep);
+    GuestClgSP = GuestClgSPrand(kStep);
+    SupplyAirSP = SupplyAirSPrand(kStep);
+    ChwSP = ChwSPrand(kStep);
+    
     
     % need this because some inputs will follow rule-based schedules
     if dayTime <= 7*3600
