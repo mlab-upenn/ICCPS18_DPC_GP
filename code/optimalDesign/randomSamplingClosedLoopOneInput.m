@@ -3,8 +3,8 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 1;
-n_steps = 20;
+SimDays = 2;
+n_steps = 25;
 
 % control variables
 ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
@@ -15,7 +15,7 @@ ctrl_vars_all = struct('ClgSP', linspace(22,32,n_steps),...
 
 % control features will be in same order
 % select only 3 at a time
-ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_vars = {'SupplyAirSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;
@@ -35,13 +35,7 @@ y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 datafile = 'unconstrained-LargeHotel';
 offline_data = load(['../data/' datafile '.mat']);
 
-[X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
-                                  eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
-                                  eval(['ctrl_vars_all.' ctrl_vars{3}]));
-X_star = X_grid(:);
-Y_star = Y_grid(:);
-Z_star = Z_grid(:);
-X_c_star = [X_star, Y_star, Z_star];
+X_c_star = eval(['ctrl_vars_all.' ctrl_vars{1}])';
 
 %% setup GP model
 
@@ -53,8 +47,8 @@ model.likelihood          = @likGauss;
 load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-% n_samples_init = 1000;
-% init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
+n_samples_init = 500;
+init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 
 true_hyp = init_hyp;
 
@@ -278,8 +272,8 @@ t = [0:length(y_test)-1]';
 f=figure('Name', 'random sampling');
 f = plotgp(f, t, y_test, f_star_mean, sqrt(f_star_variance));
 axis1 = findobj(f,'Type','axes');
-axis1(2).XLim = [0 1000];
-axis1(1).XLim = [0 1000];
+axis1(2).XLim = [0 size(X_test,1)];
+axis1(1).XLim = [0 size(X_test,1)];
 
 figure('Name', 'random sampling'); grid on;
 yyaxis left
@@ -289,5 +283,9 @@ yyaxis right
 plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
 
-%% Save results
-save random_sampling map_hyperparameters_random model X_chosen y_chosen
+ctrl_vars_all = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_idx = [1, 3, 5, 7, 8];
+figure('Name', 'random sampling'); grid on;
+plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
+ylabel(ctrl_vars{1})
+xlabel('sample number')

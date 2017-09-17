@@ -1,22 +1,27 @@
 %% load data
 
-file = 'constrained-LargeHotel';
+file = 'unconstrained-LargeHotel';
 ctrl_horizon = 1;
 order_autoreg = 3;
 n_samples = 1000;
-ctrl_variables = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
-[X, y] = load_data(file, order_autoreg, ctrl_variables);
+% ctrl_variables = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+
+[X, y] = load_data(file, order_autoreg, ctrl_vars);
+% standardize the data set
+[X_train_norm, X_train_min, X_train_max] = preNorm(X);
+[y_train_norm, y_train_min, y_train_max] = preNorm(y);
 
 X_train = X(1:n_samples,:);
-y_train = y(1:n_samples,:);
-X_test = X(n_samples+1:2*n_samples,:);
-y_test = y(n_samples+1:2*n_samples,:);
+y_train = y(1:n_samples);
+X_train_norm = X_train_norm(1:n_samples,:);
+y_train_norm = y_train_norm(1:n_samples,:);
 
-% standardize the data set
-[X_train_norm, X_train_min, X_train_max] = preNorm(X_train);
-[y_train_norm, y_train_min, y_train_max] = preNorm(y_train);
-
+% X_test = X(n_samples+1:2*n_samples,:);
+% y_test = y(n_samples+1:2*n_samples,:);
+datafile = 'test-LargeHotel';
+[X_test, y_test] = load_data(datafile, order_autoreg, ctrl_vars);
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
@@ -57,7 +62,7 @@ solver = @minimize_minfunc;
 maxiter = -100;
 
 % training
-[hyp, flogtheta, ~] = trainGParx(hyp0, inf, meanf, cov, lik, X_train_norm, y_train_norm, @minimize_minfunc, -100);
+[hyp, flogtheta, ~] = trainGParx(hyp0, inf, meanf, cov, lik, X_train_norm, y_train_norm, solver, maxiter);
 
 % prediction on training data
 [mu_train, var_train, muf_train, varf_train] = gp(hyp, inf, meanf, cov, lik, X_train_norm, y_train_norm, X_train_norm);

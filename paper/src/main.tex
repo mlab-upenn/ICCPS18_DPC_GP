@@ -1,8 +1,23 @@
 \documentclass{sig-alternate-ipsn13}
 
+
+\usepackage{achinDefs}
+
+% some fixes
+%\linespread{0.915}
+%\setlength{\textfloatsep}{4pt}
+
+
+% make algo small
+%\makeatletter
+%\renewcommand{\ALG@beginalgorithmic}{\small}
+%\makeatother
+
 \begin{document}
 
-\title{End-to-end Learning and Control with Gaussian Processes}
+\title{End-to-end Learning \& Control using Gaussian Processes \\
+	\vspace{0.1cm}
+\Large \textbf{Towards bridging machine learning and controls for physical systems}}
 %
 % You need the command \numberofauthors to handle the 'placement
 % and alignment' of the authors beneath the title.
@@ -28,7 +43,7 @@
 % without further effort on your part as the last section in
 % the body of your article BEFORE References or any Appendices.
 
-\numberofauthors{4} %  in this sample file, there are a *total*
+\numberofauthors{1} %  in this sample file, there are a *total*
 % of EIGHT authors. SIX appear on the 'first-page' (for formatting
 % reasons) and the remaining two appear in the \additionalauthors section.
 %
@@ -45,29 +60,29 @@
 %
 % 1st. author
 \alignauthor
-Achin Jain\\
+Achin Jain, Truong X. Nghiem, Rahul Mangharam, Manfred Morari\\
 %\titlenote{Dr.~Trovato insisted his name be first.}\\
-       \affaddr{University of Pennsylvania}\\
-       \affaddr{Philadelphia, USA}\\
-       \email{achinj@seas.upenn.edu}
+       \email{\{achinj,nghiem,rahulm,morari\}@seas.upenn.edu} \\
+       \affaddr{University of Pennsylvania} \\
+	   \affaddr{Philadelphia, PA 19104,  USA}     
 % 2nd. author
-\vspace{0.2cm}
-\alignauthor
-Truong X. Nghiem\\
-       \affaddr{University of Pennsylvania}\\
-       \affaddr{Philadelphia, USA}\\       
-       \email{nghiem@seas.upenn.edu}
-\and  % use '\and' if you need 'another row' of author names 
+%\vspace{0.2cm}
+%\alignauthor
+%Truong X. Nghiem\\
+%       \affaddr{University of Pennsylvania}\\
+%       \affaddr{Philadelphia, PA 19104,  USA}\\ 
+%       \email{nghiem@seas.upenn.edu}
+%\and  % use '\and' if you need 'another row' of author names 
 % 3rd. author
-\alignauthor Rahul Mangharam\\
-       \affaddr{University of Pennsylvania}\\
-       \affaddr{Philadelphia, USA}\\
-       \email{rahulm@seas.upenn.edu}
+%\alignauthor Rahul Mangharam\\
+%       \affaddr{University of Pennsylvania}\\
+%       \affaddr{Philadelphia, PA 19104,  USA}\\
+%       \email{rahulm@seas.upenn.edu}
 % 4th. author        
-\alignauthor Manfred Morari\\
-\affaddr{University of Pennsylvania}\\
-\affaddr{Philadelphia, USA}\\
-\email{morari@seas.upenn.edu}       
+%\alignauthor Manfred Morari\\
+%	\affaddr{University of Pennsylvania}\\
+%	\affaddr{Philadelphia, PA 19104,  USA}\\
+%	\email{morari@seas.upenn.edu}       
 }
 % There's nothing stopping you putting the seventh, eighth, etc.
 % author on the opening page (as the 'third row') but we ask,
@@ -91,7 +106,8 @@ Truong X. Nghiem\\
 
 %% SECTIONS
 \input{intro.tex}
-\input{doe.tex}
+\input{gp.tex}
+\input{oed.tex}
 \input{dpc.tex}
 
 
