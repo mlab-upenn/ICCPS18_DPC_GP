@@ -124,7 +124,10 @@ results.chosen_x = [];
 results.chosen_y = [];
 tic;
 
-while kStep <= MAXSTEPS    
+while kStep <= MAXSTEPS
+    if rem(kStep, 20) == 0
+        fprintf('Simulation at iteration %d.\n', kStep);
+    end
 
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
@@ -144,7 +147,7 @@ while kStep <= MAXSTEPS
         results.chosen_y = [results.chosen_y; ...
             preNorm(outputs(9, kStep-1), y_train_min, y_train_max)];
         
-        results = learn_gp_hyperparameters_random(problem, model, iter, results);
+        results = learn_gp_hyperparameters_random(problem, model, iter, results, 'num_restarts', 0);
         
         % save errors
         [f_star_mean_random, f_star_variance_random, ~, ~, log_probabilities] = ...
@@ -290,4 +293,4 @@ plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
 
 %% Save results
-save random_sampling map_hyperparameters_random model X_chosen y_chosen
+save random_sampling map_hyperparameters_random model X_chosen y_chosen LP RMSE
