@@ -67,7 +67,7 @@ for idc = 1:numel(init_hyp.cov)
 end
 
 % prior on log noise
-priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 1)};
+priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 0.2^2)};
 % priors.lik  = {get_prior(@gaussian_prior, 0, 1)};
 
 % prior on constant mean
@@ -125,7 +125,10 @@ if flag ~= 0, error('check output flag'); end
 iter = 0;
 tic;
 
-while kStep <= MAXSTEPS    
+while kStep <= MAXSTEPS
+    if rem(kStep, 20) == 0
+        fprintf('Simulation at iteration %d.\n', kStep);
+    end
 
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
@@ -167,7 +170,7 @@ while kStep <= MAXSTEPS
         problem.candidate_x_star = preNorm(problem.candidate_x_star, X_train_min, X_train_max);
 
         % select best point
-        results = learn_gp_hyperparameters_doe(problem, model, iter, results);
+        results = learn_gp_hyperparameters_doe(problem, model, iter, results, 'num_restarts', 0);
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
         X_c_next = X_next(end,end-2:end);
         
@@ -348,3 +351,10 @@ ylabel('log probability')
 yyaxis right
 plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
+
+%% Save results
+map_hyperparameters = results.map_hyperparameters(end);
+X_chosen = X_chosen_active;
+y_chosen = y_chosen_active;
+
+save doe_sampling_ig map_hyperparameters model X_chosen y_chosen LP RMSE
