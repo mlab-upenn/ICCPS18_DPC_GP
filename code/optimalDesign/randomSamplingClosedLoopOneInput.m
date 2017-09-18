@@ -3,7 +3,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 2;
+SimDays = 7;
 n_steps = 25;
 
 % control variables
@@ -24,7 +24,6 @@ ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
                        'ChwSP', linspace(ChwMin,ChwMax,n_steps));
 
 % control features will be in same order
-% select only 3 at a time
 ctrl_vars = {'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
@@ -59,8 +58,6 @@ load('init_hyp.mat');
 % uncomment to calculate new initial hyperparams
 n_samples_init = 500;
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
-
-true_hyp = init_hyp;
 
 % priors on each log covariance parameter
 priors.cov = cell(1,numel(init_hyp.cov));
@@ -109,7 +106,8 @@ kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep; 
 
 % type of random sampling
-sample_type = 'prbs';
+% sample_type = 'prbs';
+sample_type = 'uniform';
 switch sample_type
     case 'uniform'
         ClgSPrand = ClgMin+(ClgMax-ClgMin)*rand(1,MAXSTEPS);
@@ -148,7 +146,10 @@ results.chosen_y = [];
 tic;
 
 while kStep <= MAXSTEPS    
-
+    if rem(kStep, 20) == 0
+        fprintf('Simulation at iteration %d.\n', kStep);
+    end
+    
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
@@ -167,7 +168,7 @@ while kStep <= MAXSTEPS
         results.chosen_y = [results.chosen_y; ...
             preNorm(outputs(9, kStep-1), y_train_min, y_train_max)];
         
-        results = learn_gp_hyperparameters_random(problem, model, iter, results);
+        results = learn_gp_hyperparameters_random(problem, model, iter, results, 'num_restarts', 0);
         
         % save errors
         [f_star_mean_random, f_star_variance_random, ~, ~, log_probabilities] = ...
@@ -319,3 +320,8 @@ figure('Name', 'random sampling'); grid on;
 plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
 ylabel(ctrl_vars{1})
 xlabel('sample number')
+
+%% Save results
+
+saveStr = ['random_sampling_oneinput_' sample_type '_' num2str(SimDays) 'days.mat'];
+save(saveStr, 'model', 'X_chosen', 'y_chosen', 'LP', 'RMSE');

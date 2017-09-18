@@ -53,10 +53,9 @@ model.likelihood          = @likGauss;
 load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-% n_samples_init = 1000;
-% init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
-
-true_hyp = init_hyp;
+n_samples_init = 500;
+init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
+% save('init_hyp', 'init_hyp')
 
 % priors on each log covariance parameter
 priors.cov = cell(1,numel(init_hyp.cov));

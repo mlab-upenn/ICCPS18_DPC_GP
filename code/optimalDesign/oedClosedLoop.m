@@ -50,14 +50,12 @@ model.covariance_function = {@ard_sqdexp_covariance};
 model.likelihood          = @likGauss;
 
 % used saved initial hyperparameters
-load('init_hyp.mat');
+% load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 n_samples_init = 500;
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
-
-true_hyp = init_hyp;
 
 % priors on each log covariance parameter
 priors.cov = cell(1,numel(init_hyp.cov));

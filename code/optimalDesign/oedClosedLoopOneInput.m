@@ -1,9 +1,9 @@
 
-rng(0);
+rng(1);
 
 %% define variables to control
 
-SimDays = 1;
+SimDays = 2;
 n_steps = 25;
 
 ClgMin = 22;
@@ -23,7 +23,6 @@ ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
                        'ChwSP', linspace(ChwMin,ChwMax,n_steps));
                    
 % control features will be in same order
-% select only 3 at a time
 ctrl_vars = {'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
@@ -59,8 +58,6 @@ load('init_hyp.mat');
 n_samples_init = 500;
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
-
-true_hyp = init_hyp;
 
 % priors on each log covariance parameter
 priors.cov = cell(1,numel(init_hyp.cov));
@@ -129,7 +126,10 @@ iter = 0;
 tic;
 
 while kStep <= MAXSTEPS    
-
+    if rem(kStep, 20) == 0
+        fprintf('Simulation at iteration %d.\n', kStep);
+    end
+    
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
@@ -170,7 +170,7 @@ while kStep <= MAXSTEPS
         problem.candidate_x_star = preNorm(problem.candidate_x_star, X_train_min, X_train_max);
 
         % select best point
-        results = learn_gp_hyperparameters_doe(problem, model, iter, results);
+        results = learn_gp_hyperparameters_doe(problem, model, iter, results, 'num_restarts', 0);
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
         X_c_next = X_next(end,end);
         
@@ -359,3 +359,10 @@ plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
 ylabel(ctrl_vars{1})
 xlabel('sample number')
 
+%% Save results
+map_hyperparameters = results.map_hyperparameters(end);
+X_chosen = X_chosen_active;
+y_chosen = y_chosen_active;
+
+saveStr = ['doe_sampling_oneinput_' problem.type '_' num2str(SimDays) 'days.mat'];
+save(saveStr, 'model', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
