@@ -3,7 +3,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 2;
+SimDays = 1;
 n_steps = 25;
 
 ClgMin = 22;
@@ -56,6 +56,7 @@ load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 n_samples_init = 500;
+datafile = 'init-LargeHotel';
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
 
@@ -365,4 +366,4 @@ X_chosen = X_chosen_active;
 y_chosen = y_chosen_active;
 
 saveStr = ['doe_sampling_oneinput_' problem.type '_' num2str(SimDays) 'days.mat'];
-save(saveStr, 'model', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+save(saveStr, 'model', 'map_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');

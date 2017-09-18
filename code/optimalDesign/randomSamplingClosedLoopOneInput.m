@@ -3,7 +3,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 7;
+SimDays = 1;
 n_steps = 25;
 
 % control variables
@@ -57,6 +57,7 @@ load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
 n_samples_init = 500;
+datafile = 'init-LargeHotel';
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 
 % priors on each log covariance parameter
@@ -323,5 +324,6 @@ xlabel('sample number')
 
 %% Save results
 
+map_hyperparameters = map_hyperparameters_random;
 saveStr = ['random_sampling_oneinput_' sample_type '_' num2str(SimDays) 'days.mat'];
-save(saveStr, 'model', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+save(saveStr, 'model', 'map_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
