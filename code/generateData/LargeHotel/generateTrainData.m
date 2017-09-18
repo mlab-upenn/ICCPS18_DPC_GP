@@ -19,7 +19,7 @@ end
 %% The main simulation loop
 
 EPTimeStep = 4;
-SimDays = 30+31+31;
+SimDays = 30;
 deltaT = (60/EPTimeStep)*60;
 kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep;  % max simulation time = 7 days
@@ -44,9 +44,9 @@ for ids = 1:SimDays
     DRS = [DRS;lhsdesign(1*96,8)];
 end
 
-% data_type = 'unconstrained';
+data_type = 'unconstrained';
 % data_type = 'constrained';
-data_type = 'rulebased';
+% data_type = 'rulebased';
 
 if strcmp(data_type, 'unconstrained')
     SPmin = repmat([22, 21, 24, 19, 22, 21, 12, 3.7], size(DRS,1),1);

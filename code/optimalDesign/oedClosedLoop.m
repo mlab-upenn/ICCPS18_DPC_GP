@@ -1,4 +1,5 @@
 
+clear; close all;
 rng(1);
 
 %% define variables to control
