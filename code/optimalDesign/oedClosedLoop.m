@@ -53,7 +53,8 @@ model.likelihood          = @likGauss;
 % load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-n_samples_init = 500;
+n_samples_init = 1000;
+datafile = 'init-LargeHotel';
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
 
@@ -65,7 +66,7 @@ for idc = 1:numel(init_hyp.cov)
 end
 
 % prior on log noise
-priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 0.2^2)};
+priors.lik  = {get_prior(@gaussian_prior, init_hyp.lik, 1)};
 % priors.lik  = {get_prior(@gaussian_prior, 0, 1)};
 
 % prior on constant mean
@@ -351,8 +352,10 @@ plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
 
 %% Save results
+
 map_hyperparameters = results.map_hyperparameters(end);
 X_chosen = X_chosen_active;
 y_chosen = y_chosen_active;
 
-save doe_sampling_ig map_hyperparameters model X_chosen y_chosen LP RMSE
+saveStr = ['doe_sampling_' problem.type '_' num2str(SimDays) 'days.mat'];
+save(saveStr, 'model', 'map_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');

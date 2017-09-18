@@ -53,7 +53,8 @@ model.likelihood          = @likGauss;
 load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-n_samples_init = 500;
+n_samples_init = 1000;
+datafile = 'init-LargeHotel';
 init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
 
@@ -292,4 +293,7 @@ plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
 
 %% Save results
-save random_sampling map_hyperparameters_random model X_chosen y_chosen LP RMSE
+
+map_hyperparameters = map_hyperparameters_random;
+saveStr = ['random_sampling_' sample_type '_' num2str(SimDays) 'days.mat'];
+save(saveStr, 'model', 'map_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
