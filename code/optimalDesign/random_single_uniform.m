@@ -44,31 +44,6 @@ datafile = 'test-LargeHotel';
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
-%% setup GP model
-
-D = size(X,2); % input space dimension
-
-% covariance function
-hyp0.cov = [...
-    zeros(1, D), 0, ...
-    ]';
-model.covariance_function = {'covSEard'};
-
-% gaussian likelihood function
-hyp0.lik = log(0.0005);
-model.likelihood = @likGauss;
-
-% inference method
-model.inference_method = @infExact;
-
-% choose mean function
-hyp0.mean = 0;
-model.mean_function = @meanConst;
-
-% solver
-solver = @minimize_minfunc;
-options = struct('Display', 'off', 'MaxFunEvals', 100);
-
 %% create an mlepProcess instance and configure it
 
 cd('energyPlusModels/LargeHotel/')
@@ -157,13 +132,9 @@ while kStep <= MAXSTEPS
             preNorm(outputs(9, kStep-1), y_train_min, y_train_max)];
         
         % training
-        
 %         if iter==n_samples
-        [hyp, flogtheta, ~] = trainGParx(hyp0, model.inference_method,...
-                                        model.mean_function, model.covariance_function, ...
-                                        model.likelihood, results.chosen_x, results.chosen_y,...
-                                        solver, options);
-        results.hyperparameters(iter) = hyp;
+        model = train_gp(results.chosen_x, results.chosen_y);
+        results.hyperparameters(iter) = model.hyp;
         
         % save errors
         [f_star_mean_random, f_star_variance_random, ~, ~, log_probabilities] = ...
@@ -330,7 +301,6 @@ xlabel('sample number')
 
 %% Save results
 
-all_hyperparameters = results.hyperparameters;
-final_hyperparameters = results.hyperparameters(iter);
+hyperparameters = results.hyperparameters;
 saveStr = ['random_sampling_' sample_type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'all_hyperparameters', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+save(saveStr, 'model', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');

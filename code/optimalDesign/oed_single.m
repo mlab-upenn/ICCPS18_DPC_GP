@@ -111,6 +111,8 @@ outputs = nan(9,MAXSTEPS);
 inputs = nan(8,MAXSTEPS);
 LP = zeros(1,n_samples);
 RMSE = zeros(1,n_samples);
+LP_map = zeros(1,n_samples);
+RMSE_map = zeros(1,n_samples);
 
 % initialize: parse it to obtain building outputs
 packet = ep.read;
@@ -295,7 +297,7 @@ while kStep <= MAXSTEPS
         results.chosen_y = [results.chosen_y; ...
             preNorm(outputs(9, kStep), y_train_min, y_train_max)];
         
-        % save errors
+        % save errors with map
         [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
             gp(results.map_hyperparameters(iter), model.inference_method, ...
             model.mean_function, model.covariance_function, model.likelihood, ...
@@ -303,8 +305,23 @@ while kStep <= MAXSTEPS
         f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
         f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
         
+        LP_map(iter) = mean(log_probabilities);
+        RMSE_map(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
+        
+        % save errors without map
+        model_ = train_gp(results.chosen_x, results.chosen_y);
+        results.hyperparameters(iter) = model_.hyp;
+        
+        [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
+            gp(results.hyperparameters(iter), model_.inference_method, ...
+            model_.mean_function, model_.covariance_function, model_.likelihood, ...
+            results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
+        f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
+        f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
+        
         LP(iter) = mean(log_probabilities);
-        RMSE(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
+        RMSE(iter) = sqrt(mean((f_star_mean_active-y_test).^2));        
+
         
     end
     
@@ -322,52 +339,41 @@ disp(['Stopped with flag ' num2str(flag)]);
 
 %% DOE post processing
 
-D = size(X,2); % input space dimension
-
-% covariance function
-hyp0.cov = [...
-    zeros(1, D), 0, ...
-    ]';
-covariance_function = {'covSEard'};
-
-% gaussian likelihood function
-hyp0.lik = log(0.0005);
-likelihood = @likGauss;
-
-% inference method
-inference_method = @infExact;
-
-% choose mean function
-hyp0.mean = 0;
-mean_function = @meanConst;
-
-% solver
-solver = @minimize_minfunc;
-options = struct('Display', 'off', 'MaxFunEvals', 100);
-
-[hyp, flogtheta, ~] = trainGParx(hyp0, inference_method,...
-                                       mean_function, covariance_function, ...
-                                       likelihood, results.chosen_x, results.chosen_y,...
-                                       solver, options);
-                                    
+% errors without map estimate
 [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-    gp(hyp, inference_method, ...
-       mean_function, covariance_function, likelihood, ...
+    gp(results.hyperparameters(end), model_.inference_method, ...
+       model_.mean_function, model_.covariance_function, model_.likelihood, ...
        results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-   
+        
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
-report_active = sprintf('\nACTIVE: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
+report_active = sprintf('\nACTIVE without MAP: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
                  mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
 fprintf('%s\n', report_active);
 
 loss(y_test, f_star_mean_active, f_star_variance_active);
 
-X_chosen_active = results.chosen_x;
-y_chosen_active = results.chosen_y;
-X_chosen_active = postNorm(X_chosen_active, X_train_min, X_train_max);
-y_chosen_active = postNorm(y_chosen_active, y_train_min, y_train_max);
+% errors with map estimate                                 
+[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
+    gp(results.map_hyperparameters(end), model.inference_method, ...
+       model.mean_function, model.covariance_function, model.likelihood, ...
+       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
+   
+f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
+f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
+
+report_active = sprintf('\nACTIVE with MAP: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
+                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
+fprintf('%s\n', report_active);
+
+loss(y_test, f_star_mean_active, f_star_variance_active);
+
+% chosen samples
+X_chosen = results.chosen_x;
+y_chosen = results.chosen_y;
+X_chosen = postNorm(X_chosen, X_train_min, X_train_max);
+y_chosen = postNorm(y_chosen, y_train_min, y_train_max);
 
 % plotgp for active learning
 t = [0:length(y_test)-1]';
@@ -394,10 +400,8 @@ xlabel('sample number')
 
 %% Save results
 
-final_hyperparameters = hyp;
-map_hyperparameters = results.map_hyperparameters(end);
-X_chosen = X_chosen_active;
-y_chosen = y_chosen_active;
+hyperparameters = results.hyperparameters;
+map_hyperparameters = results.map_hyperparameters;
 
 saveStr = ['doe_sampling_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'map_hyperparameters', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+save(saveStr, 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
