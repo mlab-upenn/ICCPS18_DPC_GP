@@ -158,7 +158,7 @@ while kStep <= MAXSTEPS
         
         % training
         
-        if iter==n_samples
+%         if iter==n_samples
         [hyp, flogtheta, ~] = trainGParx(hyp0, model.inference_method,...
                                         model.mean_function, model.covariance_function, ...
                                         model.likelihood, results.chosen_x, results.chosen_y,...
@@ -175,7 +175,7 @@ while kStep <= MAXSTEPS
         
         LP(iter) = mean(log_probabilities);
         RMSE(iter) = sqrt(mean((f_star_mean_random-y_test).^2));
-        end
+%         end
         
     end
     
@@ -330,6 +330,7 @@ xlabel('sample number')
 
 %% Save results
 
+all_hyperparameters = results.hyperparameters;
 final_hyperparameters = results.hyperparameters(iter);
 saveStr = ['random_sampling_' sample_type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+save(saveStr, 'model', 'all_hyperparameters', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');

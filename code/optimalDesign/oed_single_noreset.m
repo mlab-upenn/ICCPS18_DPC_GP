@@ -129,11 +129,6 @@ while kStep <= MAXSTEPS
         fprintf('Simulation at iteration %d.\n', kStep);
     end
     
-    % reset prior after few samples
-    if kStep > 250 && rem(kStep, 50) == 0
-        model = reset_prior(model, results);
-    end
-    
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
@@ -322,10 +317,39 @@ disp(['Stopped with flag ' num2str(flag)]);
 
 %% DOE post processing
 
+D = size(X,2); % input space dimension
+
+% covariance function
+hyp0.cov = [...
+    zeros(1, D), 0, ...
+    ]';
+covariance_function = {'covSEard'};
+
+% gaussian likelihood function
+hyp0.lik = log(0.0005);
+likelihood = @likGauss;
+
+% inference method
+inference_method = @infExact;
+
+% choose mean function
+hyp0.mean = 0;
+mean_function = @meanConst;
+
+% solver
+solver = @minimize_minfunc;
+options = struct('Display', 'off', 'MaxFunEvals', 100);
+
+[hyp, flogtheta, ~] = trainGParx(hyp0, inference_method,...
+                                       mean_function, covariance_function, ...
+                                       likelihood, results.chosen_x, results.chosen_y,...
+                                       solver, options);
+                                    
 [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-    gp(results.map_hyperparameters(end), model.inference_method, ...
-       model.mean_function, model.covariance_function, model.likelihood, ...
+    gp(hyp, inference_method, ...
+       mean_function, covariance_function, likelihood, ...
        results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
+   
 f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
 f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
 
@@ -365,9 +389,10 @@ xlabel('sample number')
 
 %% Save results
 
-final_hyperparameters = results.map_hyperparameters(end);
+final_hyperparameters = hyp;
+map_hyperparameters = results.map_hyperparameters(end);
 X_chosen = X_chosen_active;
 y_chosen = y_chosen_active;
 
-saveStr = ['doe_sampling_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+saveStr = ['doe_sampling_noreset_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
+save(saveStr, 'model', 'map_hyperparameters', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
