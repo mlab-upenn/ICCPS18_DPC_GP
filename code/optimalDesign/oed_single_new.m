@@ -53,8 +53,8 @@ model.likelihood          = @likGauss;
 % load('init_hyp.mat');
 
 % uncomment to calculate new initial hyperparams
-n_samples_init = 500;
-datafile = 'init-LargeHotel';
+% n_samples_init = 500;
+% datafile = 'init-LargeHotel';
 % init_hyp = initial_model(datafile, n_samples_init, order_autoreg, ctrl_vars);
 % save('init_hyp', 'init_hyp')
 
@@ -130,7 +130,7 @@ while kStep <= MAXSTEPS
     end
     
     % reset prior after few samples
-    if kStep > 140 && rem(kStep, 50) == 0
+    if kStep > 250 && rem(kStep, 50) == 0
         model = reset_prior(model, results);
     end
     
