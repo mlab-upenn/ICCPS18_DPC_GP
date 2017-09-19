@@ -129,6 +129,11 @@ while kStep <= MAXSTEPS
         fprintf('Simulation at iteration %d.\n', kStep);
     end
     
+    % reset prior after few samples
+    if kStep > 140 && rem(kStep, 50) == 0
+        model = reset_prior(model, results);
+    end
+    
     % compute next set-points
     dayTime = mod(eptime, 86400);  % time in current day
     
@@ -359,9 +364,10 @@ ylabel(ctrl_vars{1})
 xlabel('sample number')
 
 %% Save results
-map_hyperparameters = results.map_hyperparameters(end);
+
+final_hyperparameters = results.map_hyperparameters(end);
 X_chosen = X_chosen_active;
 y_chosen = y_chosen_active;
 
-saveStr = ['doe_sampling_oneinput_' problem.type '_' num2str(SimDays) 'days.mat'];
-save(saveStr, 'model', 'map_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+saveStr = ['doe_sampling_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
+save(saveStr, 'model', 'final_hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
