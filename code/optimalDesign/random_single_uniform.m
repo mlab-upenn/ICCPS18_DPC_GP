@@ -4,7 +4,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 7;
+SimDays = 10;
 n_steps = 25;
 
 % control variables
