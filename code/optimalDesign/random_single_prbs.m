@@ -293,10 +293,12 @@ ylabel('RMSE')
 
 ctrl_vars_all = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 ctrl_idx = [1, 3, 5, 7, 8];
-figure('Name', 'random sampling'); grid on;
-plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
-ylabel(ctrl_vars{1})
-xlabel('sample number')
+for idn = 1:numel(ctrl_vars)
+    figure('Name', 'random sampling'); grid on;
+    plot(inputs(ctrl_idx(strcmp(ctrl_vars{idn},ctrl_vars_all)),:), 'LineWidth', 2)
+    ylabel(ctrl_vars{idn})
+    xlabel('sample number')
+end
 
 %% Save results
 
