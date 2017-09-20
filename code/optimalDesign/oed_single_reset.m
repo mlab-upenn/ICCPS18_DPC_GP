@@ -4,9 +4,10 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 7;
+SimDays = 1;
 n_steps = 25;
 
+% control variables
 ClgMin = 22;
 ClgMax = 32;
 KitchenClgMin = 24;
@@ -25,6 +26,7 @@ ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
                    
 % control features will be in same order
 ctrl_vars = {'ChwSP'};
+% ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 
 % normalize data, except for min and max this data won't be used again
 order_autoreg = 3;
@@ -41,7 +43,17 @@ datafile = 'test-LargeHotel';
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
-X_c_star = eval(['ctrl_vars_all.' ctrl_vars{1}])';
+if numel(ctrl_vars)==1
+    X_c_star = eval(['ctrl_vars_all.' ctrl_vars{1}])';
+else
+    [X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
+                                  eval(['ctrl_vars_all.' ctrl_vars{3}]));
+    X_star = X_grid(:);
+    Y_star = Y_grid(:);
+    Z_star = Z_grid(:);
+    X_c_star = [X_star, Y_star, Z_star];
+end
 
 %% setup GP model
 
@@ -178,7 +190,7 @@ while kStep <= MAXSTEPS
         % select best point
         results = learn_gp_hyperparameters_doe(problem, model, iter, results, 'num_restarts', 0);
         X_next = postNorm(results.chosen_x, X_train_min, X_train_max);
-        X_c_next = X_next(end,end);
+        X_c_next = X_next(end,end-numel(ctrl_vars)+1:end);
         
         % need this because some inputs will follow rule-based schedules
         if dayTime <= 7*3600
@@ -393,15 +405,17 @@ ylabel('RMSE')
 
 ctrl_vars_all = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 ctrl_idx = [1, 3, 5, 7, 8];
-figure('Name', 'active learning'); grid on;
-plot(inputs(ctrl_idx(strcmp(ctrl_vars{1},ctrl_vars_all)),:), 'LineWidth', 2)
-ylabel(ctrl_vars{1})
-xlabel('sample number')
+for idn = 1:numel(ctrl_vars)
+    figure('Name', 'active learning'); grid on;
+    plot(inputs(ctrl_idx(strcmp(ctrl_vars{idn},ctrl_vars_all)),:), 'LineWidth', 2)
+    ylabel(ctrl_vars{idn})
+    xlabel('sample number')
+end
 
 %% Save results
 
 hyperparameters = results.hyperparameters;
 map_hyperparameters = results.map_hyperparameters;
 
-saveStr = ['doe_sampling_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
+saveStr = ['results/doe_sampling_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
 save(saveStr, 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');

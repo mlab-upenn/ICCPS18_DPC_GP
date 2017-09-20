@@ -285,7 +285,6 @@ axis1(1).XLim = [0 size(X_test,1)];
 
 figure('Name', 'random sampling'); grid on;
 yyaxis left
-LP(LP<-100) = NaN;
 plot(LP, 'LineWidth', 2)
 ylabel('log probability')
 yyaxis right
@@ -302,5 +301,5 @@ xlabel('sample number')
 %% Save results
 
 hyperparameters = results.hyperparameters;
-saveStr = ['random_sampling_' sample_type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
+saveStr = ['results/random_sampling_' sample_type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
 save(saveStr, 'model', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
