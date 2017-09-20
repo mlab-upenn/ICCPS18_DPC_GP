@@ -303,5 +303,7 @@ end
 %% Save results
 
 hyperparameters = results.hyperparameters;
-saveStr = ['results/random_sampling_' sample_type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+[YY, MM, DD, HH, MINS, ~] = datevec(now);
+saveStr = sprintf('random_sampling_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
+    sample_type, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
+save(fullfile('results', saveStr), 'model', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
