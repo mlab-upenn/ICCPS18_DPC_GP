@@ -1,7 +1,9 @@
 
+no_inputs = 1;
+no_days = 10;
 
 %% OED information gain reset
-load doe_sampling_reset_IG_1input_7day.mat
+load(['doe_sampling_reset_IG_' num2str(no_inputs) 'input_' num2str(no_days) 'day.mat'])
 LP(LP<-5) = NaN;
 
 figure(1);  hold on; grid on; box on;
@@ -13,7 +15,7 @@ h2igr = plot(RMSE_map, 'LineWidth', 2);
 ylabel('RMSE')
 
 %% OED information gain noreset
-load doe_sampling_noreset_IG_1input_7day.mat
+load(['doe_sampling_noreset_IG_' num2str(no_inputs) 'input_' num2str(no_days) 'day.mat'])
 LP(LP<-5) = NaN;
 
 figure(1);  hold on; grid on; box on;
@@ -26,7 +28,7 @@ ylabel('RMSE')
 
 %% RANDOM uniform
 
-load random_sampling_uniform_1input_7day.mat
+load(['random_sampling_uniform_' num2str(no_inputs) 'input_' num2str(no_days) 'day.mat'])
 LP(LP<-5) = NaN;
 
 figure(1)
@@ -39,7 +41,7 @@ legend([h2igr, h2ig, h2un], 'ig reset', 'ig noreset', 'uniform', 'Location', 'Be
 
 %% RANDOM prbs
 
-% load random_sampling_prbs_1input_7day.mat
+% load(['random_sampling_prbs_' num2str(no_inputs) 'input_' num2str(no_inputs) 'day.mat'])
 % LP(LP<-5) = NaN;
 % 
 % figure(1)
