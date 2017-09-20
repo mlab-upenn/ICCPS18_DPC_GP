@@ -417,5 +417,7 @@ end
 hyperparameters = results.hyperparameters;
 map_hyperparameters = results.map_hyperparameters;
 
-saveStr = ['results/doe_sampling_reset_' problem.type '_' num2str(numel(ctrl_vars)) 'input_' num2str(SimDays) 'day.mat'];
-save(saveStr, 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
+[YY, MM, DD, HH, MINS, ~] = datevec(now);
+saveStr = sprintf('doe_sampling_reset_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
+    problem.type, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
+save(fullfile('results', saveStr), 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
