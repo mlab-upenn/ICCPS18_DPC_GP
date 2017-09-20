@@ -4,7 +4,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 10;
+SimDays = 15;
 n_steps = 25;
 
 % control variables
@@ -349,6 +349,19 @@ cd('../../')
 
 disp(['Stopped with flag ' num2str(flag)]);
 
+%% save data
+
+data.Ambient = outputs(6,:)';
+data.Humidity =  outputs(7,:)';
+data.TotalLoad =  outputs(9,:)';
+data.TOD =  outputs(3,:)';
+data.DOW = outputs(4,:)';
+data.ClgSP = inputs(1,:)';
+data.KitchenClgSP = inputs(3,:)';
+data.GuestClgSP = inputs(5,:)';
+data.SupplyAirSP = inputs(7,:)';
+data.ChwSP = inputs(8,:)';
+
 %% DOE post processing
 
 % errors without map estimate
@@ -421,3 +434,5 @@ map_hyperparameters = results.map_hyperparameters;
 saveStr = sprintf('doe_sampling_reset_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
     problem.type, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
 save(fullfile('results', saveStr), 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
+
+save(fullfile('../data', saveStr),'-struct','data');

@@ -4,7 +4,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 10;
+SimDays = 15;
 n_steps = 25;
 
 % control variables
@@ -307,3 +307,5 @@ hyperparameters = results.hyperparameters;
 saveStr = sprintf('random_sampling_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
     sample_type, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
 save(fullfile('results', saveStr), 'model', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE');
+
+save(fullfile('../data', saveStr),'-struct','data');
