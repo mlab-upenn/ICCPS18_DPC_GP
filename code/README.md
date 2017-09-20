@@ -14,6 +14,15 @@ Note that the inputs are up to `k-1`, not `k`.
 
 ## Output ##
 
+To help ease the transition from the experiment step to the control step,
+we will have separate training code that is compatible with the control code.
+The experiment code should write the raw data and settings of the model to
+a data file, which will be used by the training code to learn and save the
+final model in the correct form for control.
+
+A raw data file (MAT) should contain the unnormalized variables as in the
+original data files (in /data folder) but from the experiment.
+
 # Training #
 
 Two folders involved:
