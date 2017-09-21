@@ -1,43 +1,68 @@
-function valResults = control_validation_gpml(trainResults, valData, lag_y, lag_Ta, lag_humid, lag_dr, remove_nonworkdays, stepsahead, norm_y_min, norm_y_max, hours)
-%trainResults is the result structure returned by the training function
-%control_*train.m
-% lag_* are the lagged outputs and non-temporal inputs.
-% Each is a vector of lag values, and only those are considered as inputs.
-% 
-% The inputs are ordered as followed:
-% [ar_outputs, dr_signals, Ta_inputs, humid_inputs, temporal_inputs]
-% where
-%   dr_signals = [s(k-L1), s(k-L12),..., s(k-L1p)] where Li in lag_dr
-%   ar_outpus = [y(k-L1), y(k-L2),..., y(k-Lp)] where Li in lag_y
-%   Ta_inputs = [Ta(k-L1), Ta(k-L2),...,Ta(k-Lp)] where Li in lag_Ta
-%   Ta_inputs = [h(k-L1), h(k-L2),...,h(k-Lp)] where Li in lag_humid
-%   temporal_inputs = [hour_of_day, day_of_week]
+function valResults = control_validation_gpml(model, hyp, Xtrain, Ytrain, Xtest, Ytest, norm_y_min, norm_y_max)
+% Validates a GP model.
+% INPUTS:
+%   model : the model structure, see CONTROL_TRAIN_GPML.
+%   hyp : the hyperparameter structure (after training, e.g., with
+%           CONTROL_TRAIN_GPML).
+%   Xtrain, Ytrain : original inputs and targets for training.
+%   Xtest, Ytest : inputs and targets for validation.
+%   norm_y_min, norm_y_max : optional values to de-normalize the output.
+%           If they are provided, the predictive outputs will be
+%           de-normalized before loss metrics are computed against Ytest.
 %
-% For stepsahead, see construct_data() in this folder.
+% Regarding normalization, the following must hold true:
+%   - Xtrain and Ytrain are normalized if the GP model requires so; in
+%       other words, they must be exactly the data used to train the GP
+%       model and to perform prediction.
+%   - Ytest is always unnormalized.
+%   - Xtest is normalized if the GP model requires normalized inputs.
 %
-% hours, if present, will specify the hours we take into the learning; it's
-% of the form [starthour, endhour] for starthour <= t < endhour.
+% OUTPUTS: a structure of fields
+%   .y : the predictive outputs (unnormalized)
+%   .s2 : the predictive variance (unnormalized)
+%   .y_norm, .s2_norm : in the case the GP's output is normalized
+%       (norm_y_min and norm_y_max are provided), these are the normalized
+%       / original outputs from the GP model.
+%   .loss_rmsq, .loss_ae, .loss_se, .loss_lpd, .loss_mrse, .loss_smse,
+%   .loss_msll are some loss measures.
 
+narginchk(4, inf);
 
-if ~exist('stepsahead', 'var')
-    stepsahead = 0;
+nD = size(Xtrain, 2);    % input dimension
+assert(size(Xtrain,1) == size(Ytrain,1), 'Xtrain and Ytrain must have the same number of rows.');
+assert(size(Xtest, 2) == nD, 'Xtest must have the same dimension as Xtrain.');
+assert(size(Xtest,1) == size(Ytest,1), 'Xtest and Ytest must have the same number of rows.');
+
+% Set default model's functions
+model = get_default_model(model);
+
+% Validate the hyperparameters
+validate_gp(hyp, model.inference_method, model.mean_function, model.covariance_function, model.likelihood, nD);
+
+% Normalization
+has_normalization = false;
+if nargin > 6
+    assert(nargin >= 8, 'Not enough arguments for normalization parameters.');
+    assert(isscalar(norm_y_min) && isscalar(norm_y_max) && norm_y_min < norm_y_max, 'Invalid normalization parameters.');
+    has_normalization = true;
 end
 
 valResults = struct();
-if ~exist('hours', 'var')
-    hours = [];
+[valResults.y, valResults.s2] = gp(hyp, model.inference_method, ...
+    model.mean_function, model.covariance_function, model.likelihood, ...
+    Xtrain, Ytrain, Xtest);
+
+% De-normalize the data if necessary
+if has_normalization
+    valResults.y_norm = valResults.y;
+    valResults.s2_norm = valResults.s2;
+    valResults.y = postNorm(valResults.y_norm, norm_y_min, norm_y_max);
+    valResults.s2 = postNormVar(valResults.s2_norm, norm_y_min, norm_y_max);
 end
-[valResults.inputs, valResults.target] = construct_data(valData, lag_y, lag_Ta, lag_humid, lag_dr, remove_nonworkdays, stepsahead, valData.y, hours);
-
-[valResults.y_norm, valResults.s2_norm] = gp(trainResults.hyp, @infExact, trainResults.mean, trainResults.cov, trainResults.lik,...
-    trainResults.inputs, trainResults.target, valResults.inputs);
-
-% De-normalize the data
-valResults.y = postNorm(valResults.y_norm, norm_y_min, norm_y_max);
-valResults.s2 = postNormVar(valResults.s2_norm, norm_y_min, norm_y_max);
 
 % Compute some loss measures
 [valResults.loss_ae, valResults.loss_se, valResults.loss_lpd, valResults.loss_mrse, valResults.loss_smse, valResults.loss_msll] = ...
-    loss(valResults.target, valResults.y, valResults.s2);
+    loss(Ytest, valResults.y, valResults.s2);
+valResults.loss_rmse = sqrt(mean((Ytest - valResults.y).^2));
 
 end

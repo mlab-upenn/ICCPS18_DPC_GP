@@ -9,116 +9,204 @@
 % This code uses/bases on the GPDyn toolbox.
 
 %% Load and prepare data
-RESULTS = load('../LargeHotel_Chicago_data_chiller_iidunif');
-matprefix = 'gpml_';
-dr_timestep = 15;       % The time step in minutes
-remove_nonworkdays = true;     % If we want to remove non-work days
-                               % (Sundays and holidays)
-
-%working_hours = [8,22];     % working hours, during which we want to learn the models
-working_hours = [];
-                               
+dr_timestep = 15;       % The time step in minutes                               
 stepsperhour = 60 / dr_timestep;
 
-% Construct the identification data and validation data (for feature
-% selection).
+% UPDATE the data_train_type and postfix as well
+
+% datafname = 'random_sampling_uniform_3input_15day_20170921_0625.mat';
+% data_train_type = 'random_sampling_uniform_3input';
+
+datafname = 'doe_sampling_noreset_IG_3input_15day_20170921_1052.mat';
+data_train_type = 'doe_sampling_noreset_IG_3input';
+
+% datafname = 'random_sampling_prbs_3input_15day_20170921_0742';
+% data_train_type = 'random_sampling_prbs_3input';
+
+data_train = load(fullfile('..', 'data', datafname));
+
+postfix = 'prior_3days_final';
 
 % Number of data points to use for identification
-ident_len = 3*7 * (24*stepsperhour);
+ident_len = [1, min(length(data_train.TOD), 24*stepsperhour*3)];
+data_train = slice_data(data_train, ident_len);
 
-% Number of data points to use for validation (right after the ident data)
-val_len = 2*7 * (24*stepsperhour);
+% Normalize the data (not all fields)
+normalized_fields = {'Ambient', 'Humidity', 'TotalLoad', 'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+[data_train_norm, normparams] = normalize_data(data_train, normalized_fields);
 
-% Some of the data values are shifted by one step (by EnergyPlus), e.g.
-% Power[k+1] actually corresponds to the time step t_k (hence u[k]).
-% However, as GPDyn (specifically its construct() function) assumes the
-% model: y[k] = f(y[k-1], ... , y[k-lag_y], u[k-1], ... , u[k-lag_u])
-% we should not shift these data values when loading them from the MAT file
+datafname = 'test-LargeHotel';
+data_test = load(fullfile('..', 'data', datafname));
 
-% Obtain the ident data
-identData = struct();
-
-identData.u_hour = RESULTS.Time(1:ident_len, 3:4) * [1; 1/60];  % 0-24
-% The day of week is shifted by one and is an input
-identData.u_day = RESULTS.Time((1:ident_len)+1, 6);  % 1-7
-if remove_nonworkdays
-    % not used in GP; also shifted by one-step
-    identData.u_holiday = RESULTS.Time((1:ident_len)+1, 7);
-end
-
-identData.u_ta = RESULTS.Ambient(1:ident_len,:);
-identData.u_humid = RESULTS.Humidity(1:ident_len,:) / 100;  % 0 - 1
-
-% DR signal is shifted 1 step
-identData.u_dr = RESULTS.DRSignal((1:ident_len)+1,:);  % -1 - 1
-
-% Output: interval demand, it is shifted one time step by EnergyPlus, but
-% we must load it as-is (see note above).
-identData.y = RESULTS.TotalLoad(1:ident_len,:) * 1e-3;  % in kW
-
-% Obtain the validation data
-% See notes above regarding indices, etc.
-valData = struct();
-
-valData.u_hour = RESULTS.Time((1:val_len)+ident_len, 3:4) * [1; 1/60];  % 0-24
-% The day of week is shifted by one and is an input
-valData.u_day = RESULTS.Time((1:val_len)+1+ident_len, 6);  % 1-7
-if remove_nonworkdays
-    % not used in GP
-    valData.u_holiday = RESULTS.Time((1:val_len)+1+ident_len, 7);
-end
-
-valData.u_ta = RESULTS.Ambient((1:val_len)+ident_len,:);
-valData.u_humid = RESULTS.Humidity((1:val_len)+ident_len,:) / 100;  % 0 - 1
-
-% DR signal is shifted 1 step
-valData.u_dr = RESULTS.DRSignal((1:val_len)+1+ident_len,:);  % -1 - 1
-
-valData.y = RESULTS.TotalLoad((1:val_len)+ident_len,:) * 1e-3;  % in kW
-
-
-% Normalizing data
-% We don't normalize time inputs (hour and day) because they are small and
-% will enter periodic covariance functions (which implicitly convert the
-% input to [-1,1] range.
-%
-% We only normalize inputs that have large ranges.
-%
-% For the output values, we need to normalize them before constructing the
-% training inputs (which include lagged output values) and targets, because
-% the normalization mapping of the output must be the same for consistent
-% multi-step simulation (it doesn't matter for 1-step prediction).
-
-% Normalize identification data and calculate the min and max values
-[identData.u_ta_norm, norm_ta_min, norm_ta_max] = preNorm(identData.u_ta);
-[identData.y_norm, norm_y_min, norm_y_max] = preNorm(identData.y);
-
-identData.norm_ta_min = norm_ta_min;
-identData.norm_ta_max = norm_ta_max;
-identData.norm_y_min = norm_y_min;
-identData.norm_y_max = norm_y_max;
-
-% Normalize the validation data using the computed min and max values
-valData.u_ta_norm = preNorm(valData.u_ta, norm_ta_min, norm_ta_max);
-valData.y_norm = preNorm(valData.y, norm_y_min, norm_y_max);  % Used to construct AR inputs for 1-step predictions
-
+% Normalize the data (same as for training)
+data_test_norm = normalize_data(data_test, normalized_fields, normparams);
 
 % Inline if
 iif = @(varargin) varargin{2*find([varargin{1:2:end}], 1, 'first')}();
 
-remove_humidity = false;
-
 %% Train and validate for each stepsahead value
 
-for stepsahead = 0:7
-    matfilename = sprintf('%sfeature_selection_ahead%02d', matprefix, stepsahead);
+for stepsahead = 0:0
+    %{
+    % OED (14days)
+    model_inputs = {...
+        {'Ambient', [1,0]}, ...
+        {'Humidity', 2}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ...
+        {'ClgSP', 2:-1:0}, ...
+        {'KitchenClgSP', 2:-1:0}, ...
+        {'GuestClgSP', [2, 1, 0]}, ...
+        {'SupplyAirSP', 3:-1:0}, ...
+        {'ChwSP', [3, 1, 0]}};
+    %}
+    %{
+    % OED (7 days)
+    model_inputs = {...
+        {'Ambient', [1,0]}, ...
+        {'Humidity', 2}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ...
+        {'ClgSP', 0}, ...
+        {'KitchenClgSP', 0}, ...
+        {'GuestClgSP', 0}, ...
+        {'SupplyAirSP', [2, 0]}, ...
+        {'ChwSP', [1, 0]}};
+    %}
     
-    lag_y = (6:-1:1) + stepsahead;
-    lag_Ta = (2+stepsahead):-1:1;
-    lag_humid = (2+stepsahead):-1:1;
-    lag_dr = (6+stepsahead):-1:1;
+    %{
+    % OED (3 days)
+    model_inputs = {...
+        {'Ambient', [1,0]}, ...
+        {'Humidity', 2}, ...
+        {'TotalLoad', 2:-1:1}, ...
+        'TOD', ...
+        {'ClgSP', 0}, ...
+        {'KitchenClgSP', 0}, ...
+        {'GuestClgSP', 0}, ...
+        {'SupplyAirSP', [2, 0]}, ...
+        {'ChwSP', [1, 0]}};
+    %}
     
-    Nins = numel(lag_y) + numel(lag_Ta) + numel(lag_humid) + numel(lag_dr);
+    %{
+    % Random Uniform (14days)
+    model_inputs = {...
+        {'Ambient', [3,0]}, ...
+        {'Humidity', [3, 0]}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ... 
+        {'ClgSP', 0}, ... 
+        {'KitchenClgSP', 0}, ...
+        {'GuestClgSP', 3:-1:0}, ...
+        {'SupplyAirSP', 2:-1:0}, ...
+        {'ChwSP', 3:-1:0}};
+
+    % Random uniform (7days)
+    model_inputs = {...
+        {'Ambient', [3,0]}, ...
+        {'Humidity', [3, 0]}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ... 
+        {'GuestClgSP', 0}, ... 
+        {'SupplyAirSP', 1:-1:0}, ...
+        {'ChwSP', 3:-1:0}};
+    %}
+    
+    %{
+    % Random uniform (3days)
+    model_inputs = {...
+        {'Ambient', [3,0]}, ...
+        {'Humidity', 0}, ...
+        {'TotalLoad', 3:-1:2}, ...
+        'TOD', ... %{'ClgSP', 0}, ... {'KitchenClgSP', 0}, ...
+        {'GuestClgSP', [2, 0]}, ... % {'SupplyAirSP', 2:-1:0}, ...
+        {'ChwSP', 1:-1:0}};
+    %}
+    
+    %{
+    % Random PRBS (14 days)
+    model_inputs = {...
+        {'Ambient', [1,0]}, ...
+        {'Humidity', 1}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ... %'DOW', ...
+        {'ClgSP', [3, 0]}, ... 
+        {'KitchenClgSP', [3, 0]}, ...
+        {'GuestClgSP', 3:-1:0}, ...
+        {'SupplyAirSP', 3:-1:0}, ...
+        {'ChwSP', 3:-1:0}};
+    %}
+    
+    %{
+    % Random PRBS (7 days)
+    model_inputs = {...
+        {'Ambient', [1,0]}, ...
+        {'Humidity', 1}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', ... %'DOW', ...
+        {'ClgSP', [3, 0]}, ... 
+        {'KitchenClgSP', [3, 0]}, ...
+        {'GuestClgSP', [3, 1, 0]}, ...
+        {'SupplyAirSP', [3, 1, 0]}, ...
+        {'ChwSP', [3, 1, 0]}};
+    %}
+    
+    %{
+    % Random PRBS (3 days)
+    model_inputs = {...
+        {'Ambient', [3 1]}, ...
+        {'Humidity', 0}, ...
+        {'TotalLoad', [3 2]}, ...
+        'TOD', ... %'DOW', ...
+        {'ClgSP', 3}, ... 
+        {'KitchenClgSP', 3}, ...
+        {'GuestClgSP', [1 0]}, ...
+        {'SupplyAirSP', [1 0]}, ...
+        {'ChwSP', [1 0]}};
+    %}
+    
+    % OED prior (14days)
+    model_inputs = {...
+        {'Ambient', 3:-1:0}, ...
+        {'Humidity', 3:-1:0}, ...
+        {'TotalLoad', 3:-1:1}, ...
+        'TOD', 'DOW', ...
+        {'ClgSP', 3:-1:0}, ...
+        {'KitchenClgSP', 3:-1:0}, ...
+        {'GuestClgSP', [3, 2, 1, 0]}, ...
+        {'SupplyAirSP', 3:-1:0}, ...
+        {'ChwSP', [3, 2, 1, 0]}};
+    
+    model_target = 'TotalLoad';
+    model_excepts = {'TOD', 'DOW'};
+    
+    [Xtrain_norm, Ytrain_norm] = construct_data(data_train_norm, model_inputs, model_target, stepsahead, model_excepts);
+
+    % SE-ARD
+    model = struct;
+    model.covariance_function = 'covSEard';
+    model.mean_function = 'meanConst';
+    model.likelihood = 'likGauss';
+    
+    % Assign prior (for OED)
+    nD = size(Xtrain_norm, 2);
+    model.prior = struct;
+    model.prior.cov = repmat({{'priorGauss', 0, 1}}, gpml_numhyps(model.covariance_function, nD), 1);
+    model.prior.mean = repmat({{'priorGauss', 0, 1}}, gpml_numhyps(model.mean_function, nD), 1);
+    model.prior.lik = repmat({{'priorGauss', 0, 1}}, gpml_numhyps(model.likelihood, nD), 1);
+    
+    hyp0 = struct;
+    %hyp0 = load('feature_selection/random_sampling_uniform_3input_ahead00_14days_final', 'training_result');
+    %hyp0 = hyp0.training_result.hyp;
+    %hyp0.cov(hyp0.cov > 10) = [];
+    
+    %{
+    hypnames = [arrayfun(@(d) ['y', num2str(d)], lag_y, 'UniformOutput', false),...
+        arrayfun(@(d) ['u', num2str(d)], lag_dr, 'UniformOutput', false),...
+        arrayfun(@(d) ['Ta', num2str(d)], lag_Ta, 'UniformOutput', false),...
+        arrayfun(@(d) ['h', num2str(d)], lag_humid, 'UniformOutput', false),...
+        {'t', 'sf'}]';
+    %}
     
     %{
     % SE * Matern
@@ -160,6 +248,7 @@ for stepsahead = 0:7
         {'sf', 't', 'sf', 'alpha'}]';
     %}
     
+    %{
     % (SE + Const)*RQ
     % Construct the covariance function
     cov = {'covProd', {...
@@ -179,7 +268,7 @@ for stepsahead = 0:7
         arrayfun(@(d) ['Ta', num2str(d)], lag_Ta, 'UniformOutput', false),...
         arrayfun(@(d) ['h', num2str(d)], lag_humid, 'UniformOutput', false),...
         {'sf', 't', 'sf', 'alpha'}]';
-    
+    %}
     
     %{
     % NN
@@ -206,31 +295,26 @@ for stepsahead = 0:7
         arrayfun(@(d) ['h', num2str(d)], lag_humid, 'UniformOutput', false),...
         {'t', 'sf'}]';
     %}
-    
-    %{
-    cov = 'covSEard';
-    
-    hypnames = [arrayfun(@(d) ['y', num2str(d)], lag_y, 'UniformOutput', false),...
-        arrayfun(@(d) ['u', num2str(d)], lag_dr, 'UniformOutput', false),...
-        arrayfun(@(d) ['Ta', num2str(d)], lag_Ta, 'UniformOutput', false),...
-        arrayfun(@(d) ['h', num2str(d)], lag_humid, 'UniformOutput', false),...
-        {'t', 'sf'}]';
-    %}
-    
-    training_result = control_train_gpml(identData, lag_y, lag_Ta, lag_humid, lag_dr, cov, remove_nonworkdays, hypcov, stepsahead, working_hours);
-    
-    training_result.lag_y = lag_y;
-    training_result.lag_Ta = lag_Ta;
-    training_result.lag_humid = lag_humid;
-    training_result.lag_dr = lag_dr;
+
+
+    training_result = struct;
     training_result.stepsahead = stepsahead;
-    training_result.hypnames = hypnames;
-    training_result.hours = working_hours;
+    %training_result.hypnames = hypnames;
+    training_result.model_inputs = model_inputs;
+    training_result.model_target = model_target;
+    training_result.model_excepts = model_excepts;
+    
+    [training_result.hyp, training_result.flogtheta, training_result.model] = control_train_gpml(Xtrain_norm, Ytrain_norm, model, hyp0,...
+        @minimize_minfunc, -100);
     
     % Validate by performing 1-step predictions, then compute several measures
     % compared to the real outputs
-    validation_result = control_validation_gpml(training_result,valData,lag_y,lag_Ta,lag_humid,lag_dr,remove_nonworkdays,stepsahead,norm_y_min,norm_y_max, working_hours);
+    [Xtest_norm, ~] = construct_data(data_test_norm, model_inputs, model_target, stepsahead, model_excepts);
+    [~, Ytest] = construct_data(data_test, model_inputs, model_target, stepsahead, model_excepts);
     
-    save(matfilename, 'training_result', 'validation_result');
+    validation_result = control_validation_gpml(training_result.model, training_result.hyp, ...
+        Xtrain_norm, Ytrain_norm, Xtest_norm, Ytest, normparams.(model_target).min, normparams.(model_target).max);
     
+    matfilename = fullfile('feature_selection', sprintf('%s_ahead%02d_%s', data_train_type, stepsahead, postfix));
+    save(matfilename, 'training_result', 'validation_result'); 
 end
