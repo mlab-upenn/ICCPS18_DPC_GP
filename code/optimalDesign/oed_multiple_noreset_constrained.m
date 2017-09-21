@@ -4,7 +4,7 @@ rng(1);
 
 %% define variables to control
 
-SimDays = 7;
+SimDays = 15;
 n_steps = 25;
 
 % control variables
@@ -134,10 +134,10 @@ MAXSTEPS = SimDays*24*EPTimeStep;
 % variables for plotting:
 outputs = nan(9,MAXSTEPS);
 inputs = nan(8,MAXSTEPS);
-LP = zeros(1,n_samples);
-RMSE = zeros(1,n_samples);
-LP_map = zeros(1,n_samples);
-RMSE_map = zeros(1,n_samples);
+LP = nan(1,n_samples);
+RMSE = nan(1,n_samples);
+LP_map = nan(1,n_samples);
+RMSE_map = nan(1,n_samples);
 
 % initialize: parse it to obtain building outputs
 packet = ep.read;
@@ -335,6 +335,7 @@ while kStep <= MAXSTEPS
         LP_map(iter) = mean(log_probabilities);
         RMSE_map(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
         
+        if rem(iter, 20) == 0 || iter==n_samples
         % save errors without map
         model_ = train_gp(results.chosen_x, results.chosen_y);
         results.hyperparameters(iter) = model_.hyp;
@@ -348,7 +349,7 @@ while kStep <= MAXSTEPS
         
         LP(iter) = mean(log_probabilities);
         RMSE(iter) = sqrt(mean((f_star_mean_active-y_test).^2));        
-
+        end
         
     end
     

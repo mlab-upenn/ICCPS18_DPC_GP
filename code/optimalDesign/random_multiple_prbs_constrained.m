@@ -71,8 +71,8 @@ kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep; 
 
 % type of random sampling
-% sample_type = 'prbs';
-sample_type = 'uniform';
+sample_type = 'prbs';
+% sample_type = 'uniform';
 switch sample_type
     case 'uniform'
         ClgSPrand_b7 = ClgMin+(ClgMax-ClgMin)*rand(1,MAXSTEPS);
