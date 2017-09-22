@@ -1,5 +1,5 @@
 function plot_results
-%plot_for_postfixes({'3days_final', '7days_final', '14days_final'}, 'SE');
+plot_for_postfixes({'3days_final', '7days_final', '14days_final'}, 'SE');
 plot_for_postfixes({'3days_truongkernel', '7days_truongkernel', '14days_truongkernel'}, 'Truong''s kernel');
 end
 
