@@ -464,5 +464,5 @@ for stepsahead = 0:0
         Xtrain_norm, Ytrain_norm, Xtest_norm, Ytest, normparams.(model_target).min, normparams.(model_target).max);
     
     matfilename = fullfile('feature_selection', sprintf('%s_ahead%02d_%s', data_train_type, stepsahead, postfix));
-    save(matfilename, 'training_result', 'validation_result'); 
+    save(matfilename, 'training_result', 'validation_result', 'normparams', 'Xtrain_norm', 'Ytrain_norm'); 
 end
