@@ -45,10 +45,12 @@ for ids = 1:SimDays
 end
 
 % data_type = 'unconstrained';
-data_type = 'constrained';
+% data_type = 'constrained';
 % data_type = 'nominal';
+data_type = 'ramped';
+rampVal = 2;
 
-if strcmp(data_type, 'unconstrained')
+if strcmp(data_type, 'unconstrained') || strcmp(data_type, 'ramped')
     SPmin = repmat([22, 21, 24, 19, 22, 21, 12, 3.7], size(DRS,1),1);
     SPmax = repmat([32, 21, 32, 19, 26, 21, 14, 9.7], size(DRS,1),1);
     DRS = SPmin + (SPmax-SPmin).*DRS;
@@ -98,6 +100,13 @@ while kStep <= MAXSTEPS
         SP(5) = DRS(kStep,5);
         SP(7) = DRS(kStep,7);
         SP(8) = DRS(kStep,8);
+    end
+    
+    if strcmp(data_type, 'ramped') && kStep>1
+        ChwMin = 3.7;
+        ChwMax = 9.7;
+        ChwPrev = inputs(8,kStep-1);
+        SP(8) = max(ChwMin,ChwPrev-rampVal)+(min(ChwMax,ChwPrev+rampVal)-max(ChwMin,ChwPrev-rampVal))*rand;
     end
     
     inputs(:,kStep) = SP;
