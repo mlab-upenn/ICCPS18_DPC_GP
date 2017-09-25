@@ -20,7 +20,7 @@ y_train_norm = y_train_norm(1:n_samples,:);
 
 % X_test = X(n_samples+1:2*n_samples,:);
 % y_test = y(n_samples+1:2*n_samples,:);
-datafile = 'test-LargeHotel';
+datafile = 'test-unconstrained-LargeHotel';
 [X_test, y_test] = load_data(datafile, order_autoreg, ctrl_vars);
 X_test_norm = preNorm(X_test, X_train_min, X_train_max);
 y_test_norm = preNorm(y_test, y_train_min, y_train_max);
@@ -29,20 +29,26 @@ y_test_norm = preNorm(y_test, y_train_min, y_train_max);
 
 D = size(X,2); % input space dimension
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% the difference between the cov fns below stands out when 
+% AR terms for control are included in the features
+% check load_data.m to add/remove those features
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % covariance function
-cov = {'covSEard'};
-hyp0.cov = [...
-    zeros(1, D), 0, ...
-    ]';
-% cov = {'covProd', {...
-%     {'covSum', {'covConst', 'covSEard'}},...
-%     {'covRQiso'}} ...  % temporal
-%     };
+% cov = {'covSEard'};
 % hyp0.cov = [...
-%     0, ...
-%     zeros(1, D), 0, ...    % non-temporal
-%     0, 0, 0, ...  % temporal
+%     zeros(1, D), 0, ...
 %     ]';
+cov = {'covProd', {...
+    {'covSum', {'covConst', 'covSEard'}},...
+    {'covRQiso'}} ...  % temporal
+    };
+hyp0.cov = [...
+    0, ...
+    zeros(1, D), 0, ...    % non-temporal
+    0, 0, 0, ...  % temporal
+    ]';
 
 % gaussian likelihood function
 lik = @likGauss;
