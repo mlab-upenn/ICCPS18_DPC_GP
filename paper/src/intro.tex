@@ -1,5 +1,14 @@
 \section{Introduction}
 
+\begin{figure*}[h]
+	\centering
+	\missingfigure[figwidth=42pc]{Paper organization and contributions}
+	\caption{Paper organization and contributions}
+	\captionsetup{justification=centering}
+	\label{F:intro}
+\end{figure*}
+
+
 Machine learning and control theory are two foundational but disjoint communities. Machine learning requires data to produce models, and control systems require models to provide stability, safety or other performance guarantees. Machine learning is widely used for regression or classification, but thus far data-driven models have not been suitable for closed-loop control of physical plants. The challenge now, with using data-driven approaches, is to close the loop for real-time control and decision making.
 
 Consider a multivariable dynamical system subject to external disturbances. The first and foremost requirement for making any decision is to obtain the underlying control-oriented predictive model of the system. With a reasonable forecast of the external disturbances, these models should predict the state of the system in the future and thus a predictive controller based on Model Predictive Control (MPC) can act preemptively to provide a desired behavior. In particular, MPC has been proven to be very powerful for multivariable systems in the presence of input and output constraints, and forecast of the disturbances. The caveat is that MPC requires a reasonably accurate physical representation of the system. This makes MPC unsuitable for control of complex plants such as natural gas processing, oil refineries, boilers, manufacturing plants, and buildings where the user expertise, time, and associated sensor costs required to develop a model are very high \cite{Sturzenegger2016,vzavcekova2014}.
@@ -12,15 +21,16 @@ Due to aforementioned reasons, the control strategies in such systems are often 
 The question now is, can we employ data-driven techniques to reduce the cost of modeling, and still exploit the benefits that MPC has to offer? We therefore look for automatic and data-driven approaches to control that are also adaptive, scalable and interpretable. We solve this problem with \textit{Data Predictive Control (DPC)} by bridging the gap between Machine Learning and Predictive Control.
 
 \subsection{Practical challenges in bridging machine learning and controls}
+\label{SS:practical_challenges}
 
 The central idea behind DPC is to obtain control-oriented models using machine learning or black-box modeling, and formulate the control problem in a way that receding horizon control (RHC) can still be applied and the optimization problem can be solved efficiently.
 
 At this point, it's important to note that the standard machine learning regression used for prediction is fundamentally different from using machine learning for control synthesis. In the former, all the inputs to the model (also called regressors or features) are known, while in the latter some of the inputs that are the control variables must be optimized in real-time for a desired performance. We next discuss the challenges in using machine learning algorithms for control.
 
-\noindent \textbf{(1) Computational complexity:} Depending upon the learning algorithm, the output from a learned model is a non-linear, non-convex and sometimes non-differentiable (eg.~Random Forests \cite{Friedman2001}) function of the inputs with no closed-form expression. Using such models for control synthesis where some of the inputs must be optimized can lead to computationally intractable optimization. Our previous work on DPC uses an adaptation of Random Forests which overcomes this problem by separation of variables to derive a linearized input-output mapping at each time step \cite{JainACC2017,JainCDC2017}.
-This paper uses Gaussian Processes (GP) where the output mean and variance are analytical functions of the inputs, albeit non-convex.
+\noindent \textbf{(1) Data quality and quantity:} Most of the historical data that is available from complex systems like buildings are based on some rule-based controllers. Therefore, the data may not be sufficient to explain the relationship between the inputs and the outputs. To obtain richer data with enough excitation in the inputs, new experiments must be done either by sampling the inputs randomly or by a procedure for optimal experiment design (OED) \cite{Emery1998,Fedorov2010}. This paper proposes the use of GP i.e.~the estimate of variance in GP predictions to recommend control strategies for OED.
 
-\noindent \textbf{(2) Data quality and quantity:} Most of the historical data that is available from complex systems like buildings are based on some rule-based controllers. Therefore, the data may not be sufficient to explain the relationship between the inputs and the outputs. To obtain richer data with enough excitation in the inputs, new experiments must be done either by sampling the inputs randomly or by a procedure for optimal experiment design (OED) \cite{Emery1998,Fedorov2010}. This paper proposes the use of GP i.e.~the estimate of variance in GP predictions to recommend control strategies for OED.
+\noindent \textbf{(2) Computational complexity:} Depending upon the learning algorithm, the output from a learned model is a non-linear, non-convex and sometimes non-differentiable (eg.~Random Forests \cite{Friedman2001}) function of the inputs with no closed-form expression. Using such models for control synthesis where some of the inputs must be optimized can lead to computationally intractable optimization. Our previous work on DPC uses an adaptation of Random Forests which overcomes this problem by separation of variables to derive a linearized input-output mapping at each time step \cite{JainACC2017,JainCDC2017}.
+This paper uses Gaussian Processes (GP) where the output mean and variance are analytical functions of the inputs, albeit non-convex.
 
 \noindent \textbf{(3) Performance guarantees and robustness:} An essential characteristic for closed-loop control is to provide performance guarantees. This becomes hard with a black-box is used to replace a physical model. However, it is possible to provide probabilistic guarantees with a learning algorithm based on Gaussian Processes. DPC based on Gaussian Processes bounds the performance errors within 95\% confidence intervals. Handling disturbance uncertainties or robustness to sensor failures in the DPC framework is part of our on-going work and is thus excluded from this paper.
 
@@ -48,11 +58,4 @@ This paper answers the following questions:
 	\item Online learning with a Data Predictive Controller in closed-loop
 \end{enumerate}
 
-\begin{figure*}[t!]
-	\centering
-	\missingfigure[figwidth=42pc]{Paper organization and contributions}
-	\caption{Paper organization and contributions}
-	\captionsetup{justification=centering}
-	\label{F:intro}
-\end{figure*}
 

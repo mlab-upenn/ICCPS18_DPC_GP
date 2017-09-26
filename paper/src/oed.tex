@@ -1,6 +1,18 @@
 \section{Optimal Experiment Design}
 \label{S:oed}
 
+In this section, we address the practical challenge of ``Data quality and quantity" enumerated in Sec.~\ref{SS:practical_challenges}.
+\\
+
+In general, the more data we have, a better model we can learn using machine learning algorithms. However, in some practical situations, sufficient training data is not available, and in other cases, even if we have enough data, it may not be suitable for learning. In either case, we must obtain data after running new experiments, i.e.~exciting the inputs of the dynamical system and measuring its response. In the control literature, a popular technique that is used for system identification, especially for linear systems, is measuring the \textit{step response} of the system to estimate the time-constants, and further for designing of controllers. On the other hand, the machine learning literature uses \textit{information theoretic} approaches to estimate how well the training samples explain the underlying model. This, in general, also holds for nonlinear systems.
+
+Since, we model the dynamical system using a GP, it is natural to use the concept of We use the \textit{information gain} for optimal experiment design.
+
+\todo[inline]{motivation for OED}
+\todo[inline]{limited data}
+\todo[inline]{need to decide how the functional tests should be done}
+\todo[inline]{need a mechanism for updating model in real-time for example during seasonal changes}
+
 \subsection{Batch update: selecting most informative data for periodic model update}
 
 The data from a real system are often noisy and contain outliers. 
@@ -9,9 +21,37 @@ Further, for both training time and real-time control, the computational complex
 
 The goal of this section is to outline a systematic procedure for optimal experiment design that can be employed to select best $k$ samples from given $n$ observations.
 
-
 We use the concept of approximate marginalization in \cite{Garnett2013}.
+\todo[inline]{information gain criteria, equivalence b/w parameter and data space form}
+\todo[inline]{marginalization approximation concept}
 
 What is the optimal procedure to select data for model training for large data
 
+\begin{figure}[h!]
+	\centering
+	\missingfigure[figwidth=20pc]{comparison of model accuracy b/w IG, MV, Uniform, PRBS}
+	\caption{}
+	\captionsetup{justification=centering}
+	\label{F:}
+\end{figure}
+
 \subsection{Online update: recommending control strategies for experiment design }
+
+\todo[inline]{extension of last approach for functional testing}
+\todo[inline]{useful under operational constraints}
+
+\begin{figure}[h!]
+	\centering
+	\missingfigure[figwidth=20pc]{SIMULATION: comparison of model accuracy b/w IG, Uniform}
+	\caption{}
+	\captionsetup{justification=centering}
+	\label{F:}
+\end{figure}
+
+\begin{figure}[h!]
+	\centering
+	\missingfigure[figwidth=20pc]{BAR PLOT: comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
+	\caption{}
+	\captionsetup{justification=centering}
+	\label{F:}
+\end{figure}
