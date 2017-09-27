@@ -124,7 +124,7 @@
 
 % Copyright (c) 2014 Roman Garnett.
 
-function results = learn_gp_hyperparameters_doe(problem, model, i, results, varargin)
+function [results, ind] = learn_gp_hyperparameters_doe(problem, model, i, results, varargin)
 
 % parse optional inputs
 parser = inputParser;
