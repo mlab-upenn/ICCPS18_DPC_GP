@@ -34,6 +34,9 @@ This paper uses Gaussian Processes (GP) where the output mean and variance are a
 
 \noindent \textbf{(3) Performance guarantees and robustness:} An essential characteristic for closed-loop control is to provide performance guarantees. This becomes hard with a black-box is used to replace a physical model. However, it is possible to provide probabilistic guarantees with a learning algorithm based on Gaussian Processes. DPC based on Gaussian Processes bounds the performance errors within 95\% confidence intervals. Handling disturbance uncertainties or robustness to sensor failures in the DPC framework is part of our on-going work and is thus excluded from this paper.
 
+\noindent \textbf{(4) Model adaptability:} 
+\todo[inline]{Active learning}
+
 \noindent \textbf{(4) Interpretability of control decisions:} Besides the accuracy of synthesizing control strategies with machine learning in the loop, we are also interested in solutions that are interpretable and trustworthy. Thus, the DPC recommendations should have traceability so they can be verified to be stable and safe. This direction of research also forms part of our on-going work.
 
 \subsection{Overcoming practical challenges}

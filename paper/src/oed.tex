@@ -9,11 +9,14 @@ In general, the more data we have, a better model we can learn using machine lea
 Since, we model the dynamical system using a GP, it is natural to use the concept of We use the \textit{information gain} for optimal experiment design.
 
 \todo[inline]{motivation for OED}
-\todo[inline]{limited data}
+\todo[inline]{two main problems:}
 \todo[inline]{need to decide how the functional tests should be done}
 \todo[inline]{need a mechanism for updating model in real-time for example during seasonal changes}
 
-\subsection{Batch update: selecting most informative data for periodic model update}
+\subsection{Information gain for OED}
+\todo[inline]{theory goes here}
+
+\subsection{Batch selection: selecting most informative data for periodic model update}
 
 The data from a real system are often noisy and contain outliers. 
 It is therefore essential to filter the most \textit{informative} data that best explain the dynamics from the available pool of data.
@@ -35,18 +38,10 @@ What is the optimal procedure to select data for model training for large data
 	\label{F:}
 \end{figure}
 
-\subsection{Online update: recommending control strategies for experiment design }
+\subsection{Sequential sampling: recommending control strategies for experiment design }
 
 \todo[inline]{extension of last approach for functional testing}
 \todo[inline]{useful under operational constraints}
-
-\begin{figure}[h!]
-	\centering
-	\missingfigure[figwidth=20pc]{SIMULATION: comparison of model accuracy b/w IG, Uniform}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:}
-\end{figure}
 
 \begin{figure}[h!]
 	\centering
