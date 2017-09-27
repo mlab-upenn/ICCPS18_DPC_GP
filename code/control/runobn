@@ -1,0 +1,7 @@
+#!/bin/bash
+for i in `seq 1`;
+do
+  echo Run $i
+  ~/work/working/obn/smnchai/build/Debug/smnchai obnsim.chai
+  sleep 20
+done
