@@ -113,7 +113,8 @@ classdef SignalsValues < handle
         
         function v = getSignal(self, name, idx)
             % Get values of given signal with given index idx (if omitted
-            % then the entire signal vector).
+            % then the entire signal vector).  The returned values are not
+            % denormalized.
             % The vectors will grow if necessary so that idx is always
             % valid (uninitialized values will be NaN); so beware of
             % overflowing the memory.

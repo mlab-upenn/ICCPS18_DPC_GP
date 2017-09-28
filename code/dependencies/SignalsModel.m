@@ -206,13 +206,17 @@ classdef SignalsModel < handle
                         % indices lower than the start index of the substitute
                         % values.
                         Xidx_from = find((Xidx(:,kk) < startidx) | (Xidx(:,kk) > endidx));
-                        X(Xidx_from, kk+curIdx-1) = thesignal(Xidx(Xidx_from,kk));
+                        if ~isempty(Xidx_from)
+                            X(Xidx_from, kk+curIdx-1) = thesignal(Xidx(Xidx_from,kk));
+                        end
                         
                         % Assign values from substitute values.
                         % don't use ~Xidx_from as it will include NaNs
                         Xidx_from = find((Xidx(:,kk) >= startidx) & (Xidx(:,kk) <= endidx));
-                        X(Xidx_from, kk+curIdx-1) = ...
-                            params.Results.inputsubs.(thefield).values(Xidx(Xidx_from,kk) - startidx + 1);
+                        if ~isempty(Xidx_from)
+                            X(Xidx_from, kk+curIdx-1) = ...
+                                params.Results.inputsubs.(thefield).values(Xidx(Xidx_from,kk) - startidx + 1);
+                        end
                     end
                 else
                     X(:, curIdx:curIdx+numlags-1) = lagmatrix(thesignal, thelags);
