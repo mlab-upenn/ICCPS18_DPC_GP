@@ -17,14 +17,17 @@ stepsperhour = 60 / dr_timestep;
 % datafname = 'random_sampling_uniform_2ramped_3input_15day_20170924_1913.mat';
 % data_train_type = 'random_sampling_uniform_2ramped_3input';
 
-datafname = 'random_sampling_uniform_3input_15day_20170921_0625.mat';
-data_train_type = 'random_sampling_uniform_3input';
+% datafname = 'random_sampling_uniform_3input_15day_20170921_0625.mat';
+% data_train_type = 'random_sampling_uniform_3input';
 
 % datafname = 'doe_sampling_noreset_IG_3input_15day_20170921_1052.mat';
 % data_train_type = 'doe_sampling_noreset_IG_3input';
 
 % datafname = 'doe_sampling_noreset_IG_2ramped_3input_15day_20170924_2357.mat';
 % data_train_type = 'doe_sampling_noreset_IG_2ramped_3input';
+
+datafname = 'doe_sampling_noreset_IG_2ramped_3input_15day_final_20170928_0930.mat';
+data_train_type = 'doe_sampling_noreset_IG_2ramped_3input_final';
 
 % datafname = 'random_sampling_prbs_3input_15day_20170921_0742';
 % data_train_type = 'random_sampling_prbs_3input';
@@ -34,15 +37,37 @@ data_train_type = 'random_sampling_uniform_3input';
 
 data_train = load(fullfile('..', 'data', datafname));
 
-postfix = '7days_truongkernel';
+postfix = '3days_truongkernel';
 
 % Number of data points to use for identification
-ident_len = [1, min(length(data_train.TOD), 24*stepsperhour*7)];
+ident_len = [1, min(length(data_train.TOD), 24*stepsperhour*3)];
 data_train = slice_data(data_train, ident_len);
 
 % Normalize the data (not all fields)
 normalized_fields = {'Ambient', 'Humidity', 'TotalLoad', 'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
-[data_train_norm, normparams] = normalize_data(data_train, normalized_fields);
+[~, normparams] = normalize_data(data_train, normalized_fields);
+
+% Adjust manually some of the normalization parameters
+normparams.Humidity.min = 0;
+normparams.Humidity.max = 100;
+
+normparams.ClgSP.min = 22;
+normparams.ClgSP.max = 32;
+
+normparams.KitchenClgSP.min = 24;
+normparams.KitchenClgSP.max = 32;
+
+normparams.GuestClgSP.min = 22;
+normparams.GuestClgSP.max = 26;
+
+normparams.SupplyAirSP.min = 12;
+normparams.SupplyAirSP.max = 14;
+
+normparams.ChwSP.min = 3.7;
+normparams.ChwSP.max = 9.7;
+
+% Re-normalize the training dataset
+data_train_norm = normalize_data(data_train, normalized_fields, normparams);
 
 datafname = 'test-unconstrained-LargeHotel'; %'test-LargeHotel'; 'test-ramped2-LargeHotel'
 data_test = load(fullfile('..', 'data', datafname));
@@ -363,7 +388,7 @@ for stepsahead = 0:0
         {'ChwSP', [3 2 1 0]}};    
     %}
     
-    %{
+    
     % OED - Truong's kernel - ramped (3 days)
         model_inputs = {...
         'TOD', ...
@@ -375,7 +400,7 @@ for stepsahead = 0:0
         {'GuestClgSP', 0}, ...
         {'SupplyAirSP', [2 0]}, ...
         {'ChwSP', [3 2 1 0]}};
-    %}
+    
     
     %{
     % OED - Truong's kernel - ramped (7 days)
@@ -578,6 +603,6 @@ for stepsahead = 0:0
     validation_result = control_validation_gpml(training_result.model, training_result.hyp, ...
         Xtrain_norm, Ytrain_norm, Xtest_norm, Ytest, normparams.(model_target).min, normparams.(model_target).max);
     
-    matfilename = fullfile(sprintf('%s_ahead%02d_%s', data_train_type, stepsahead, postfix));  % 'feature_selection', 
+    matfilename = fullfile('feature_selection', sprintf('%s_ahead%02d_%s', data_train_type, stepsahead, postfix));  % 'feature_selection', 
     save(matfilename, 'training_result', 'validation_result', 'normparams', 'Xtrain_norm', 'Ytrain_norm'); 
 end
