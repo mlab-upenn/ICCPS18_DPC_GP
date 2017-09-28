@@ -29,3 +29,4 @@ utilSocket.cfg
 Output
 *.*~
 *.m~
+eplusout.*
