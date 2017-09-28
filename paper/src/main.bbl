@@ -38,6 +38,12 @@ R.~Garnett, M.~A. Osborne, and P.~Hennig.
 \newblock Active learning of linear embeddings for gaussian processes.
 \newblock {\em arXiv preprint arXiv:1310.6740}, 2013.
 
+\bibitem{girard04approximate}
+A.~Girard.
+\newblock {\em Approximate methods for propagation of uncertainty with Gaussian
+  process models}.
+\newblock {PhD} thesis, University of Glasgow, 2004.
+
 \bibitem{JainACC2017}
 A.~Jain, M.~Behl, and R.~Mangharam.
 \newblock {D}ata {P}redictive {C}ontrol for building energy management.
@@ -50,6 +56,17 @@ A.~Jain, F.~Smarra, and R.~Mangharam.
   {E}nsemble {L}earning.
 \newblock In {\em Proceedings of the 2017 Conference on Decision and Control}.
   IEEE, 2017.
+
+\bibitem{kocijan16modelling}
+J.~Kocijan.
+\newblock {\em Modelling and Control of Dynamic Systems Using Gaussian Process
+  Models}.
+\newblock Springer, 2016.
+
+\bibitem{rasmussen06gaussian}
+C.~E. Rasmussen and C.~K.~I. Williams.
+\newblock {\em Gaussian Processes for Machine Learning}.
+\newblock The MIT Press, 2006.
 
 \bibitem{Sturzenegger2016}
 D.~Sturzenegger, D.~Gyalistras, M.~Morari, and R.~S. Smith.
