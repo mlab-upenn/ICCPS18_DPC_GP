@@ -15,8 +15,6 @@ nBuildings = numel(buildings);
 % The length of data used for the simulation
 datalen = (4 * 24) * (7*6);
 
-startday = 7;
-startmonth = 7;
 
 %% Load the baseline and forecasts
 BASELINE = load(fullfile('..', 'data', 'test-LargeHotel.mat'));
