@@ -1,6 +1,27 @@
 \section{Data Predictive Control}
 \label{S:dpc}
 
+\subsection{Gaussian Processes for Dynamical Systems}
+\label{S:intro-gp:control}
+
+As GPs can be used to model nonlinear functions, they are suitable for modeling dynamical systems.
+This is achieved by feeding delayed input and output signals back to the model as regressors \cite{kocijan16modelling}.
+In such cases, the model is said to be autoregressive, whose current output depends on its past inputs and outputs.
+Specifically, in control systems, it is common to use as the regressors of a dynamical GP
+\begin{equation*}
+x_t\!=\![y_{t-l_y}, \dots, y_{t-1}, u_{t-l_u}, \dots, u_t, w_{t-l_w}, \dots, w_{t-1}, w_t]
+\end{equation*}
+where \(t\) denotes the time step, \(u\) the control input, \(w\) the exogenous disturbance input, \(y\) the (past) output.
+Here, \(l_y\), \(l_u\), and \(l_w\) are respectively the lags for autoregressive outputs, control inputs, and disturbances.
+Note that \(u_t\) and \(w_t\) are the current control and disturbance inputs.
+The vector of all autoregressive inputs can be thought of as the current state of the model.
+A dynamical GP can then be trained from data in the same way as any other GPs.
+
+When a GP is used for control or optimization, it is usually necessary to simulate the model over a finite number of future steps and predict its multistep-ahead behavior.
+Because the output of a GP is a distribution rather than a point estimate, the autoregressive outputs fed to the model beyond the first step are random variables, resulting in more and more complex output distributions as we go further.
+Therefore, a multistep simulation of a GP involves the propagation of uncertainty through the model.
+There exist several methods for uncertainty propagation in GPs like \emph{Monte-Carlo method} and \emph{zero-variance method} \cite{girard04approximate,kocijan16modelling}. In this paper, we use separate models for each prediction step as described in Sec.~\ref{S:dpc}.
+
 \todo[inline]{closed-loop control with the identified model}
 \todo[inline]{training multiple models for each time step}
 \todo[inline]{comment on non-convexity, computational complexity}

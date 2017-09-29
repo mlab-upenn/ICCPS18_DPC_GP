@@ -1,20 +1,57 @@
 \section{Optimal Experiment Design}
 \label{S:oed}
 
-In this section, we address the practical challenge of ``Data quality and quantity" enumerated in Sec.~\ref{SS:practical_challenges}.
+In this section, we address the practical challenge of ``Data quality and quantity" and also touch upon ``Model adaptability" listed in Sec.~\ref{SS:practical_challenges}.
 \\
 
-In general, the more data we have, a better model we can learn using machine learning algorithms. However, in some practical situations, sufficient training data is not available, and in other cases, even if we have enough data, it may not be suitable for learning. In either case, we must obtain data after running new experiments, i.e.~exciting the inputs of the dynamical system and measuring its response. In the control literature, a popular technique that is used for system identification, especially for linear systems, is measuring the \textit{step response} of the system to estimate the time-constants, and further for designing of controllers. On the other hand, the machine learning literature uses \textit{information theoretic} approaches to estimate how well the training samples explain the underlying model. This, in general, also holds for nonlinear systems.
+For practical applications, we come across two kinds of situations:
+\begin{enumerate}
+	\item \textbf{Insufficient data:} In general, the more data we have, a better model we can learn using machine learning algorithms. When sufficient training data is not available for learning the behavior of the dynamical system, we resort to \textit{optimal experiment design} (OED) or \textit{functional testing}, a method of exciting the inputs of the dynamical system and measuring its response. For example, in the control literature, a popular technique, especially for linear systems, is measuring the \textit{step response} of the system to estimate the time-constants, and further for designing of controllers. In context of buildings as we discuss in Sec.~\ref{S:casestudy}, it is often the case that very limited data from the installed sensors and multimeters are available. Hence, we need to design a mechanism to recommend control strategies to sample new data.
+	
+	\item \textbf{Computational complexity:} Even if we have sufficient data, it may not be directly suitable for learning because of noisy measurements/outliers or using the entire data set may be not advisable due to computational complexity as is the case with GPs. The solution to this problem lies in \textit{selecting the most informative batch} (from the available data) that best explains the system behavior or dynamics. Another application of this in periodic update of the learned model as the system properties change over time. For example, the same GP model may be not be suitable to control a building in both Summer and Winter season, so we must select the most informative data from year around data. We discuss active learning in detail in Sec.~\ref{S:active}.
+\end{enumerate}
 
-Since, we model the dynamical system using a GP, it is natural to use the concept of We use the \textit{information gain} for optimal experiment design.
+For \textit{optimal experiment design} and \textit{selecting the most informative batch} with GP as the learned model, we follow the \textit{information theoretic} approach to estimate how well the training samples explain the behavior underlying physical system.
 
-\todo[inline]{motivation for OED}
-\todo[inline]{two main problems:}
-\todo[inline]{need to decide how the functional tests should be done}
-\todo[inline]{need a mechanism for updating model in real-time for example during seasonal changes}
+\subsection{Information theoretic approach to OED}
 
-\subsection{Information gain for OED}
-\todo[inline]{theory goes here}
+In this section, we show how the prediction variance \eqref{E:gp-regression} in GPs can be exploited for experiment design.
+The goal here is to update the parameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially. One popular metric of selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}. Since, we can calculate the variance in \(y\) for any \(x\), OED based on MV is straight forward to compute. However, another metric which has proven to provide better procedure to update parameters \(\theta\) is the Information Gain (IG) \cite{Krause2008}. 
+
+IG metric selects the sample which adds maximum information to the model, i.e.~reduces the uncertainty in \(\theta\) the most. If we denote the existing data before sampling by \(D\), then the goal is to select \(x\) that maximizes the information gain defined as
+\begin{align}
+\argmax_x H(\theta|D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|D,x,y),
+\label{E:ig:theta}
+\end{align}
+where, \(H\) is the Shanon's Entropy given by
+\begin{align}
+H(\theta|D) = -\int p(\theta|D) \log (p(\theta|D))d\theta.
+\end{align}
+Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}\), we need to take an expectation over \(y\). When the dimension of \(\theta\) is large, computing entropies is typically computationally intractable. Using equivalence of the expressions \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\),
+we can transform \eqref{E:ig:theta} as
+\begin{align}
+\argmax_x H(y|x,D) - \EE_{\theta \sim p(\theta|D)}H(y|x,\theta).
+\label{E:ig:y}
+\end{align}
+In this case, the expectation is defined over \(\theta\) the expression \eqref{E:ig:y} is much easier to compute because \(y\) is now single dimension. For further details, we refer the reader to \cite{Houlsby2011}.
+The first term in \eqref{E:ig:y} can be calculated by marginalizing over the distribution of \(\theta|D\):
+\begin{align}
+p(y|x,D) =& \EE_{\theta \sim p(\theta|D)}p(y|x,\theta,D) \nonumber\\
+=& \int p(y|x,\theta, D)p(\theta|D)d\theta
+\end{align}
+for which the exact solution is difficult to compute. We therefore use an approximation described in \cite{Garnett2013}. It is shown that for \(\theta|D \sim \GaussianDist{\bar{\theta}}{\Sigma}\), we can find a linear approximation to \(\bar{y}(x) = a^T(x)\theta+b(x)\) such that
+\begin{align}
+\EE_{\theta \sim p(\theta|D)}p(y|x,\theta,D) \sim \GaussianDist{a^T\bar{\theta}+b}{\sigma^2+a^T\Sigma a}.
+\end{align}
+Under the same approximation, the second term in \eqref{E:ig:y} can be written as \(H(y|x,\hat{\theta})\). 
+Finally, using the relation for the differential entropy for a Gaussian distribution, the information gain in \eqref{E:ig:y} is approximated as
+%\begin{align}
+%H(y|x,D) = \frac{1}{2}\log(2\pi e \sigma^2(x)).
+%\end{align}
+\begin{align}
+\text{IG} = \frac{1}{2}\log\left(\frac{\sigma^2(x)+a^T(x)\Sigma a(x)}{\sigma^2(x)}\right).
+\end{align}
+
 
 \subsection{Batch selection: selecting most informative data for periodic model update}
 
@@ -23,10 +60,6 @@ It is therefore essential to filter the most \textit{informative} data that best
 Further, for both training time and real-time control, the computational complexity of Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. Thus, obtaining the best GP model with least data is highly desired.
 
 The goal of this section is to outline a systematic procedure for optimal experiment design that can be employed to select best $k$ samples from given $n$ observations.
-
-We use the concept of approximate marginalization in \cite{Garnett2013}.
-\todo[inline]{information gain criteria, equivalence b/w parameter and data space form}
-\todo[inline]{marginalization approximation concept}
 
 What is the optimal procedure to select data for model training for large data
 
