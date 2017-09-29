@@ -1,84 +1,78 @@
 \section{Gaussian Processes}
 \label{sec:intro-gp}
 
-\todo[inline]{Copied from Truong's paper. Need to revise.}
+In this section, we briefly introduce modeling with Gaussian Process (GP) and its applications in control.
+More details can be found in \cite{Rasmussen2006} %on GP for machine learning and in
+and \cite{Kocijan2016}. % on GP modeling of dynamic systems.
 
-Gaussian Processes offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems. (1) GP provide an estimate of uncertainty or confidence in the predictions. For example, we can estimate a 95\% confidence bound for the predictions which can be used to measure control performance. (2) GP work for well with small data set, which is in general helpful for any learning application. (3) The model structure of GP allows to include prior knowledge of the system behavior by defining priors on the parameters or using particular structure of covariance functions.
-
-
-This section briefly introduces Gaussian Process (GP) modeling with applications in control.
-For more details, we refer the reader to \cite{rasmussen06gaussian} for general GP discussions and \cite{kocijan16modelling} for applications of GPs in  dynamic systems.
-
-A GP can be viewed as an extension of the multivariate Gaussian distribution to functions. 
-It is a collection of random variables, any finite number of which have a joint Gaussian distribution.
-Specifically, consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
-Given  the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), we wish to find the  distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\).
-Assuming a GP structure \(y \sim \mathcal{GP}(\mu, k; \theta)\), \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),
+\begin{definition}[\cite{Rasmussen2006}]
+  A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+\end{definition}
+Consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
+A GP of \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),
 \begin{align*}
 \mu(x) &= \EE [f(x)] \\
 k(x,x') &= \EE [(f(x)-\mu(x)) (f(x') - \mu(x'))] + \sigma_n^2 \delta(x,x')
 \end{align*}
 where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
-The covariance matrix \(K\) is defined to have elements \(K_{ij} = k(x_i, x_j)\).
+This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
 
-The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\).
-Intuitively speaking,  \(k(\cdot, \cdot)\) relates nearby inputs (in a sense defined by the covariance function) so that they will give similar predictions. 
-This is an advantage of GP modeling as it specifies the structure of the covariance matrix of the input variables rather than a fixed structural input--output relationship.
-It is therefore highly flexible and can capture complex behavior with fewer parameters.
-There exists a wide range of covariance functions and combinations to choose from \cite{rasmussen06gaussian}. 
-
-Given the training data, the hyperparameters can be estimated by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
-Once the hyperparameters are determined, the GP can be used to predict the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\): \(y_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), where
+Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance
 \begin{subequations}
 \label{eq:gp-regression}
 \begin{align}
 \bar{y}_\star &= g_{\mathrm{m}} (x_{\star}) \coloneqq \mu(x_\star) + K_\star K^{-1} (Y - \mu(X))\\
-\sigma_\star^2 &= g_{\mathrm{v}} (x_{\star}) \coloneqq K_{\star \star} - K_\star K^{-1} K_\star^T\\
-K_\star &= [k(x_\star, x_1), \dots, k(x_\star, x_N)], K_{\star \star} = k(x_\star, x_\star) \text.
+\sigma_\star^2 &= g_{\mathrm{v}} (x_{\star}) \coloneqq K_{\star \star} - K_\star K^{-1} K_\star^T \text,
 \end{align}
 \end{subequations}
+where \(K_\star = [k(x_\star, x_1), \dots, k(x_\star, x_N)]\), \(K_{\star \star} = k(x_\star, x_\star)\), and $K$ is the covariance matrix with elements \(K_{ij} = k(x_i, x_j)\).
 
-A key advantage of GP regression is that it provides the predictive posterior distribution of the output instead of a point estimate.
-This posterior distribution carries the full information of the prediction, including for example its confidence level.
-While the predicted mean is often used as the best guess of the output, the full distribution can be used in a meaningful way.
-In our method, the variance of the predictive distribution is incorporated into the optimization to control the system with a quantifiable confidence guarantee.
+Note that the mean and covariance functions are parameterized by the hyperparameters $\theta$, which can be learned by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
+The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $D = (X, Y)$.
+In other words, a GP model specifies the structure of the covariance matrix of, or the relationship between, the input variables rather than a fixed structural input--output relationship.
+It is therefore highly flexible and can capture complex behavior with fewer parameters.
+There exists a wide range of covariance functions and combinations to choose from \cite{Rasmussen2006}. 
+
+GPs offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems.
+\begin{enumerate}
+\item GPs provide an estimate of uncertainty or confidence in the
+  predictions through the predictive variance.  While the predictive mean is often used as the best guess of the output, the full distribution can be used in a meaningful way. For example, we can estimate a 95\% confidence bound for the predictions which can be used to measure control performance.
+\item GPs work well with small data sets.  This ability is generally useful for any learning application.
+\item The model structure of GPs allows to include prior knowledge of the system behavior by defining priors on the hyperparameters or using particular structure of the covariance function.  This feature enables incorporating domain knowledge directly into the GP model to improve its accuracy.
+\end{enumerate}
 
 
 \subsection{Gaussian Processes for Dynamical Systems}
 \label{sec:intro-gp:control}
 
-As GPs can be used to model nonlinear functions, they are suitable for modeling dynamical systems.
-This is achieved by feeding delayed input and output signals back to the model as regressors \cite{kocijan16modelling}.
-In such cases, the model is said to be autoregressive, whose current output depends on its past inputs and outputs.
-Specifically, in control systems, it is common to use as the regressors of a dynamical GP
+GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
+Specifically, n control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
+\begin{math}
+  y_{t} = f(x_t)
+\end{math}
+where
 \begin{equation*}
- x_t\!=\![y_{t-l_y}, \dots, y_{t-1}, u_{t-l_u}, \dots, u_t, w_{t-l_w}, \dots, w_{t-1}, w_t]
+  x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
 \end{equation*}
-where \(t\) denotes the time step, \(u\) the control input, \(w\) the exogenous disturbance input, \(y\) the (past) output.
-Here, \(l_y\), \(l_u\), and \(l_w\) are respectively the lags for autoregressive outputs, control inputs, and disturbances.
+Here, \(t\) denotes the time step, \(u\) the control input, \(w\) the exogenous disturbance input, \(y\) the (past) output, and \(l\), \(m\), and \(p\) are respectively the lags for autoregressive outputs, control inputs, and disturbances.
 Note that \(u_t\) and \(w_t\) are the current control and disturbance inputs.
 The vector of all autoregressive inputs can be thought of as the current state of the model.
 A dynamical GP can then be trained from data in the same way as any other GPs.
 
+\iffalse
 When a GP is used for control or optimization, it is usually necessary to simulate the model over a finite number of future steps and predict its multistep-ahead behavior.
 Because the output of a GP is a distribution rather than a point estimate, the autoregressive outputs fed to the model beyond the first step are random variables, resulting in more and more complex output distributions as we go further.
 Therefore, a multistep simulation of a GP involves the propagation of uncertainty through the model.
-There exist several methods for uncertainty propagation in GPs \cite{girard04approximate,kocijan16modelling}. 
+There exist several methods for uncertainty propagation in GPs \cite{girard04approximate,Kocijan2016}. 
 We mention here two simulation methods for autoregressive GPs.
 \begin{itemize}
 \item The \emph{Monte-Carlo method} obtains samples of the output distribution under input uncertainty, which can be seen as a Gaussian mixture.  This Gaussian mixture becomes more complex in later steps of the simulation, therefore efficient numerical algorithms must be implemented.  This method can achieve good prediction accuracy at the expense of high computational load.  It is also general, \ie it can be used with any covariance functions.
-\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{kocijan16modelling,girard04approximate}.
+\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
 \end{itemize}
 
+\fi
 
-\subsection{Training}
-
-\todo[inline]{GP training}
-
-\subsection{Prediction}
-
-\todo[inline]{GP prediction}
 
 \begin{figure}[h!]
   \centering
