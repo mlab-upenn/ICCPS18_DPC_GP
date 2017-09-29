@@ -19,47 +19,17 @@ reftol = 0.1; % 0.05*abs(DRreduction);
 
 
 %% Select the GP model
-% control_gp_model_file = 'doe_noreset_IG_2ramped_3input_ahead00_14days_truongkernel';
-control_gp_model_file = 'random_uniform_2ramped_3input_ahead00_14days_truongkernel';
+control_gp_model_file = 'doe_noreset_IG_2ramped_3input_ahead00_14days_truongkernel';
+%control_gp_model_file = 'random_uniform_2ramped_3input_ahead00_14days_truongkernel';
 
 ramplimit = 2;
 
-%{
-%%
-
-DRstart = 13;
-DRend = 16;
-DRreduction = 30*1000;  % in Watts
-%reftol = 0.05*abs(DRreduction);
-
-% Set to true if multiple GPs are used for predictions; otherwise a single
-% GP is used iteratively.
-multipleGPs = false;
-
-horizon = 8;
-active_ahead = 4;
-
-use_battery = true;
-wdelta = 100;
-wPb = 0;
-%wvar = 0.2*wdelta;
-wvar = 10;
-
-MATpostfix = sprintf('_%s', datestr(now, 'yyyymmdd_HHMM'));  % _%02d  simindex
-
-t = tic;
-run_sim;
-running_time_stats(simindex) = toc(t);
-delete(controller)
-clear controller
-simindex = simindex + 1;
-%}
 
 %%
 
 DRstart = 18;
 DRend = 21;
-DRreduction = 25*1000;  % in Watts
+DRreduction = 20*1000;  % in Watts
 %reftol = 0.05*abs(DRreduction);
 
 % Set to true if multiple GPs are used for predictions; otherwise a single
@@ -84,12 +54,12 @@ delete(controller)
 clear controller
 simindex = simindex + 1;
 
-
+%{
 %%
 
 DRstart = 18;
 DRend = 21;
-DRreduction = 40*1000;  % in Watts
+DRreduction = 20*1000;  % in Watts
 %reftol = 0.05*abs(DRreduction);
 
 % Set to true if multiple GPs are used for predictions; otherwise a single
@@ -113,7 +83,7 @@ running_time_stats(simindex) = toc(t);
 delete(controller)
 clear controller
 simindex = simindex + 1;
-
+%}
 
 %% Summary
 disp('Running time statistics:');
