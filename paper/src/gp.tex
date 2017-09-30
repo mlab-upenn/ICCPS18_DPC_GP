@@ -1,12 +1,12 @@
 \section{Gaussian Processes}
-\label{sec:intro-gp}
+\label{S:gp}
 
 In this section, we briefly introduce modeling with Gaussian Process (GP) and its applications in control.
 More details can be found in \cite{Rasmussen2006} %on GP for machine learning and in
 and \cite{Kocijan2016}. % on GP modeling of dynamic systems.
 
 \begin{definition}[\cite{Rasmussen2006}]
-  A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+ A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
 \end{definition}
 Consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
 A GP of \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),
@@ -17,10 +17,11 @@ k(x,x') &= \EE [(f(x)-\mu(x)) (f(x') - \mu(x'))] + \sigma_n^2 \delta(x,x')
 where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
+Given the training data, the hyperparameters can be estimated by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
 
 Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance
 \begin{subequations}
-\label{eq:gp-regression}
+\label{E:gp-regression}
 \begin{align}
 \bar{y}_\star &= g_{\mathrm{m}} (x_{\star}) \coloneqq \mu(x_\star) + K_\star K^{-1} (Y - \mu(X))\\
 \sigma_\star^2 &= g_{\mathrm{v}} (x_{\star}) \coloneqq K_{\star \star} - K_\star K^{-1} K_\star^T \text,
@@ -42,18 +43,17 @@ GPs offer several advantages over other machine learning algorithms that make th
 \item The model structure of GPs allows to include prior knowledge of the system behavior by defining priors on the hyperparameters or using particular structure of the covariance function.  This feature enables incorporating domain knowledge directly into the GP model to improve its accuracy.
 \end{enumerate}
 
-
 \subsection{Gaussian Processes for Dynamical Systems}
 \label{sec:intro-gp:control}
 
 GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
 Specifically, n control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
 \begin{math}
-  y_{t} = f(x_t)
+y_{t} = f(x_t)
 \end{math}
 where
 \begin{equation*}
-  x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
+x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
 \end{equation*}
 Here, \(t\) denotes the time step, \(u\) the control input, \(w\) the exogenous disturbance input, \(y\) the (past) output, and \(l\), \(m\), and \(p\) are respectively the lags for autoregressive outputs, control inputs, and disturbances.
 Note that \(u_t\) and \(w_t\) are the current control and disturbance inputs.
@@ -67,23 +67,16 @@ Therefore, a multistep simulation of a GP involves the propagation of uncertaint
 There exist several methods for uncertainty propagation in GPs \cite{girard04approximate,Kocijan2016}. 
 We mention here two simulation methods for autoregressive GPs.
 \begin{itemize}
-\item The \emph{Monte-Carlo method} obtains samples of the output distribution under input uncertainty, which can be seen as a Gaussian mixture.  This Gaussian mixture becomes more complex in later steps of the simulation, therefore efficient numerical algorithms must be implemented.  This method can achieve good prediction accuracy at the expense of high computational load.  It is also general, \ie it can be used with any covariance functions.
-\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
+	\item The \emph{Monte-Carlo method} obtains samples of the output distribution under input uncertainty, which can be seen as a Gaussian mixture.  This Gaussian mixture becomes more complex in later steps of the simulation, therefore efficient numerical algorithms must be implemented.  This method can achieve good prediction accuracy at the expense of high computational load.  It is also general, \ie it can be used with any covariance functions.
+	\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
 \end{itemize}
 
 \fi
 
-
 \begin{figure}[h!]
-  \centering
-  \missingfigure[figwidth=20pc]{show GP prior and posterior side by side for building example}
-  \caption{}
-  \captionsetup{justification=centering}
-  \label{F:}
+	\centering
+	\missingfigure[figwidth=20pc]{show GP prior and posterior side by side for building example}
+	\caption{}
+	\captionsetup{justification=centering}
+	\label{F:}
 \end{figure}
-
-  
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "main"
-%%% End:

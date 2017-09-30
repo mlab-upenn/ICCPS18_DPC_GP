@@ -1,4 +1,6 @@
-\documentclass{sig-alternate-ipsn13}
+\documentclass[conference]{IEEEtran}
+%\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 
 \usepackage{mathtools}  % for special symbols such as :=
 \usepackage{xspace}
@@ -49,7 +51,6 @@
 \newcommand{\PP}{\mathbb{P}\xspace}  % Probability
 \newcommand{\BB}{\mathbb{B}\xspace}  % Logic set {true, false}
 
-
 % some fixes
 %\linespread{0.915}
 %\setlength{\textfloatsep}{4pt}
@@ -62,94 +63,43 @@
 
 \begin{document}
 
-\title{End-to-end Learning \& Control using Gaussian Processes \\
+\title{Learning and Control using Gaussian Processes \\
 	\vspace{0.1cm}
-\Large \textbf{Towards bridging machine learning and controls for physical systems}}
-%
-% You need the command \numberofauthors to handle the 'placement
-% and alignment' of the authors beneath the title.
-%
-% For aesthetic reasons, we recommend 'three authors at a time'
-% i.e. three 'name/affiliation blocks' be placed beneath the title.
-%
-% NOTE: You are NOT restricted in how many 'rows' of
-% "name/affiliations" may appear. We just ask that you restrict
-% the number of 'columns' to three.
-%
-% Because of the available 'opening page real-estate'
-% we ask you to refrain from putting more than six authors
-% (two rows with three columns) beneath the article title.
-% More than six makes the first-page appear very cluttered indeed.
-%
-% Use the \alignauthor commands to handle the names
-% and affiliations for an 'aesthetic maximum' of six authors.
-% Add names, affiliations, addresses for
-% the seventh etc. author(s) as the argument for the
-% \additionalauthors command.
-% These 'additional authors' will be output/set for you
-% without further effort on your part as the last section in
-% the body of your article BEFORE References or any Appendices.
+	\Large \textbf{Towards bridging machine learning and controls for physical systems}}
 
-\numberofauthors{1} %  in this sample file, there are a *total*
-% of EIGHT authors. SIX appear on the 'first-page' (for formatting
-% reasons) and the remaining two appear in the \additionalauthors section.
-%
-\author{
-% You can go ahead and credit any number of authors here,
-% e.g. one 'row of three' or two rows (consisting of one row of three
-% and a second row of one, two or three).
-%
-% The command \alignauthor (no curly braces needed) should
-% precede each author name, affiliation/snail-mail address and
-% e-mail address. Additionally, tag each line of
-% affiliation/address with \affaddr, and tag the
-% e-mail address with \email.
-%
-% 1st. author
-  \alignauthor
-  First Last
-% Achin Jain$^{\S}$, Truong X. Nghiem$^{\S,\ddag}$, Manfred Morari$^{\S}$, Rahul Mangharam$^{\S}$\\
-%        \email{$^{\S}$\{achinj,nghiem,morari,rahulm\}@seas.upenn.edu; \; $^{\ddag}$Truong.Nghiem@nau.edu} \\
-%        \affaddr{$^{\S}$University of Pennsylvania, Philadelphia, PA 19104, USA} \\ % Department of Electrical and Systems Engineering, 
-% 	   \affaddr{$^{\ddag}$Northern Arizona University, Flagstaff, AZ 86011, USA}
-% 2nd. author
-%\vspace{0.2cm}
-%\alignauthor
-%Truong X. Nghiem\\
-%       \affaddr{University of Pennsylvania}\\
-%       \affaddr{Philadelphia, PA 19104,  USA}\\ 
-%       \email{nghiem@seas.upenn.edu}
-%\and  % use '\and' if you need 'another row' of author names 
-% 3rd. author
-%\alignauthor Rahul Mangharam\\
-%       \affaddr{University of Pennsylvania}\\
-%       \affaddr{Philadelphia, PA 19104,  USA}\\
-%       \email{rahulm@seas.upenn.edu}
-% 4th. author        
-%\alignauthor Manfred Morari\\
-%	\affaddr{University of Pennsylvania}\\
-%	\affaddr{Philadelphia, PA 19104,  USA}\\
-%	\email{morari@seas.upenn.edu}       
+
+\author{\IEEEauthorblockN{Achin Jain$^{\star,\S}$, Truong X. Nghiem$^{\star,\S,\ddag}$, Manfred Morari$^{\S}$, Rahul Mangharam$^{\S}$}
+\IEEEauthorblockA{\textit{$^{\S}$University of Pennsylvania, Philadelphia, PA 19104, USA} \\
+\textit{$^{\ddag}$Northern Arizona University, Flagstaff, AZ 86011, USA} \\
+$^{\star}$\textit{equal contribution}}
+%\and
+%\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
+%\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+%\textit{name of organization (of Aff.)}\\
+%City, Country \\
+%email address}
+%\and
+%\IEEEauthorblockN{3\textsuperscript{rd} Given Name Surname}
+%\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+%\textit{name of organization (of Aff.)}\\
+%City, Country \\
+%email address}
+%\and
+%\IEEEauthorblockN{4\textsuperscript{th} Given Name Surname}
+%\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+%\textit{name of organization (of Aff.)}\\
+%City, Country \\
+%email address}
 }
-% There's nothing stopping you putting the seventh, eighth, etc.
-% author on the opening page (as the 'third row') but we ask,
-% for aesthetic reasons that you place these 'additional authors'
-% in the \additional authors block, viz.
-%\additionalauthors{Additional authors: John Smith (The Th{\o}rv{\"a}ld Group,
-%email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
-%(The Kumquat Consortium, email: {\texttt{jpkumquat@consortium.net}}).}
-
-\date{\today}
-
-% Just remember to make sure that the TOTAL number of authors
-% is the number that will appear on the first page PLUS the
-% number that will appear in the \additionalauthors section.
 
 \maketitle
 
 %% ABSTRACT
 \input{abstract.tex}
 
+\begin{IEEEkeywords}
+Machine learning, Gaussian Processes, Optimal Experiment Design, Receding Horizon Control, Active Learning
+\end{IEEEkeywords}
 
 %% SECTIONS
 \input{intro.tex}
@@ -162,18 +112,11 @@
 %% CONCLUSION
 \input{conclusion.tex}
 
-
 %ACKNOWLEDGMENTS
 %\input{ack.tex}
 
-
 %% BIBLIOGRAPHY
-\bibliographystyle{abbrv}
+\bibliographystyle{unsrt}
 \bibliography{references} 
-
-%% APPENDIX
-%\balancecolumns
-%\appendix
-
 
 \end{document}
