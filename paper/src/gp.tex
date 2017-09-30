@@ -40,14 +40,14 @@ GPs offer several advantages over other machine learning algorithms that make th
 \item GPs provide an estimate of uncertainty or confidence in the
   predictions through the predictive variance.  While the predictive mean is often used as the best guess of the output, the full distribution can be used in a meaningful way. For example, we can estimate a 95\% confidence bound for the predictions which can be used to measure control performance.
 \item GPs work well with small data sets.  This ability is generally useful for any learning application.
-\item The model structure of GPs allows to include prior knowledge of the system behavior by defining priors on the hyperparameters or using particular structure of the covariance function.  This feature enables incorporating domain knowledge directly into the GP model to improve its accuracy.
+\item GPs allow including prior knowledge of the system behavior by defining priors on the hyperparameters or constructing a particular structure of the covariance function.  This feature enables incorporating domain knowledge into the GP model to improve its accuracy.
 \end{enumerate}
 
 \subsection{Gaussian Processes for Dynamical Systems}
 \label{sec:intro-gp:control}
 
 GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
-Specifically, n control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
+Specifically, in control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
 \begin{math}
 y_{t} = f(x_t)
 \end{math}
@@ -73,10 +73,15 @@ We mention here two simulation methods for autoregressive GPs.
 
 \fi
 
-\begin{figure}[h!]
-	\centering
-	\missingfigure[figwidth=20pc]{show GP prior and posterior side by side for building example}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:}
+\begin{figure}[!tb]
+  \centering \missingfigure[figwidth=20pc]{show GP prior and posterior
+    side by side for building example}
+  \caption{}
+  \captionsetup{justification=centering}
+  \label{F:GP}
 \end{figure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
