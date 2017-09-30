@@ -4,8 +4,18 @@
 
 \usepackage{mathtools}  % for special symbols such as :=
 \usepackage{xspace}
-
 \usepackage{achinDefs}
+
+
+\usepackage{tikz}
+\usepackage[utf8]{inputenc}
+\usepackage{pgfplots} 
+\usepackage{pgfgantt}
+\usepackage{pdflscape}
+\pgfplotsset{compat=newest} 
+\pgfplotsset{plot coordinates/math parser=false}
+\newlength\fwidth
+\newlength\hwidth
 
 %%%%%%%%%%%%%%%%% Macros used in the paper %%%%%%%%%%%%%%%%%%%%
 
@@ -98,7 +108,7 @@ $^{\star}$\textit{equal contribution}}
 \input{abstract.tex}
 
 \begin{IEEEkeywords}
-Machine learning, Gaussian Processes, Optimal Experiment Design, Receding Horizon Control, Active Learning
+Machine learning, Gaussian Processes, optimal experiment design, receding horizon control, active learning
 \end{IEEEkeywords}
 
 %% SECTIONS

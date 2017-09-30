@@ -19,7 +19,7 @@ The hyperparameter vector \(\theta\) parameterizes the mean and covariance funct
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
 Given the training data, the hyperparameters can be estimated by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
 
-Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance
+Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance
 \begin{subequations}
 \label{E:gp-regression}
 \begin{align}
@@ -44,7 +44,7 @@ GPs offer several advantages over other machine learning algorithms that make th
 \end{enumerate}
 
 \subsection{Gaussian Processes for Dynamical Systems}
-\label{sec:intro-gp:control}
+\label{S:intro-gp:control}
 
 GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
 Specifically, n control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function

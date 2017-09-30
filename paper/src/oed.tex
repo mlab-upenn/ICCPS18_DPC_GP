@@ -16,69 +16,100 @@ For \textit{optimal experiment design} and \textit{selecting the most informativ
 \subsection{Information theoretic approach to OED}
 
 In this section, we show how the prediction variance \eqref{E:gp-regression} in GPs can be exploited for experiment design.
-The goal here is to update the parameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially. One popular metric of selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}. Since, we can calculate the variance in \(y\) for any \(x\), OED based on MV is straight forward to compute. However, another metric which has proven to provide better procedure to update parameters \(\theta\) is the Information Gain (IG) \cite{Krause2008}. 
+The goal here is to update the parameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially. One popular metric of selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}. Since, we can calculate the variance in \(y\) for any \(x\), OED based on MV is straight forward to compute. However, another metric which has proven to more powerful in learning parameters \(\theta\) is the Information Gain (IG) \cite{Krause2008}. 
 
-IG metric selects the sample which adds maximum information to the model, i.e.~reduces the uncertainty in \(\theta\) the most. If we denote the existing data before sampling by \(D\), then the goal is to select \(x\) that maximizes the information gain defined as
+IG metric selects the sample which adds maximum information to the model, i.e.~reduces the uncertainty in \(\theta\) the most. If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
 \begin{align}
-\argmax_x H(\theta|D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|D,x,y),
+\argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y),
 \label{E:ig:theta}
 \end{align}
 where, \(H\) is the Shanon's Entropy given by
 \begin{align}
-H(\theta|D) = -\int p(\theta|D) \log (p(\theta|D))d\theta.
+H(\theta|\D) = -\int p(\theta|\D) \log (p(\theta|\D))d\theta.
 \end{align}
 Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}\), we need to take an expectation over \(y\). When the dimension of \(\theta\) is large, computing entropies is typically computationally intractable. Using equivalence of the expressions \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\),
 we can transform \eqref{E:ig:theta} as
 \begin{align}
-\argmax_x H(y|x,D) - \EE_{\theta \sim p(\theta|D)}H(y|x,\theta).
+\argmax_x H(y|x,\D) - \EE_{\theta \sim p(\theta|\D)}H(y|x,\theta).
 \label{E:ig:y}
 \end{align}
 In this case, the expectation is defined over \(\theta\) the expression \eqref{E:ig:y} is much easier to compute because \(y\) is now single dimension. For further details, we refer the reader to \cite{Houlsby2011}.
-The first term in \eqref{E:ig:y} can be calculated by marginalizing over the distribution of \(\theta|D\):
+The first term in \eqref{E:ig:y} can be calculated by marginalizing over the distribution of \(\theta|\D\):
 \begin{align}
-p(y|x,D) =& \EE_{\theta \sim p(\theta|D)}p(y|x,\theta,D) \nonumber\\
-=& \int p(y|x,\theta, D)p(\theta|D)d\theta
+p(y|x,\D) =& \EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \nonumber\\
+=& \int p(y|x,\theta, \D)p(\theta|\D)d\theta
 \end{align}
-for which the exact solution is difficult to compute. We therefore use an approximation described in \cite{Garnett2013}. It is shown that for \(\theta|D \sim \GaussianDist{\bar{\theta}}{\Sigma}\), we can find a linear approximation to \(\bar{y}(x) = a^T(x)\theta+b(x)\) such that
+for which the exact solution is difficult to compute. We therefore use an approximation described in \cite{Garnett2013}. It is shown that for \(\theta|\D \sim \GaussianDist{\bar{\theta}}{\Sigma}\), we can find a linear approximation to \(\bar{y}(x) = a^T(x)\theta+b(x)\) such that
 \begin{align}
-\EE_{\theta \sim p(\theta|D)}p(y|x,\theta,D) \sim \GaussianDist{a^T\bar{\theta}+b}{\sigma^2+a^T\Sigma a}.
+\EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \sim \GaussianDist{a^T\bar{\theta}+b}{\sigma^2+a^T\Sigma a}.
 \end{align}
 Under the same approximation, the second term in \eqref{E:ig:y} can be written as \(H(y|x,\hat{\theta})\). 
 Finally, using the relation for the differential entropy for a Gaussian distribution, the information gain in \eqref{E:ig:y} is approximated as
 %\begin{align}
-%H(y|x,D) = \frac{1}{2}\log(2\pi e \sigma^2(x)).
+%H(y|x,\D) = \frac{1}{2}\log(2\pi e \sigma^2(x)).
 %\end{align}
 \begin{align}
 \text{IG} = \frac{1}{2}\log\left(\frac{\sigma^2(x)+a^T(x)\Sigma a(x)}{\sigma^2(x)}\right).
+\label{E:ig:final}
 \end{align}
+Next, we apply this result for sequential optimal experiment design and best batch selection.
 
+\subsection{Sequential sampling: recommending control strategies for experiment design }
 
-\subsection{Batch selection: selecting most informative data for periodic model update}
+%As said before, when the available data is limited, we need a procedure to sample new data. 
+The goal here is to update the model parameters \(\theta\) of the GP efficiently as new data is observed. 
+To begin the experiment design, we assume that we only know about which features \(x\) have an influence on the output \(y\). This is often known in practice. For example, for the case study in Sec.~\ref{S:casestudy}, the output of interest if the building power consumption, and the features we consider include outside air temperature and humidity, time of day to account for occupancy, control set points and lagged terms for the output. Then a covariance structure of GP must be selected. For the example above, we chose a squared exponential kernel.
+If samples \(\D := (X,Y)\) are available, we can assign the prior distribution on \(\theta\) based on the MLE estimate \( \argmax_\theta \Pr(Y \vert X, \theta)\), i.e.~\(\theta_{\mathrm{init}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma_{\mathrm{init}}}\) where a suitable value of \(\sigma_{\mathrm{init}}\) is chosen, otherwise, the mean of the Gaussian priors \(\theta_{\mathrm{init}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma_\mathrm{init}}\) is also initialized manually.
 
-The data from a real system are often noisy and contain outliers. 
-It is therefore essential to filter the most \textit{informative} data that best explain the dynamics from the available pool of data.
-Further, for both training time and real-time control, the computational complexity of Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. Thus, obtaining the best GP model with least data is highly desired.
-
-The goal of this section is to outline a systematic procedure for optimal experiment design that can be employed to select best $k$ samples from given $n$ observations.
-
-What is the optimal procedure to select data for model training for large data
-
+Now, consider a dynamical GP model introduced in Sec.~\ref{S:intro-gp:control},
+\begin{math}
+y_{t} = f(x_t;\theta)
+\end{math}
+where
+\begin{equation*}
+x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
+\end{equation*}
+At time \(t\), the current disturbance, and the lagged terms of the output, control input and disturbance are all known. The current control input \(u_t \in \RR^p \) is the only unknown feature for experiment design. For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
+\begin{align}
+\maximize_{u_{t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2(x_t)}\right) \\
+\st &  \ \ \ \     u_{\mathrm{min}}  \leq u_t \leq u_{\mathrm{max}} \nonumber
+\end{align}
+The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\) and we proceed to time \(t+1\). 
+The algorithm for OED is summarized in Algo.~\ref{A:oed}
+In Sec.~\ref{S:casestudy}, for a dynamical model of a building, we add operation constraints on a Chiller system to optimally sample the chilled water temperature, supply air temperature and the zone level cooling set point. 
 \begin{figure}[h!]
 	\centering
-	\missingfigure[figwidth=20pc]{comparison of model accuracy b/w IG, MV, Uniform, PRBS}
+	\missingfigure[figwidth=20pc]{BAR PLOT: comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
 	\caption{}
 	\captionsetup{justification=centering}
 	\label{F:}
 \end{figure}
 
-\subsection{Sequential sampling: recommending control strategies for experiment design }
 
-\todo[inline]{extension of last approach for functional testing}
-\todo[inline]{useful under operational constraints}
+\subsection{Batch selection: selecting most informative data for periodic model update}
+
+The computational complexity of training Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. 
+Further, the data from a real system are often noisy, contain outliers. 
+Obtaining the best GP model with least data is highly desired.
+It is therefore essential to filter the most informative subset of data that best explain the dynamics.
+In this section, we outline a systematic procedure to select best $k$ samples from given $n$ observations.
+The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable, and (2) the decision has to be made only from the available data rather than sampling. 
+
+Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. Then, we add this sample to \(\mathcal{S}\) until \(|\mathcal{S}|=k\) or the model performance meets some desired metric. In this setup, we solve the following optimization problem
+\begin{align}
+\maximize_{x_{k}:(x_k,y_k) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_k)+a^T(x_k)\Sigma a(x_k)}{\sigma^2(x_k)}\right)
+\end{align}
+
+The algorithm for OED is summarized in Algo.~\ref{A:batch}
+
+
 
 \begin{figure}[h!]
+	\setlength\fwidth{0.4\textwidth}
+	\setlength\hwidth{0.3\textwidth}
 	\centering
-	\missingfigure[figwidth=20pc]{BAR PLOT: comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
+	\input{figures/selection.tex}
+%	\input{figures/selection_random.tex}
 	\caption{}
 	\captionsetup{justification=centering}
 	\label{F:}
