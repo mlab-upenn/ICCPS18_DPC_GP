@@ -5,8 +5,8 @@ In this section, we briefly introduce modeling with Gaussian Process (GP) and it
 More details can be found in \cite{Rasmussen2006} %on GP for machine learning and in
 and \cite{Kocijan2016}. % on GP modeling of dynamic systems.
 
-\begin{definition}[\cite{Rasmussen2006}]
- A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
+\begin{definition}
+A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution \cite{Rasmussen2006}.
 \end{definition}
 Consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
 A GP of \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),

@@ -59,28 +59,54 @@ Next, we apply this result for sequential optimal experiment design and best bat
 %As said before, when the available data is limited, we need a procedure to sample new data. 
 The goal here is to update the model parameters \(\theta\) of the GP efficiently as new data is observed. 
 To begin the experiment design, we assume that we only know about which features \(x\) have an influence on the output \(y\). This is often known in practice. For example, for the case study in Sec.~\ref{S:casestudy}, the output of interest if the building power consumption, and the features we consider include outside air temperature and humidity, time of day to account for occupancy, control set points and lagged terms for the output. Then a covariance structure of GP must be selected. For the example above, we chose a squared exponential kernel.
-If samples \(\D := (X,Y)\) are available, we can assign the prior distribution on \(\theta\) based on the MLE estimate \( \argmax_\theta \Pr(Y \vert X, \theta)\), i.e.~\(\theta_{\mathrm{init}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma_{\mathrm{init}}}\) where a suitable value of \(\sigma_{\mathrm{init}}\) is chosen, otherwise, the mean of the Gaussian priors \(\theta_{\mathrm{init}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma_\mathrm{init}}\) is also initialized manually.
+If samples \(\D := (X,Y)\) are available, we can assign the prior distribution on \(\theta\) based on the MLE estimate \( \argmax_\theta \Pr(Y \vert X, \theta)\), i.e.~\(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\) where a suitable value of \(\sigma^2_{\mathrm{init}}\) is chosen, otherwise, the mean of the Gaussian priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\) is also initialized manually.
 
 Now, consider a dynamical GP model introduced in Sec.~\ref{S:intro-gp:control},
 \begin{math}
 y_{t} = f(x_t;\theta)
 \end{math}
 where
-\begin{equation*}
+\begin{align}
 x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
-\end{equation*}
+\label{E:GP:features}
+\end{align}
 At time \(t\), the current disturbance, and the lagged terms of the output, control input and disturbance are all known. The current control input \(u_t \in \RR^p \) is the only unknown feature for experiment design. For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
 \begin{align}
+\label{E:oed:sampling}
 \maximize_{u_{t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2(x_t)}\right) \\
 \st &  \ \ \ \     u_{\mathrm{min}}  \leq u_t \leq u_{\mathrm{max}} \nonumber
 \end{align}
-The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\) and we proceed to time \(t+1\). 
-The algorithm for OED is summarized in Algo.~\ref{A:oed}
+The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
+The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
 In Sec.~\ref{S:casestudy}, for a dynamical model of a building, we add operation constraints on a Chiller system to optimally sample the chilled water temperature, supply air temperature and the zone level cooling set point. 
+
+\begin{algorithm}[!tb]
+	\caption{Sequential sampling for OED}
+	\label{A:oed:sequential}
+	\begin{algorithmic}[1]
+		\Procedure{Initialization}{}
+		\If{initial \(\D := (X,Y)\)}
+		\State Compute \( \theta_{\mathrm{MLE}} = \argmax_{\theta^{\mathrm{MLE}}} \Pr(Y \vert X, \theta)\)
+		\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\)
+		\Else 
+		\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\)
+		\EndIf
+		\EndProcedure
+		\Procedure{Sampling}{}
+		\While{\(t<t_{\mathrm{max}}\)}
+		\State Calculate features \(x_t\) in \eqref{E:GP:features} as a function of \(u_t\)
+		\State Solve \eqref{E:oed:sampling} to calculate optimal \(u^*_t\)
+		\State Apply \(u^*_t\) to the system and measure \(y_t\)
+		\State \(\D = \D \cup (x_t,y_t) \)
+		\State Update \( \theta_{\mathrm{t}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{t-1}})\)
+		\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
 
 \begin{figure}[!tb]
 	\centering
-	\missingfigure[figwidth=20pc]{BAR PLOT: comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
+	\missingfigure[figwidth=20pc]{comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
 	\caption{}
 	\captionsetup{justification=centering}
 	\label{F:OED}
@@ -98,17 +124,38 @@ The main differences between the problem of selecting the best or the most infor
 
 Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. Then, we add this sample to \(\mathcal{S}\) until \(|\mathcal{S}|=k\) or the model performance meets some desired metric. In this setup, we solve the following optimization problem
 \begin{align}
-\maximize_{x_{k}:(x_k,y_k) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_k)+a^T(x_k)\Sigma a(x_k)}{\sigma^2(x_k)}\right)
+\label{E:oed:batch}
+\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
 \end{align}
 
-The algorithm for OED is summarized in Algo.~\ref{A:batch}
+The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
 
-\begin{figure}[!tb]
-	\centering
-	\setlength\fwidth{0.4\textwidth}
-	\setlength\hwidth{0.3\textwidth}	
-	\input{figures/selection.tex}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:OED-acc}
-\end{figure}
+\begin{algorithm}[!tb]
+	\caption{Batch selection for OED}
+	\label{A:oed:batch}
+	\begin{algorithmic}[1]
+		\Procedure{Initialization}{}
+		\State Sample with replacement \(k\) integers \( \in \{1,\dots,n\} \)
+		\State Compute \( \theta_{\mathrm{MLE}} = \argmax_{\theta^{\mathrm{MLE}}} \Pr(Y \vert X, \theta)\)
+		\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\)
+		\EndProcedure
+		\State Define \(\mathcal{S} = \varnothing\)
+		\Procedure{Sampling}{}
+		\While{\( j < k \)}
+		\State Solve \eqref{E:oed:batch} for optimal \({x_{j} \vert (x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} \)
+		\State \(\mathcal{S} = \mathcal{S} \cup (x_j,y_j) \)
+		\State Update \( \theta_{\mathrm{j}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{j-1}})\)
+		\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+%\begin{figure}[!tb]
+%	\centering
+%	\setlength\fwidth{0.4\textwidth}
+%	\setlength\hwidth{0.3\textwidth}	
+%	\input{figures/selection.tex}
+%	\caption{}
+%	\captionsetup{justification=centering}
+%	\label{F:OED-acc}
+%\end{figure}
