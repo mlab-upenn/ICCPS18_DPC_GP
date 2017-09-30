@@ -13,7 +13,7 @@ buildings = {'LargeHotel'};
 nBuildings = numel(buildings);
 
 % The length of data used for the simulation
-datalen = (4 * 24) * (7*6);
+% datalen = (4 * 24) * (7*6);
 
 
 %% Load the baseline and forecasts
