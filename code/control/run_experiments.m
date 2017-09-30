@@ -17,13 +17,11 @@ Batt_params = struct('power_max', 50000, ...% Battery max charge/discharge power
 running_time_stats = [];
 reftol = 0.1; % 0.05*abs(DRreduction);
 
-
-%% Select the GP model
-control_gp_model_file = 'doe_noreset_IG_2ramped_3input_ahead00_14days_truongkernel';
-%control_gp_model_file = 'random_uniform_2ramped_3input_ahead00_14days_truongkernel';
-
 ramplimit = 2;
 
+
+%% Select the GP model
+control_gp_model_file = 'doe_noreset_IG_2ramped_3input_ahead00_4days_truongkernel';
 
 %%
 
@@ -36,14 +34,14 @@ DRreduction = 20*1000;  % in Watts
 % GP is used iteratively.
 multipleGPs = false;
 
-horizon = 4;
+horizon = 8;
 active_ahead = 4;
 
 use_battery = false;
 wdelta = 0;
 wPb = 100;
 %wvar = 0.2*wdelta;
-wvar = 1;
+wvar = 0.5;
 
 MATpostfix = sprintf('_nobattery_%s', datestr(now, 'yyyymmdd_HHMM'));  % _%02d  simindex
 
@@ -54,7 +52,6 @@ delete(controller)
 clear controller
 simindex = simindex + 1;
 
-%{
 %%
 
 DRstart = 18;
@@ -66,14 +63,14 @@ DRreduction = 20*1000;  % in Watts
 % GP is used iteratively.
 multipleGPs = false;
 
-horizon = 4;
+horizon = 8;
 active_ahead = 4;
 
 use_battery = true;
 wdelta = 100;
 wPb = 0;
 %wvar = 0.2*wdelta;
-wvar = 1;
+wvar = 0.5;
 
 MATpostfix = sprintf('_battery_%s', datestr(now, 'yyyymmdd_HHMM'));  % _%02d  simindex
 
@@ -83,7 +80,71 @@ running_time_stats(simindex) = toc(t);
 delete(controller)
 clear controller
 simindex = simindex + 1;
-%}
+
+
+%% Select the GP model
+control_gp_model_file = 'random_uniform_2ramped_3input_ahead00_4days_truongkernel';
+
+
+%%
+
+DRstart = 18;
+DRend = 21;
+DRreduction = 20*1000;  % in Watts
+%reftol = 0.05*abs(DRreduction);
+
+% Set to true if multiple GPs are used for predictions; otherwise a single
+% GP is used iteratively.
+multipleGPs = false;
+
+horizon = 8;
+active_ahead = 4;
+
+use_battery = false;
+wdelta = 0;
+wPb = 100;
+%wvar = 0.2*wdelta;
+wvar = 0.5;
+
+MATpostfix = sprintf('_nobattery_%s', datestr(now, 'yyyymmdd_HHMM'));  % _%02d  simindex
+
+t = tic;
+run_sim;
+running_time_stats(simindex) = toc(t);
+delete(controller)
+clear controller
+simindex = simindex + 1;
+
+
+%%
+
+DRstart = 18;
+DRend = 21;
+DRreduction = 20*1000;  % in Watts
+%reftol = 0.05*abs(DRreduction);
+
+% Set to true if multiple GPs are used for predictions; otherwise a single
+% GP is used iteratively.
+multipleGPs = false;
+
+horizon = 8;
+active_ahead = 4;
+
+use_battery = true;
+wdelta = 100;
+wPb = 0;
+%wvar = 0.2*wdelta;
+wvar = 0.5;
+
+MATpostfix = sprintf('_battery_%s', datestr(now, 'yyyymmdd_HHMM'));  % _%02d  simindex
+
+t = tic;
+run_sim;
+running_time_stats(simindex) = toc(t);
+delete(controller)
+clear controller
+simindex = simindex + 1;
+
 
 %% Summary
 disp('Running time statistics:');

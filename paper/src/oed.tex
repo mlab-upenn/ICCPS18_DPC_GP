@@ -77,12 +77,13 @@ At time \(t\), the current disturbance, and the lagged terms of the output, cont
 The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\) and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed}
 In Sec.~\ref{S:casestudy}, for a dynamical model of a building, we add operation constraints on a Chiller system to optimally sample the chilled water temperature, supply air temperature and the zone level cooling set point. 
-\begin{figure}[h!]
+
+\begin{figure}[!tb]
 	\centering
 	\missingfigure[figwidth=20pc]{BAR PLOT: comparison of model accuracy b/w  IG, MV, Uniform, PRBS}
 	\caption{}
 	\captionsetup{justification=centering}
-	\label{F:}
+	\label{F:OED}
 \end{figure}
 
 
@@ -102,15 +103,12 @@ Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through
 
 The algorithm for OED is summarized in Algo.~\ref{A:batch}
 
-
-
-\begin{figure}[h!]
-	\setlength\fwidth{0.4\textwidth}
-	\setlength\hwidth{0.3\textwidth}
+\begin{figure}[!tb]
 	\centering
+	\setlength\fwidth{0.4\textwidth}
+	\setlength\hwidth{0.3\textwidth}	
 	\input{figures/selection.tex}
-%	\input{figures/selection_random.tex}
 	\caption{}
 	\captionsetup{justification=centering}
-	\label{F:}
+	\label{F:OED-acc}
 \end{figure}
