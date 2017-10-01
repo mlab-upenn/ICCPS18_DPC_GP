@@ -1,0 +1,64 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\hwidth,
+at={(0\fwidth,0\hwidth)},
+scale only axis,
+xmin=0.75,
+xmax=4.25,
+xtick={1,2,3,4},
+xticklabels={{3 days},{4 days},{7 days},{15 days}},
+ymin=5,
+ymax=50,
+ylabel style={font=\color{white!15!black}},
+ylabel={error [kW]},
+axis background/.style={fill=white},
+axis x line*=bottom,
+axis y line*=left,
+legend style={legend cell align=left, align=left, fill=none, draw=none}
+]
+\addplot [color=black, line width=1.0pt, mark=o, mark options={solid, black}]
+  table[row sep=crcr]{%
+1	34.3140805588557\\
+2	27.5433343713973\\
+3	17.1677414519593\\
+4	14.4209817329554\\
+};
+\addlegendentry{OED: RMSE}
+
+\addplot [color=black, line width=1.0pt, mark=diamond, mark options={solid, black}]
+  table[row sep=crcr]{%
+1	26.8449130224607\\
+2	21.7375133161147\\
+3	12.4850812909003\\
+4	10.2094195992202\\
+};
+\addlegendentry{OED: AE}
+
+\addplot [color=black, dashed, line width=1.0pt, mark=o, mark options={solid, black}]
+  table[row sep=crcr]{%
+1	46.5079097566504\\
+2	32.6318399699692\\
+3	16.2266261244709\\
+4	15.4927695430419\\
+};
+\addlegendentry{Random: RMSE}
+
+\addplot [color=black, dashed, line width=1.0pt, mark=diamond, mark options={solid, black}]
+  table[row sep=crcr]{%
+1	35.783459827676\\
+2	24.8751433203046\\
+3	12.0397305635341\\
+4	10.609041925765\\
+};
+\addlegendentry{Random: AE}
+
+\end{axis}
+\end{tikzpicture}%
