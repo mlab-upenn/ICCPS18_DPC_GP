@@ -11,6 +11,7 @@
 
 * data generated using `generateTrainData.m`.
 * `unconstrained-` contains data with `22<=ClgSP<=32`, `24<=KitchenClgSP<=32`, `22<=GuestClgSP<=26`, `12<=SupplyAirSP<=14` and `3.7<=ChwSP<=9.7`. Other inputs follow the nominal rule-based strategy.
+* `train-ramped2-` contains data with `22<=GuestClgSP<=26`, `12<=SupplyAirSP<=14`, `3.7<=ChwSP<=9.7` and `|ChwSP(k)-ChwSP(k-1)|<=2`. Other inputs follow the nominal rule-based strategy.
 
 ## Testing data ##
 
