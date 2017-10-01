@@ -1,33 +1,31 @@
-\section{Receding Horizon Control}
+\section{Model Predictive Control}
 \label{S:dpc}
 
+In this section, we address the practical challenge of ``Computational complexity" and ``Performance guarantees" listed in Sec.~\ref{SS:practical_challenges}.
 
+Consider a black-box model given by $x_{t+1}=f(x_t,u_t,d_t)$, where $x,u,d$ represent state, input and disturbance, respectively. Depending upon the learning algorithm, $f$ is typically nonlinear, nonconvex and sometimes nondifferentiable (as is the case with regression trees and random forests) with no closed-form expression. 
+Such functional representations learned through black-box modeling may not be directly suitable for control and optimization as the optimization problem can be computationally intractable, or due to nondifferentiabilities we may have to settle with a sub-optimal solution using evolutionary algorithms. 
+In our previous work, we use \textit{separation of variables} that allows us to approximate the Random Forests as affine models in the neighborhood of a given disturbance \cite{JainCDC2017}. 
+The main drawback of this approach is that these models lead to a non-smooth input behavior. 
+Gaussian Processes overcome this problem at the expense of higher computational effort.
+Furthermore, GPs can generalize well using only a few samples while also providing an estimate for uncertainty in the predictions. 
+We exploit this property in the optimization to generate input trajectories with high confidence.
 
-\todo[inline]{closed-loop control with the identified model}
-\todo[inline]{training multiple models for each time step}
-\todo[inline]{comment on non-convexity, computational complexity}
+At time \(t\), given training data \(\D = (X,Y) \), we consider a different GP model for each time step \(\tau \in \{0,\dots,N-1\}\):
+\begin{gather}
+y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}}{\sigma^2}, \\
+x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t]. \nonumber
+\end{gather}
+The output at step \(\tau\) depends upon \(x_{t+\tau|t}\)  which is a function of inputs \(u_{t+\tau-m}, \dots, u_{t+\tau}\).
+We are interested in the following optimization problem with quadratic cost with \(R \succ 0\)
+\begin{align}
+\label{E:mpc:generic}
+\minimize & \sum_{\tau=0}^{N-1} (\bar{y}_{t+\tau|t}-y_{\mathrm{ref}})^2 + {u_{t+\tau|t}}^T R {u_{t+\tau|t}}+ \lambda \sigma^2_{t+\tau|t} \nonumber \\
+\st & \ \ \ \ \ \bar{y}_{t+\tau|t} = \mu(x_{t+\tau|t}) + K_\star K^{-1} (Y - \mu(X)), \nonumber\\
+& \ \ \ \ \ \ \ \ \ \ \sigma^2_{t+\tau|t} = K_{\star \star} - K_\star K^{-1} K_\star^T, \\
+& \ \ \ \ \ \ \ \ \ \ \ \ \ \ u_{\mathrm{min}}  \leq u_{t+\tau|t} \leq u_{\mathrm{max}}, \nonumber\\
+& \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \forall \tau \in \{0,\dots,N-1\}, \nonumber
+\end{align}
+where \(K_\star = [k(x_{t+\tau|t}, x_1), \dots, k(x_{t+\tau|t}, x_N)]\), \(K_{\star \star} = k(x_{t+\tau|t}, x_{t+\tau|t})\), and $K$ is the covariance matrix with elements \(K_{ij} = k(x_i, x_j)\). The parameters \(\theta\), i.e. the mean \(\mu\) and the covariance function \(k\) are optimized while training GPs as described in Sec.~\ref{S:gp} or by experiment design in \ref{S:oed}.
 
-
-\subsection{Tracking a reference power signal}
-
-\todo[inline]{optimization problem}
-
-\begin{figure}[!tb]
-	\centering
-	\missingfigure[figwidth=20pc]{}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:MPC1}
-\end{figure}
-
-\subsection{Optimizing energy usage under operation constraints}
-
-\todo[inline]{optimization problem}
-
-\begin{figure}[!tb]
-	\centering
-	\missingfigure[figwidth=20pc]{}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:MPC2}
-\end{figure}
+Although we have an analytical expressions for all the constraints in the optimization, depending upon the choice of mean and covariance functions, the optimization can be computationally hard to solve. For the case study in Sec.~\ref{S:casestudy} we choose a combination of a squared exponential and rational quadratic kernel which results in nonconvex constraints. Nevertheless, we can solve \eqref{E:mpc:generic} using IPOPT \cite{Waechter2009b}.
