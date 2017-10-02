@@ -16,16 +16,17 @@ The goal of active learning is to filter the most informative subset of data tha
 In this section, we outline a systematic procedure to select best $k$ samples from given $n$ observations.
 The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable, and (2) the decision has to be made only from the available data rather than sampling. 
 
-Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. Then, we add this sample to \(\mathcal{S}\) until \(|\mathcal{S}|=k\) or the model performance meets some desired metric. In this setup, we solve the following optimization problem
+We begin by selecting \(k\) samples randomly. This is the best result we can obtain using random sampling. We assign priors of \(\theta\) based on MLE estimate obtained by learning a GP on the drawn set.
+Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. In this setup, we solve the following optimization problem
 \begin{align}
 \label{E:oed:batch}
 \maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
 \end{align}
-
+Then, we add this sample to \(\mathcal{S}\), update the \(\theta\)  and proceed until \(|\mathcal{S}|=k\).
 The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
 
 \begin{algorithm}[!tb]
-	\caption{Batch selection for OED}
+	\caption{Optimal subset of data selection}
 	\label{A:oed:batch}
 	\begin{algorithmic}[1]
 		\Procedure{Initialization}{}
@@ -35,7 +36,7 @@ The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
 		\EndProcedure
 		\State Define \(\mathcal{S} = \varnothing\)
 		\Procedure{Sampling}{}
-		\While{\( j < k \)}
+		\While{\( j \leq k \)}
 		\State Solve \eqref{E:oed:batch} for optimal \({x_{j} \vert (x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} \)
 		\State \(\mathcal{S} = \mathcal{S} \cup (x_j,y_j) \)
 		\State Update \( \theta_{\mathrm{j}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{j-1}})\)
