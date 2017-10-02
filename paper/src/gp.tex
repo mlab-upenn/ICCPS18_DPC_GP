@@ -10,10 +10,11 @@ A Gaussian process is a collection of random variables, any finite number of whi
 \end{definition}
 Consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
 A GP of \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),
-\begin{align*}
+\begin{align}
+\label{E:gp:prior}
 \mu(x) &= \EE [f(x)] \\
-k(x,x') &= \EE [(f(x)-\mu(x)) (f(x') - \mu(x'))] + \sigma_n^2 \delta(x,x')
-\end{align*}
+k(x,x') &= \EE [(f(x)-\mu(x)) (f(x') - \mu(x'))] + \sigma_n^2 \delta(x,x') \nonumber
+\end{align}
 where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
@@ -74,9 +75,11 @@ We mention here two simulation methods for autoregressive GPs.
 \fi
 
 \begin{figure}[!tb]
-  \centering \missingfigure[figwidth=20pc]{show GP prior and posterior
-    side by side for building example}
-  \caption{}
+  \centering
+	\setlength\fwidth{0.4\textwidth}
+	\setlength\hwidth{0.2\textwidth}	
+	\input{figures/gp-prior-post.tex}  
+  \caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building. Chilled water temperature varies from \(3.7\mathrm{^oC}\) to \(9.7\mathrm{^oC}\).}
   \captionsetup{justification=centering}
   \label{F:GP}
 \end{figure}
