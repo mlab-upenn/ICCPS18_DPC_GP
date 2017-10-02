@@ -31,7 +31,7 @@ Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding obs
 where \(K_\star = [k(x_\star, x_1), \dots, k(x_\star, x_N)]\), \(K_{\star \star} = k(x_\star, x_\star)\), and $K$ is the covariance matrix with elements \(K_{ij} = k(x_i, x_j)\).
 
 Note that the mean and covariance functions are parameterized by the hyperparameters $\theta$, which can be learned by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
-The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $D = (X, Y)$.
+The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $\D = (X, Y)$.
 In other words, a GP model specifies the structure of the covariance matrix of, or the relationship between, the input variables rather than a fixed structural input--output relationship.
 It is therefore highly flexible and can capture complex behavior with fewer parameters.
 There exists a wide range of covariance functions and combinations to choose from \cite{Rasmussen2006}. 

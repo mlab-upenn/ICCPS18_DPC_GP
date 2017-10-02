@@ -3,13 +3,12 @@
 
 In January 2014, the east coast (PJM) electricity grid experienced an 86x increase in the price of electricity from \$31/MWh to \$2,680/MWh in a matter of 10 minutes. Similarly, the price spiked 32x from an average of \$25/MWh to \$800/MWh in July of 2015. This extreme price volatility has become the new norm in our electric grids. Building additional peak generation capacity is not environmentally or economically sustainable. Furthermore, the traditional view of energy efficiency does not address this need for \emph{Energy Flexibility}. The solution lies with Demand Response (DR) from the customer side - curtailing demand during peak capacity for financial incentives. However, this is a very hard problem for commercial, industrial and institutional plants, the largest electricity consumers.
 
-Thus, the problem of energy management during a DR event makes an ideal case for DPC. In the following sections, we apply Optimal Experiment Design, MPC based on GPs and also perform Active Learning to a large scale EnergyPlus model to show how effectively DPC can provide a desired power curtailment as well as a desired thermal comfort. DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
+Thus, the problem of energy management during a DR event makes an ideal case for DPC. In the following sections, we apply Optimal Experiment Design, DPC based on GPs and also perform Active Learning on a large scale EnergyPlus model to show how effectively DPC can provide a desired power curtailment as well as a desired thermal comfort. DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
 
 \subsection{Building Description}
 We use the DoE Commercial Reference Building (DoE CRB) simulated in EnergyPlus \cite{Deru2011} as the virtual test-bed building.
 This is a large 6 story hotel building consisting of 22 zones with a total area of 122,120 sq.ft. 
-During peak load conditions the building can consume up to 400 kW of power. 
-For the simulation of the DoE CRB building we use actual meteorological year data from Chicago for the years 2012 and 2013. 
+During peak load conditions the building can consume up to 400 kW of power.  
 
 \subsection{Training Gaussian Processes}
 

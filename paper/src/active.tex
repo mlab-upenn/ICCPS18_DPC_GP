@@ -1,5 +1,55 @@
 \section{Active Learning / Evolving GP?}
 \label{S:active}
 
-\todo[inline]{needs reorganization of OED section}
-\todo[inline]{controller in the loop}
+In this section, we discuss the challenge of ``Model adaptability" listed in Sec.~\ref{SS:practical_challenges}.
+
+As the system properties change with time, the learned model must actively update itself for best control performance.
+For example, the same GP model may be not be suitable to control a building in both Summer and Winter season.
+As we generate more data with time, we may not want to use full data set for model update because of multiple reasons.
+First, only selected or the most informative sub set of data may explain the dynamics at the time. Second, the computational complexity of training Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. So the learning becomes computationally hard as the size of data increases.
+Therefore, obtaining the best GP model with least data is highly desired. The solution to this problem lies in \textit{selecting the optimal subset of data} (from the available data) that best explains the system behavior or dynamics.
+For active learning, we extend the result from Sec.~\ref{SS:information-theory}.
+
+\subsection{Optimal subset of data selection: selecting most informative data for periodic model update}
+
+The goal of active learning is to filter the most informative subset of data that best explain the dynamics.
+In this section, we outline a systematic procedure to select best $k$ samples from given $n$ observations.
+The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable, and (2) the decision has to be made only from the available data rather than sampling. 
+
+Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. Then, we add this sample to \(\mathcal{S}\) until \(|\mathcal{S}|=k\) or the model performance meets some desired metric. In this setup, we solve the following optimization problem
+\begin{align}
+\label{E:oed:batch}
+\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
+\end{align}
+
+The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
+
+\begin{algorithm}[!tb]
+	\caption{Batch selection for OED}
+	\label{A:oed:batch}
+	\begin{algorithmic}[1]
+		\Procedure{Initialization}{}
+		\State Sample with replacement \(k\) integers \( \in \{1,\dots,n\} \)
+		\State Compute \( \theta_{\mathrm{MLE}} = \argmax_{\theta^{\mathrm{MLE}}} \Pr(Y \vert X, \theta)\)
+		\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\)
+		\EndProcedure
+		\State Define \(\mathcal{S} = \varnothing\)
+		\Procedure{Sampling}{}
+		\While{\( j < k \)}
+		\State Solve \eqref{E:oed:batch} for optimal \({x_{j} \vert (x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} \)
+		\State \(\mathcal{S} = \mathcal{S} \cup (x_j,y_j) \)
+		\State Update \( \theta_{\mathrm{j}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{j-1}})\)
+		\EndWhile
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{figure}[!tb]
+	\centering
+	\setlength\fwidth{0.4\textwidth}
+	\setlength\hwidth{0.3\textwidth}	
+	\input{figures/batch-acc.tex}
+	\caption{Prediction of power consumption of a building. Top: 100 most informative samples are selected from available 1000 data points. Bottom: 100 samples are selected randomly. The mean prediction and variance in prediction are much better with active learning.}
+	\captionsetup{justification=centering}
+	\label{F:batch-acc}
+\end{figure}

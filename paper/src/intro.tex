@@ -23,7 +23,7 @@ It is important to note that the standard machine learning regression used for p
 
 We next discuss the practical challenges in using machine learning algorithms for control.
 
-\noindent \textbf{(1) Data quality and quantity:} Most of the historical data that is available from complex systems like buildings are based on some rule-based controllers. Therefore, the data may not be sufficient to explain the relationship between the inputs and the outputs. To obtain richer data with enough excitation in the inputs, new experiments must be done either by sampling the inputs randomly or by a procedure for optimal experiment design (OED) \cite{Emery1998,Fedorov2010}. This paper proposes the use of GP i.e.~the estimate of variance in GP predictions to recommend control strategies for OED.
+\noindent \textbf{(1) Data quality:} Most of the historical data that is available from complex systems like buildings are based on some rule-based controllers. Therefore, the data may not be sufficient to explain the relationship between the inputs and the outputs. To obtain richer data with enough excitation in the inputs, new experiments must be done either by sampling the inputs randomly or by a procedure for optimal experiment design (OED) \cite{Emery1998,Fedorov2010}. This paper proposes the use of GP i.e.~the estimate of variance in GP predictions to recommend control strategies for OED.
 
 \noindent \textbf{(2) Computational complexity:} Depending upon the learning algorithm, the output from a learned model is a non-linear, non-convex and sometimes non-differentiable (eg.~Random Forests \cite{Friedman2001}) function of the inputs with no closed-form expression. Using such models for control synthesis where some of the inputs must be optimized can lead to computationally intractable optimization. Our previous work on DPC uses an adaptation of Random Forests which overcomes this problem by separation of variables to derive a linearized input-output mapping at each time step \cite{JainACC2017,JainCDC2017}.
 This paper uses Gaussian Processes (GP) where the output mean and variance are analytical functions of the inputs, albeit non-convex.
@@ -55,12 +55,11 @@ For the application to building control in context of Demand Response, where the
 
 \todo[inline]{revisit when OED and CONTROL sections are ready}
 
-This paper answers the following questions:
+This paper has the following contributions:
 \begin{enumerate}
-	\item Optimal experiment design for batch updates
-	\item Optimal experiment design for sequential updates in real-time
-	\item Data Predictive Control using Gaussian Processes for real-time control
-	\item Online learning with a Data Predictive Controller in closed-loop
+	\item Optimal experiment design for recommending control strategies for functional test
+	\item MPC using Gaussian Processes for real-time control
+	\item Active learning with a MPC in closed-loop
 \end{enumerate}
 
 
