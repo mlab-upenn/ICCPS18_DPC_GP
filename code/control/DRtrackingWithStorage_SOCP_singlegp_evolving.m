@@ -227,12 +227,16 @@ classdef DRtrackingWithStorage_SOCP_singlegp_evolving < OBNNode
             mygpmodels.gpdata = nextgp.GPData(gpmodels.hyp, gpmodels.mean_function, ...
                 gpmodels.covariance_function, gpmodels.likelihood, ...
                 gpmodels.inputs, gpmodels.target);
-            mygpmodels.gp = nextgp.GP(mygpmodel.gpdata);
+            mygpmodels.gp = nextgp.GP(mygpmodels.gpdata);
             mygpmodels.curHyp = gpmodels.hyp;
             
-            mygpmodels.origmodel = struct('mean_function', gpmodels.mean_function,...
-                'covariance_function', gpmodels.covariance_function, ...
-                'likelihood', gpmodels.likelihood);
+            mygpmodels.origmodel = struct;
+            mygpmodels.origmodel.mean_function = gpmodels.mean_function;
+            mygpmodels.origmodel.covariance_function = gpmodels.covariance_function;
+            mygpmodels.origmodel.likelihood = gpmodels.likelihood;
+            if ischar(mygpmodels.origmodel.likelihood)
+                mygpmodels.origmodel.likelihood = str2func(mygpmodels.origmodel.likelihood);
+            end
             
             % Functions to denormalize the output mean and variance
             gpmodel_commons.norm_y_min = normparams.(gpmodels.model_target).min;
@@ -980,7 +984,7 @@ classdef DRtrackingWithStorage_SOCP_singlegp_evolving < OBNNode
                 % select (will take a long time)
                 switch self.evolving_data.method
                     case 'IG'
-                        data = online_batch_update_evolving(self.gpmodels.origmodel, data, self.gpmodels.curHyp, self.evolving_data.maxpoints);
+                        data = online_batch_update(self.gpmodels.origmodel, data, self.gpmodels.curHyp, self.evolving_data.maxpoints);
                         
                     otherwise
                         error('Unknown model updating method: %s.', self.evolving_data.method);
@@ -992,7 +996,7 @@ classdef DRtrackingWithStorage_SOCP_singlegp_evolving < OBNNode
             newhyp = trainGParx(self.gpmodels.curHyp, @infExact, ...
                 self.gpmodels.origmodel.mean_function, self.gpmodels.origmodel.covariance_function, self.gpmodels.origmodel.likelihood, ...
                 data.x, data.y, @minimize_minfunc, -100);
-
+            
             % Update the GP model and save data
             self.gpmodels.curHyp = newhyp;
             self.gpmodels.gpdata.setHyperparameters(newhyp);

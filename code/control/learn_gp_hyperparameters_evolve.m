@@ -164,7 +164,7 @@ function results = learn_gp_hyperparameters_evolve(problem, model, varargin)
   [~, ind] = min(sum(residuals.^2, 2));
 
   x = problem.candidate_x_star(ind, :);
-  y = problem.f(x);
+  y = problem.f(x, ind);
 
   problem.candidate_x_star = ...
       problem.candidate_x_star([1:(ind - 1), (ind + 1):end], :);

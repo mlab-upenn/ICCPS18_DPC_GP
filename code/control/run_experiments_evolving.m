@@ -22,7 +22,7 @@ ramplimit = 2;
 
 evolving_params = struct('period', 96,...   % number of steps before updating the model
     'method', 'IG', ...     % method: IG = Information Gain (only method)
-    'maxpoints', 672);      % max number of points allowed
+    'maxpoints', 300);      % max number of points allowed 672
 
 
 %% Select the GP model

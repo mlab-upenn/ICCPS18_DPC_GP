@@ -55,10 +55,10 @@ problem.num_evaluations  = n_samples;
 problem.candidate_x_star = data.x;
 
 % function is a simple lookup table
-problem.f = @(x,idx) y_star(idx);
+problem.f = @(x,idx) data.y(idx);
 
 % actively learn GP hyperparameters
-results = learn_gp_hyperparameters(problem, model);
+results = learn_gp_hyperparameters_evolve(problem, model);
 
 sampled_data = struct('x', results.chosen_x, 'y', results.chosen_y);
 
