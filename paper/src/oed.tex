@@ -93,7 +93,7 @@ At time \(t\), the current disturbance, and the lagged terms of the output, cont
 \begin{align}
 \label{E:oed:sampling}
 \maximize_{u_{t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2(x_t)}\right) \\
-\st &  \ \ \ \     u_{\mathrm{min}}  \leq u_t \leq u_{\mathrm{max}} \nonumber
+\st &  \ \ \ \   u_t \in \mathcal{U} \nonumber
 \end{align}
 The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.

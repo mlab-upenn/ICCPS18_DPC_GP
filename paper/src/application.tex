@@ -1,119 +1,108 @@
 \section{Case Study}
 \label{S:casestudy}
 
+\todo[inline]{intro part taken directly from CDC}
+
 In January 2014, the east coast (PJM) electricity grid experienced an 86x increase in the price of electricity from \$31/MWh to \$2,680/MWh in a matter of 10 minutes. Similarly, the price spiked 32x from an average of \$25/MWh to \$800/MWh in July of 2015. This extreme price volatility has become the new norm in our electric grids. Building additional peak generation capacity is not environmentally or economically sustainable. Furthermore, the traditional view of energy efficiency does not address this need for \emph{Energy Flexibility}. The solution lies with Demand Response (DR) from the customer side - curtailing demand during peak capacity for financial incentives. However, this is a very hard problem for commercial, industrial and institutional plants, the largest electricity consumers.
 
 Thus, the problem of energy management during a DR event makes an ideal case for DPC. In the following sections, we apply Optimal Experiment Design, DPC based on GPs and also perform Active Learning on a large scale EnergyPlus model to show how effectively DPC can provide a desired power curtailment as well as a desired thermal comfort. DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
 
 \subsection{Building Description}
+\todo[inline]{check LargeOffice or LargeHotel}
 We use the DoE Commercial Reference Building (DoE CRB) simulated in EnergyPlus \cite{Deru2011} as the virtual test-bed building.
 This is a large 6 story hotel building consisting of 22 zones with a total area of 122,120 sq.ft. 
-During peak load conditions the building can consume up to 400 kW of power.  
+During peak load conditions the building can consume up to 400 kW of power. 
 
-\subsection{Training Gaussian Processes}
+In this case study, we use the following data to validate our results. We limit to data which can be measured directly from installed sensors like thermostats, multimeters and weather forecasts., thus making it scalable to any other building or a campus of buildings.
+
+\textit{Weather variables \(d^w\):} outside temperature and humidity - these features are defined in a weather file in EnergyPlus.
+
+\textit{Proxy features \(d^p\):} time of day, day of week - these features are a good indicator of occupancy and periodic trends.
+
+\textit{Fixed schedules  \(d^s\):} kitchen cooling set point, corridor cooling set point - these set points follow predefined rules. 
+
+\textit{Control variables \(u\):} cooling set point, supply air temperature and chilled water set point - these set points will be optimized in the MPC problem for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking} and Optimal Energy Management in Sec.~\ref{SS:energy_management}.
+
+\textit{Output variable \(y\):} total power consumption - this is output of interest which we will predict using all the above features in the GP model.
+
+\subsection{Structure of  Gaussian Process Models}
+
+For MPC, we require a predictive model for each time step in the horizon.
+We learn several GP models, one for each prediction step \( \tau \in \{0,\dots,N-1\}\):
+\begin{gather}
+\label{E:gp:casestudy}
+y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}_{t+\tau|t}}{\sigma^2_{t+\tau|t}}, \\
+x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t], \nonumber
+\end{gather}
+where \(w:=[d^w, d^p, d^s]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
+
+As for the mean and covariance functions to define the structure of GP in \eqref{E:gp:prior}, we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) defined by
+\begin{gather}
+k_1(x,x')  = k, \nonumber\\
+k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda_d^2}}^2 \right),
+ \nonumber\\
+ k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \frac{1}{2\alpha} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
+k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
+\end{gather}
+Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}. For each model in \eqref{E:gp:casestudy}, we optimize the parameters \(\theta = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \) using GPML \cite{Rasmussen2010}. After training, the less important features, i.e.~features with high \(\lambda_d\) are removed and the models are trained again. We denote this final selection by \(\theta^\star\).
+
+\todo[inline]{model validation?}
 
 \subsection{Optimal Experiment Design}
 
-% \subsection{Model Predictive Control with Gaussian Processes}
+OED is powerful when hardly any data is available for training. 
+To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to \(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
+For OED, we only require the first model with \(\tau=0\) in \eqref{E:gp:casestudy}. So we simplify the notation by denoting \(t|t\) by \(t\).
+Now, the goal at time \(t\) is to determine what should be the optimal cooling set point \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) which when applied to the building will require power cnsumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
+We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms, fixed schedules and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
+In practical situations, the chilled water temperature cannot be changed by more than \(1.5^o\mathrm{C/min}\). We add this constraint accordingly to solve the optimization below every \(15 \mathrm{min}\):
+\begin{align}
+\label{E:casestudy:oed}
+\maximize_{u_{\mathrm{clg},t},u_{\mathrm{sat},t},u_{\mathrm{chw},t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2_{t}(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2_{t}(x_t)}\right) \\
+\st &  \ \ \ \  22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C} \nonumber \\
+&  \ \ \ \  12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C} \nonumber \\
+&  \ \ \ \  3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C} \nonumber \\
+&  \ \ \ \  | u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C} \nonumber
+\end{align}
+
+\todo[inline]{results}
 
 \subsection{Power Reference Tracking Control}
-
-\todo[inline]{Truong: Rather than two subsubsections under control, and a separate active learning section, I think it's better to dedicate a subsection to reference tracking, a subsection to energy optimization, and the active learning is inside each of those subsections. That causes less fragmentation and makes it easier to compare the improvement of active learning vs. without it inside each control problem.}
+\label{SS:power_tracking}
 
 This section formulates a model predictive control (MPC) approach for the demand tracking problem.
 We consider a building, which responds to various setpoints resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
 The building's response to the setpoint changes is modeled by a GP.
 The battery helps improve the tracking quality by absorbing the prediction uncertainty of the GP.
 A controller computes the setpoint values for the building and the power of the battery to optimally track the reference demand signal.
+\\
 
-\todo[inline]{\textbf{Important:} the text from Truong's ACC paper, copied verbatim hereafter, is very long and detailed. It's best to cite the ACC paper for details and succintly summarize the formulation here.}
-
-\subsubsection{Building's Demand Response Model}
-
-In Section~\ref{sec:gp-building-demand} we discussed how a GP could be trained to learn the  buildings' aggregate demand response to the DR signal from experiment data. 
-The GP  can predict the expected  demand  as well as provides probabilistic information about its prediction in the form of the variance.
-As we will show later, this additional information is invaluable in the tracking control method, particularly for controlling the battery.
-
-We will use the subscript notation \(\predict{\tau}{\bullet}\) to denote the value of a variable at time step \(\tau\) given the current information available at \(t\).
-It is a measured value if \(\tau < t\), \eg \(\predict{t-1}{y}\) is the measured power demand in the previous time step.
-When \(\tau \geq t\), the value is predicted, \eg \(\predict{t}{y}\) is the predicted power demand in the current time step.
-At \(\tau\), the input vector \(\predict{\tau}{x}\) of the GP consists of the measured and predicted outputs \(\predict{\tau}{\arvec{y}} = [\predict{\tau-l_{y}}{y}, \dots, \predict{\tau-1}{y}]\), control inputs \(\predict{\tau}{\arvec{u}} = [\predict{\tau-l_{u}}{u}, \dots, \predict{\tau}{u}]\), and disturbances \(\predict{\tau}{\arvec{w}} = [\predict{\tau-l_{w}}{w}, \dots, \predict{\tau}{w}]\), as well as the time value \(\tau\):
-\(\predict{\tau}{x} = \left[\predict{\tau}{\arvec{y}}, \predict{\tau}{\arvec{u}}, \predict{\tau}{\arvec{w}}, \tau \right] \text.\)
-The GP regression \eqref{eq:gp-regression} gives us  the distribution of  \(\predict{\tau}{y} \sim \GaussianDistSmall{\predict{\tau}{\bar{y}}}{\predict{y,\tau}{\sigma^2}}\) where
-\begin{gather}
-  \predict{\tau}{\bar{y}} = g_{\textrm{m}} (\predict{\tau}{x}), \qquad 
-  \predict{y,\tau}{\sigma^2} = g_{\textrm{v}} (\predict{\tau}{x}) \text. \label{eq:building-gp-model}
-\end{gather}
-Note that \(\predict{\tau}{x}\) may contain predicted values.
-In particular:
-\begin{itemize}
-\item Control inputs \(\predict{k}{u}\), for \(k \geq t\), are decision variables.
-\item We assume that predicted disturbances \(\predict{k}{w}\), for \(k \geq t\), are available, \eg from short-term forecasts.
-\item Predicted outputs \(\predict{k}{y}\), for \(k \geq t\), are random variables at previous steps.  For simplicity, we will only propagate the expected values, \ie \(\predict{k}{y}\) take the predicted means \(\predict{k}{\bar{y}}\) which are deterministic values.  Uncertainty propagation can be incorporated  for more accurate predictions as discussed in \cite{Kocijan2016,girard04approximate}.
-\end{itemize}
-
-
-\subsubsection{Battery's Model and Constraints}
-
+\noindent
+\textit{Battery's Model and Constraints:}
 For simplicity, we assume an ideal lossless battery model
 \begin{equation}
 \label{eq:battery-model}
-  s_{t+1} = s_t + T \Pbatt_t
+s_{t+1} = s_t + T \Pbatt_t
 \end{equation}
 where \(\Pbatt_t\) is the battery's power during the time step \(t\) and \(s\) is the battery's SoC.
 Here, \(\Pbatt\) is positive if the battery is charging and negative if discharging.
 The battery is subject to two operational constraints:
-its power must be bounded by \(\Pbmin \leq \Pbatt \leq \Pbmax\), 
-and its SoC must stay in a safe range \([\SOCmin, \SOCmax]\) where \(\SOCmax\) is the fully-charged level and \(\SOCmin\) is the lowest safe discharged level.
-
-
-\subsubsection{Tracking Constraint}
+its power must be bounded by \(\Pbmin \leq \Pbatt_t \leq \Pbmax\), 
+and its SoC must stay in a safe range \(\SOCmin \leq s_t \leq\SOCmax\) where \(\SOCmax\) is the fully-charged level and \(\SOCmin\) is the lowest safe discharged level. 
 
 The link between the buildings and the battery is the tracking constraint, which states that their total power \(p = y + b\) should track the reference \(r\).
-In this way, the battery helps reject the uncertainty of the GP and acts as an energy buffer to increase the tracking capability of the system.
-
-
-Although ideally \(p_t\) should track \(r_t\) exactly at any time \(t\), this strict constraint may be infeasible in certain circumstances, \eg when \(r\) is outside the DR capability of the system.
+In this way, the battery helps reject the uncertainty of the GP and acts as an energy buffer to increase the tracking capability of the system. Although ideally \(p_t\) should track \(r_t\) exactly at any time \(t\), this strict constraint may be infeasible in certain circumstances, \eg when \(r\) is outside the DR capability of the system.
 Therefore, we introduce a slack variable \(\delta_t = r_t - p_t\).
-The controller tries to keep \(\delta = 0\), however when exact tracking is impossible, it will maintain the operational safety of the system while keeping \(\delta\)  as small as possible.
+The controller tries to keep \(\delta_t = 0\), however when exact tracking is impossible, it will maintain the operational safety of the system while keeping \(\delta_t\)  as small as possible.
 This objective will be reflected in the cost function. 
 In this formulation, \(\delta\) is a decision variable  and the battery power is
 \begin{equation}
 \label{eq:battery-power}
 \Pbatt_t = r_t - \delta_t - y_t \text.
 \end{equation}
-This equation is made possible by the fact that the battery can be controlled precisely in real-time.
 
 
-\subsubsection{Model Predictive Tracking Control}
-
-We adopt the MPC approach \cite{maciejowski_predictive_2002} to solve the demand tracking problem. 
-At the core of the MPC are the models of the system, which are used to predict future system states given the current state and current and forecast future inputs.
-Suppose the current time step is \(t\) and the MPC horizon is \(H > 0\).
-To formulate the MPC, the equations predicting the values of the system's variables over the horizon must be derived, based on the system models.
-For simplicity, the future reference signal \(r\) and disturbances \(w\) are assumed to be deterministic, meaning that we know their future values exactly, \eg from accurate short-term forecasts.
-Formulating the MPC then amounts to deriving the distributions of the derived random variables (\(\predict{\tau}{y}\), \(\predict{\tau}{\Pbatt}\), \(\predict{\tau+1}{s}\) for \(t \leq \tau \leq t+H-1\)) conditioned on the other variables.  
-For notational brevity, we will drop the conditioning part of the notations and simply write \(\Pr(\predict{\tau}{y})\), with the implicit interpretation that it is a conditional probability.
-
-
-\paragraph{Predicted Power Demands of Buildings}
-
-
-At each time step \(\tau\) in the horizon, the predicted output is given by Eq.~\eqref{eq:building-gp-model}.
-Recall that only the predicted output means are propagated.
-Therefore \(\predict{\tau}{y}\) is independent of the realization of the random variables \(\predict{\tau}{\arvec{y}}\) in previous steps.
-It follows that the random variables \(\predict{\tau}{y}\), for all \(t \leq \tau \leq t + H - 1\), are conditionally independent given the non-derived variables. 
-Consequently, the sum of any subset \(\mathcal{I} \subseteq \{t,\dots,t+H-1\}\) of them is also a Gaussian random variable
-\begin{equation}
-\label{eq:sum-of-power-random-vars}
-\textstyle\sum_{\tau \in \mathcal{I}} \predict{\tau}{y} \sim \GaussianDistSmall{\textstyle\sum_{\tau \in \mathcal{I}} \predict{\tau}{\bar{y}}}{\textstyle\sum_{\tau \in \mathcal{I}} \predict{y,\tau}{\sigma^2}} \text.
-\end{equation}
-
-
-\paragraph{Predicted Battery Power and SoC}
-
-
-From Eq.~\eqref{eq:battery-power}, the predicted battery power at time \(\tau \geq t\) has the Gaussian distribution \(\predict{\tau}{\Pbatt} \sim 
+Since \(\GaussianDistSmall{\predict{\tau}{\bar{\Pbatt}}}{\predict{b,\tau}{\sigma^2}}\), the predicted battery power at time \(\tau \geq t\) has the Gaussian distribution \(\predict{\tau}{\Pbatt} \sim 
 \GaussianDistSmall{\predict{\tau}{\bar{\Pbatt}}}{\predict{b,\tau}{\sigma^2}}\), where
 \begin{equation}
 \label{eq:predicted-battery-power}
@@ -136,97 +125,17 @@ The bounds on the battery's power and SoC lead to corresponding chance constrain
 We wish to guarantee that at each time step, the power and SoC constraints are satisfied with probability at least \((1 - \epsilon_p)\) and  at least \((1 - \epsilon_s)\), respectively, where \(0 < \epsilon_p, \epsilon_s \leq \frac{1}{2}\) are given constants.
 Specifically, for each \(\tau\) in the horizon,
 \begin{subequations}\label{eq:chance-constraints}
-\begin{gather}
-\Pr\left( \Pbmin \leq \predict{\tau}{\Pbatt} \leq \Pbmax \right) \geq 1 - \epsilon_p \label{eq:chance-constraints:power} \\
-\Pr\left( \SOCmin \leq \predict{\tau}{s} \leq \SOCmax \right) \geq 1 - \epsilon_s \label{eq:chance-constraints:soc}
-\end{gather}
+	\begin{gather}
+	\Pr\left( \Pbmin \leq \predict{\tau}{\Pbatt} \leq \Pbmax \right) \geq 1 - \epsilon_p \label{eq:chance-constraints:power} \\
+	\Pr\left( \SOCmin \leq \predict{\tau}{s} \leq \SOCmax \right) \geq 1 - \epsilon_s \label{eq:chance-constraints:soc}
+	\end{gather}
 \end{subequations}
 where \(\predict{\tau}{\Pbatt}\) and \(\predict{\tau}{s}\) are Gaussian random variables whose means and variances are given in Eqs.~\eqref{eq:predicted-battery-power} and \eqref{eq:predicted-battery-soc}.
 
 
-\paragraph{Objective Function}
-
-
-The tracking controller aims to minimize the tracking error \(\predict{\tau}{\delta}\),
-therefore we select the quadratic objective function to minimize
-\(J = \textstyle\sum_{\tau = t}^{t+H-1} \predict{\tau}{\delta^2}\).
-We may also consider additional objectives, such as reducing the battery's charge--discharge frequency to improve its lifetime.
-These objectives can be encoded as extra weighted terms to the above tracking objective function.
-In this paper, we will only consider the tracking objective.
-
-
-\paragraph{MPC Formulation}
-
-Putting everything together,  we obtain the following stochastic MPC formulation:
-\begin{align*}
-\minimize_{\boldsymbol{u}(\cdot), \boldsymbol{\delta}(\cdot)} \quad & J = \textstyle\sum_{\tau = t}^{t+H-1} \predict{\tau}{\delta^2} \\
-\text{subject to} \quad & \text{Constraints \eqref{eq:building-gp-model}, \eqref{eq:predicted-battery-power}, \eqref{eq:predicted-battery-soc}, \eqref{eq:chance-constraints}} \\
-& \predict{\tau}{u} \in [-1, 1], \quad \forall t \leq \tau \leq t+H-1 
-\end{align*}
-At each \(t\), the above optimization is solved to find optimal DR signal \(\predict{\tau}{u^\star}\) and optimal slacks \(\predict{\tau}{\delta^\star}\), \(t \leq \tau \leq t+H-1\); of which the first optimal decisions \(\predict{t}{u^\star}\) and \(\predict{t}{\delta^\star}\) are applied.
-At the next time step \(t+1\), the optimization is repeated with newly available information (\ie new measurements and updated forecasts) and the shifted horizon \([t+1,t+H]\).
-
-The above MPC formulation is difficult to solve due to the two-sided chance constraints \eqref{eq:chance-constraints}. 
-In a recent work \cite{lubinetal16two}, it has been shown that any two-sided linear chance constraint of the form
-\(\Pr( a \leq x^T \xi \leq b ) \geq 1 - \epsilon\)
-is convex in \(a\), \(b\) and \(x\) given that \(\epsilon \leq \frac{1}{2}\).
-Here, \(a \in \RR\), \(b \in \RR\), \(x \in \RR^n\),  and \(\xi\) is a known jointly Gaussian vector.
-Furthermore, there exists a computationally tractable second-order cone (SOC) approximation of this chance constraint, stated in Lemma~\ref{thm:two-sided-chance-constraint}. 
-\begin{lemma}[Adapted from {\cite[Lemma~16]{lubinetal16two}}]
-\label{thm:two-sided-chance-constraint}
-Let $\xi \sim \GaussianDist{\mu}{\Sigma}$ be a jointly distributed Gaussian random vector with known mean $\mu$ and %positive definite
-covariance matrix $\Sigma$, and $0 < \epsilon \leq \frac{1}{2}$.  Let $LL^T = \Sigma$ be the Cholesky decomposition of $\Sigma$, and $\Phi^{-1}(\cdot)$ the inverse cumulative distribution function %(or quantile function)
-of the standard Gaussian distribution.  The following constraints, with the auxiliary variable $\gamma$ and $\epsilon^\star = \epsilon / 1.25$,
-%\begin{subequations}
-\begin{gather*}
-\gamma \geq \| L^T x \|_2, \quad a - b \leq 2 \Phi^{-1}(\epsilon^\star / 2) \gamma \\
-a - \mu^T x \leq \Phi^{-1}(\epsilon^\star) \gamma, \quad \mu^T x - b \leq \Phi^{-1}(\epsilon^\star) \gamma 
-\end{gather*}
-%\end{subequations}
-%is an SOC approximation that guarantees
-guarantee that
-\begin{math}
-\Pr( a \leq x^T \xi \leq b ) \geq 1 - \epsilon \text.
-\end{math}
-\end{lemma}
-
-This result allows us to conservatively approximate the chance constraints \eqref{eq:chance-constraints}.
-For each \(\tau \in [t, t+H-1]\), we rewrite \(\predict{\tau}{\Pbatt} = \predict{\tau}{\bar{\Pbatt}} + \predict{y,\tau}{\sigma} \xi\) using Eq.~\eqref{eq:predicted-battery-power}, where \(\xi \sim \GaussianDist{0}{1}\).
-Then \eqref{eq:chance-constraints:power} is equivalent to
-\(\Pr(\Pbmin - \predict{\tau}{\bar{\Pbatt}} \leq \predict{y,\tau}{\sigma} \xi \leq \Pbmax - \predict{\tau}{\bar{\Pbatt}}) \geq 1 - \epsilon_p\),
-which is approximated by Lemma~\ref{thm:two-sided-chance-constraint} as
-\begin{subequations}
-\label{eq:chance-constraint-approx:power}
-\begin{gather}
-\Pbmin - \predict{\tau}{\bar{\Pbatt}} \leq \Phi^{-1}(\epsilon^\star_p) \predict{y,\tau}{\sigma}, \\
-\predict{\tau}{\bar{\Pbatt}} - \Pbmax \leq \Phi^{-1}(\epsilon^\star_p) \predict{y,\tau}{\sigma}, \\
-\Pbmin - \Pbmax \leq 2 \Phi^{-1}(\epsilon^\star_p / 2) \predict{y,\tau}{\sigma}  \text.
-\end{gather}
-\end{subequations}
-Here \(\epsilon^\star_p = \epsilon_p / 1.25\), and the auxiliary variable \(\gamma\) can be dropped for \(\gamma = \| \predict{y,\tau}{\sigma} \|_2 = \predict{y,\tau}{\sigma}\).
-
-Similarly,  \eqref{eq:chance-constraints:soc} is approximated by first rewriting \(\predict{\tau}{s} = \predict{\tau}{\bar{s}} + \boldsymbol{\sigma}_{\tau \vert t} \xi\), where \(\boldsymbol{\sigma}_{\tau \vert t}\) is the vector \([\predict{y,t}{\sigma}, \dots, \predict{y,\tau}{\sigma}]^T\),  and \(\xi \sim \GaussianDist{0}{\mathrm{I}}\) is a vector of \((\tau-t+1)\) independent standard Gaussian random variables.
-Applying Lemma~\ref{thm:two-sided-chance-constraint}, we obtain the following constraints for all \(t \leq \tau \leq t+H-1\), with the auxiliary variable \(\gamma_\tau\) and \(\epsilon^\star_s = \epsilon_s / 1.25\),
-\begin{subequations}\label{eq:chance-constraint-approx:soc}
-\begin{gather}
-\gamma_\tau \geq \| \boldsymbol{\sigma}_{\tau \vert t} \|_2, \quad
-\SOCmin - \SOCmax \leq 2 \Phi^{-1}(\epsilon^\star_s / 2) \gamma_\tau \\
-\SOCmin \!-\! \predict{\tau}{\bar{s}} \leq \Phi^{-1}(\epsilon^\star_s) \gamma_\tau, \,
-\predict{\tau}{\bar{s}} \!-\! \SOCmax \leq \Phi^{-1}(\epsilon^\star_s) \gamma_\tau
-\end{gather}
-\end{subequations}
-
-The final MPC formulation  is given below:
-\begin{align}
-\label{eq:mpc-formulation}
-\minimize_{\boldsymbol{u}(\cdot), \boldsymbol{\delta}(\cdot)} \quad & J = \textstyle\sum_{\tau = t}^{t+H-1} \predict{\tau}{\delta^2} \\
-\text{subject to} \quad & \text{Constraints \eqref{eq:building-gp-model}, \eqref{eq:predicted-battery-power}, \eqref{eq:predicted-battery-soc}, \eqref{eq:chance-constraint-approx:power}, \eqref{eq:chance-constraint-approx:soc}} \nonumber \\
-& \predict{\tau}{u} \in [-1, 1], \quad \forall t \leq \tau \leq t+H-1 \nonumber
-\end{align}
-Due to the GP model~\eqref{eq:building-gp-model}, the optimization problem~\eqref{eq:mpc-formulation} is a non-convex nonlinear program, which can be solved by a nonlinear optimization solver such as IPOPT \cite{wachter2006implementation}.
-
-
 \subsection{Optimizing energy usage under operation constraints}
+\label{SS:energy_management}
+
 \todo[inline]{optimization problem}
 \begin{figure}[!tb]
 	\centering
@@ -240,8 +149,5 @@ Due to the GP model~\eqref{eq:building-gp-model}, the optimization problem~\eqre
 
 \subsection{Discussion}
 
+%\input{truongACC.tex}
 
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "main"
-%%% End:
