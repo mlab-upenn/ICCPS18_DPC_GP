@@ -18,6 +18,13 @@
 * `test-unconstrained-` contains data with `23<=ClgSP<=28`, `11<=SupplyAirSP<=15` and `3.7<=ChwSP<=9.7`. Other inputs follow the nominal rule-based strategy.
 * `test-ramped2-` contains data with `23<=ClgSP<=28`, `11<=SupplyAirSP<=15` and `3.7<=ChwSP<=9.7` and `|ChwSP(k)-ChwSP(k-1)|<=2`. Other inputs follow the nominal rule-based strategy.
 
+## Simulation data ##
+
+`sim` **data from June-August**
+
+* data generated using `generateSimData.m`.
+* `sim-nominal-` contains data with all inputs following the nominal rule-based strategy.
+
 
 # LargeHotel
 
