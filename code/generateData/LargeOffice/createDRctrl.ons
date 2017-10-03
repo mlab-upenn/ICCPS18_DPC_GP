@@ -1,0 +1,107 @@
+// -*- mode: javascript; -*-
+// Create the controller object for use with nodechai script, for the E+ reference large office building model.
+// An object named DRCTRL must be created with the following attributes and methods:
+// + StartNewDay(month, day, dayofweek, holiday) to start a new day
+// + CalcSetpoints(T, PRICE, HVACLOAD, OTHERLOAD) to calculate and return the setpoints
+// + inputmap: The input map is a vector of the indices of the following values (in exact order) in the vector from EnergyPlus to this node (i.e. output of EnergyPlus): [month, day-of-month, time-of-day, day-of-week, holiday, ambient-temp, ambient-humidity, hvac-power, non-hvac-power]
+// + outputmap: The output map is a vector of the indices of the setpoint values returned from drctrl in the output vector from this node to EnergyPlus (i.e. input to EnergyPlus). If any value is not used, the index should be 0 or negative (and that value will be ignored). For example, if drctrl returns 5 setpoints, but E+ only takes the cooling setpoint (first value) and lighting (third value), then outputmap = [1 0 2 0 0].
+// + twostage: true or false; if twostage=true, the computation of the controller is separated into two blocks: B1 computes the power output from the building output; while B2 computes the commands to the building from the DR signal.
+
+use("DRRuleLinear.ons");
+
+var CLGSETP_SCH = SPSchedule([
+    "Weekdays" : [6,26.7,
+				  22,24.0,
+				  24,26.7],
+    "Saturday" : [6,26.7,
+				  18,24.0,
+				  24,26.7],
+    "AllOtherDays" : [24,26.7]
+]);
+
+var SAT_SCH = SPSchedule(["AllDays" : [24, 12.8]]);
+
+var LIGHT_SCH = SPSchedule([
+    "Weekdays" : [5,0.5,
+				  7,0.1,
+				  8,0.3,
+				  17,0.9,
+				  18,0.7,
+				  20,0.5,
+				  22,0.3,
+				  23,0.1,
+				  24,0.05],
+    "Saturday" : [6,0.5,
+				  8,0.1,
+				  14,0.5,
+				  17,0.15,
+				  24,0.05],
+    "AllOtherDays" : [24,0.05]
+]);
+
+// var EQUIP_SCH = SPSchedule([
+//     "Weekdays" : [8,0.40,
+// 				  12,0.90,
+// 				  13,0.80,
+// 				  17,0.90,
+// 				  18,0.80,
+// 				  20,0.60,
+// 				  22,0.50,
+// 				  24,0.40],
+//     "Saturday" : [6,0.30,
+// 				  8,0.4,
+// 				  14,0.5,
+// 				  17,0.35,
+// 				  24,0.30],
+//     "AllOtherDays" : [24,0.30]
+// ]);
+
+var CWLOOP_SCH = SPSchedule(["AllDays" : [24,6.7]]);
+
+// Operation schedule of the DR controller
+var OPERATION_SCH = SPSchedule(["AllDays" : [24,1]]);
+
+// Create DR control object (the DR controller for the building)
+GLOBAL DRCTRL = DRRuleLinear();
+
+DRCTRL.SetOperationSchedule(OPERATION_SCH);
+
+// Set normal schedules
+// Because this hospital model uses dual setpoint control with both heating and cooling setpoint,
+// and it's an error if the heating setpoint is higher than the cooling setpoint, and the heating
+// setpoint in the original IDF is just slightly smaller than the cooling setpoint, we must set
+// the min values for the cooling setpoints and use small Delta values.
+
+DRCTRL.AddSchedule(CLGSETP_SCH, -2);  // Cooling SP with negative Delta
+
+DRCTRL.AddSchedule(LIGHT_SCH, 0.2, 0.0, 1.0);  // Light level SP between 0 and 1
+
+DRCTRL.AddSchedule(SAT_SCH, -2);  // Cooling SAT setpoint
+
+// A global variable must be defined, which specifies whether the chiller is controlled for demand response
+if (ChillerControlled) {
+	DRCTRL.AddSchedule(CWLOOP_SCH, -10, 2.5, 20, 3.0/4.0, 6.7);
+}
+else {
+	DRCTRL.AddSchedule(CWLOOP_SCH, 0);
+}
+
+// Create the node for the DR controller
+// inputmap: a vector of the indices of the following values
+// (in exact order) in the vector from EnergyPlus to this
+// node (i.e. output of EnergyPlus):
+// [month, day-of-month, time-of-day, day-of-week, holiday,
+// ambient-temp, ambient-humidity, hvac-power,
+// non-hvac-power]
+//
+// outputmap: a vector of the indices of the setpoint values
+// returned from drctrl in the output vector from this
+// node to EnergyPlus (i.e. input to EnergyPlus). If any
+// value is not used, the index should be 0 or negative (and
+// that value will be ignored). For example, if drctrl returns 5 setpoints, but E+
+// only takes the cooling setpoint (first value) and lighting
+// (third value), then outputmap = [1 0 2 0 0].
+
+DRCTRL.inputmap = [1..9];
+DRCTRL.outputmap = [1..4];
+DRCTRL.twostage = false;
