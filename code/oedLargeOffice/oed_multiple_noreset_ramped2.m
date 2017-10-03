@@ -2,11 +2,13 @@
 clear; close all;
 rng(1);
 
+[YY, MM, DD, HH, MINS, ~] = datevec(now);
+
 %% define variables to control
 
-SimDays = 15;
-n_steps = 25;
-order_autoreg = 3+1;
+SimDays = 28;       % max 28
+n_steps = 20;
+order_autoreg = 1+1;
 n_samples = SimDays*24*4-order_autoreg;
 
 % control variables
@@ -44,14 +46,13 @@ data_test_norm = normalize_data(data_test, normalized_fields, normparams);
 model_inputs = {...
         'TOD', ...
         'DOW', ...
-        {'Ambient', 3:-1:0}, ...
-        {'Humidity', 3:-1:0}, ...
-        {'TotalLoad', 3:-1:1}, ...
-        {'ClgSP', 3:-1:0}, ... 
-        {'LgtSP', 3:-1:0}, ...
-        {'SupplyAirSP', 3:-1:0}, ...
-        {'ChwSP', 3:-1:0}};
-    
+        {'Ambient', order_autoreg-1:-1:0}, ...
+        {'Humidity', order_autoreg-1:-1:0}, ...
+        {'TotalLoad', order_autoreg-1:-1:1}, ...
+        {'ClgSP', order_autoreg-1:-1:0}, ... 
+        {'LgtSP', order_autoreg-1:-1:0}, ...
+        {'SupplyAirSP', order_autoreg-1:-1:0}, ...
+        {'ChwSP', order_autoreg-1:-1:0}};
 model_target = 'TotalLoad';
 model_excepts = {'TOD', 'DOW'};
 stepsahead = 0;
@@ -131,6 +132,7 @@ end
 if flag ~= 0, error('check output flag'); end
 
 % DOE in closed loop
+n_days = 0;
 iter = 0;
 tic;
 
@@ -145,7 +147,7 @@ while kStep <= MAXSTEPS
     % let sim run for first few steps to get AR terms
     if kStep <= order_autoreg
         if kStep ==1    % change if this changed in idf
-            dayWeek = 'AllOtherDays';
+            dayWeek = 'Weekdays';
         else
             if outputs(5,kStep-1)>0 || outputs(4,kStep-1)==1
                 dayWeek = 'AllOtherDays';
@@ -187,7 +189,7 @@ while kStep <= MAXSTEPS
         
         % need this because some inputs will follow rule-based schedules
         if kStep ==1    % change if this changed in idf
-            dayWeek = 'AllOtherDays';
+            dayWeek = 'Weekdays';
         else
             if outputs(5,kStep-1)>0 || outputs(4,kStep-1)==1
                 dayWeek = 'AllOtherDays';
@@ -207,14 +209,14 @@ while kStep <= MAXSTEPS
         data_cur = struct();
         data_cur.TOD = offline_data.TOD(kStep);
         data_cur.DOW = offline_data.DOW(kStep);
-        data_cur.Ambient = offline_data.Ambient(kStep-3:kStep)';
-        data_cur.Humidity = offline_data.Humidity(kStep-3:kStep)';
-        data_cur.TotalLoad = outputs(9, kStep-3:kStep-1);
+        data_cur.Ambient = offline_data.Ambient(kStep-(order_autoreg-1):kStep)';
+        data_cur.Humidity = offline_data.Humidity(kStep-(order_autoreg-1):kStep)';
+        data_cur.TotalLoad = outputs(9, kStep-(order_autoreg-1):kStep-1);
         
-        data_cur.ClgSP = inputs(1,kStep-3:kStep-1);
-        data_cur.LgtSP = [inputs(2,kStep-3:kStep-1), LgtSP];
-        data_cur.SupplyAirSP = inputs(3,kStep-3:kStep-1);
-        data_cur.ChwSP = inputs(4,kStep-3:kStep-1);
+        data_cur.ClgSP = inputs(1,kStep-(order_autoreg-1):kStep-1);
+        data_cur.LgtSP = [inputs(2,kStep-(order_autoreg-1):kStep-1), LgtSP];
+        data_cur.SupplyAirSP = inputs(3,kStep-(order_autoreg-1):kStep-1);
+        data_cur.ChwSP = inputs(4,kStep-(order_autoreg-1):kStep-1);
         
         data_cur_norm = normalize_data(data_cur, normalized_fields, normparams);
         
@@ -242,8 +244,8 @@ while kStep <= MAXSTEPS
         SupplyAirSP  = X_c_next(2);
         ChwSP = X_c_next(3);
         
-        SP = [ClgSP, LgtSP, SupplyAirSP, ChwSP];        
-
+        SP = [ClgSP, LgtSP, SupplyAirSP, ChwSP];
+        
     end
     
     inputs(:,kStep) = SP;
@@ -266,15 +268,15 @@ while kStep <= MAXSTEPS
         
         % extract features
         data_cur = struct();
-        data_cur.TOD = offline_data.TOD(kStep-3:kStep);
-        data_cur.DOW = offline_data.DOW(kStep-3:kStep);
-        data_cur.Ambient = offline_data.Ambient(kStep-3:kStep);
-        data_cur.Humidity = offline_data.Humidity(kStep-3:kStep);
-        data_cur.TotalLoad = outputs(9,kStep-3:kStep);
-        data_cur.ClgSP = inputs(1,kStep-3:kStep);
-        data_cur.LgtSP = inputs(2,kStep-3:kStep);
-        data_cur.SupplyAirSP = inputs(3,kStep-3:kStep);
-        data_cur.ChwSP = inputs(4,kStep-3:kStep);
+        data_cur.TOD = offline_data.TOD(kStep-(order_autoreg-1):kStep);
+        data_cur.DOW = offline_data.DOW(kStep-(order_autoreg-1):kStep);
+        data_cur.Ambient = offline_data.Ambient(kStep-(order_autoreg-1):kStep);
+        data_cur.Humidity = offline_data.Humidity(kStep-(order_autoreg-1):kStep);
+        data_cur.TotalLoad = outputs(9,kStep-(order_autoreg-1):kStep);
+        data_cur.ClgSP = inputs(1,kStep-(order_autoreg-1):kStep);
+        data_cur.LgtSP = inputs(2,kStep-(order_autoreg-1):kStep);
+        data_cur.SupplyAirSP = inputs(3,kStep-(order_autoreg-1):kStep);
+        data_cur.ChwSP = inputs(4,kStep-(order_autoreg-1):kStep);
         
         data_cur_norm = normalize_data(data_cur, normalized_fields, normparams);
         [X_init, y_init] = construct_data(data_cur_norm, model_inputs, model_target, stepsahead, model_excepts);
@@ -288,33 +290,28 @@ while kStep <= MAXSTEPS
     if kStep > order_autoreg
         results.chosen_y = [results.chosen_y; ...
             preNorm(outputs(9, kStep), y_train_min, y_train_max)];
+    end
+    
+    % save results after every 1 week
+    if rem(kStep, 96*7) == 0
+        n_days = n_days+7;
         
-        if iter==n_samples
-            % save errors with map
-            [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-                gp(results.map_hyperparameters(iter), model.inference_method, ...
-                model.mean_function, model.covariance_function, model.likelihood, ...
-                results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-            f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-            f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-            
-            LP_map(iter) = mean(log_probabilities);
-            RMSE_map(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
-            
-            % save errors without map
-            model_ = train_gp_final(results.chosen_x, results.chosen_y);
-            results.hyperparameters(iter) = model_.hyp;
-            
-            [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-                gp(results.hyperparameters(iter), model_.inference_method, ...
-                model_.mean_function, model_.covariance_function, model_.likelihood, ...
-                results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-            f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-            f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-            
-            LP(iter) = mean(log_probabilities);
-            RMSE(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
-        end
+        data.Ambient = outputs(6,1:kStep)';
+        data.Humidity =  outputs(7,1:kStep)';
+        data.TotalLoad =  outputs(9,1:kStep)';
+        data.Month = outputs(1,1:kStep)';
+        data.DOM = outputs(2,1:kStep)';
+        data.TOD =  outputs(3,1:kStep)';
+        data.DOW = outputs(4,1:kStep)';
+        data.ClgSP = inputs(1,1:kStep)';
+        data.LgtSP = inputs(2,1:kStep)';
+        data.SupplyAirSP = inputs(3,1:kStep)';
+        data.ChwSP = inputs(4,1:kStep)';
+
+        saveStr = sprintf('doe_%s_noreset_%s_%dramped_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
+            building, problem.type, rampVal, numel(ctrl_vars), n_days, YY, MM, DD, HH, MINS);
+        save(fullfile('../../results', saveStr), 'model', 'results');
+        save(fullfile('../../data', saveStr),'-struct','data');
         
     end
     
@@ -336,7 +333,7 @@ data.Ambient = outputs(6,:)';
 data.Humidity =  outputs(7,:)';
 data.TotalLoad =  outputs(9,:)';
 data.Month = outputs(1,:)';
-data.DoM = outputs(2,:)';
+data.DOM = outputs(2,:)';
 data.TOD =  outputs(3,:)';
 data.DOW = outputs(4,:)';
 data.ClgSP = inputs(1,:)';
@@ -345,21 +342,6 @@ data.SupplyAirSP = inputs(3,:)';
 data.ChwSP = inputs(4,:)';
 
 %% DOE post processing
-
-% errors without map estimate
-[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-    gp(results.hyperparameters(end), model_.inference_method, ...
-       model_.mean_function, model_.covariance_function, model_.likelihood, ...
-       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-        
-f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-
-report_active = sprintf('\nACTIVE without MAP: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
-fprintf('%s\n', report_active);
-
-loss(y_test, f_star_mean_active, f_star_variance_active);
 
 % errors with map estimate                                 
 [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
@@ -404,15 +386,3 @@ for idn = 1:numel(ctrl_vars)
     ylabel(ctrl_vars{idn})
     xlabel('sample number')
 end
-
-%% Save results
-
-hyperparameters = results.hyperparameters;
-map_hyperparameters = results.map_hyperparameters;
-
-[YY, MM, DD, HH, MINS, ~] = datevec(now);
-saveStr = sprintf('doe_%s_noreset_%s_%dramped_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
-    building, problem.type, rampVal, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
-save(fullfile('results', saveStr), 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
-
-save(fullfile('data', saveStr),'-struct','data');
