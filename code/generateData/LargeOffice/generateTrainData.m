@@ -19,7 +19,7 @@ end
 %% The main simulation loop
 
 EPTimeStep = 4;
-SimDays = 30;
+SimDays = 29;
 deltaT = (60/EPTimeStep)*60;
 kStep = 1;  % current simulation step
 MAXSTEPS = SimDays*24*EPTimeStep;  % max simulation time = 7 days
@@ -44,9 +44,9 @@ for ids = 1:SimDays
     DRS = [DRS;lhsdesign(1*96,4)];
 end
 
-data_type = 'unconstrained';
+% data_type = 'unconstrained';
 % data_type = 'constrained';
-% data_type = 'nominal';
+data_type = 'nominal';
 % data_type = 'ramped';
 rampVal = 2;
 
@@ -70,7 +70,7 @@ while kStep <= MAXSTEPS
     % Baseline Schedule.
     % 1-sun, 2-mon, ..., 7-sat
     if kStep ==1    % change if this changed in idf
-        dayWeek = 'AllOtherDays';
+        dayWeek = 'Weekdays';
     else
         if outputs(5,kStep-1)>0 || outputs(4,kStep-1)==1
             dayWeek = 'AllOtherDays';
