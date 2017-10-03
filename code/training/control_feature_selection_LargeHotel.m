@@ -1,4 +1,5 @@
 % Feature selection code using GPML.
+% For Large Hotel model.
 %
 % Perform feature selection for the control prediction model
 % The idea is to use the ARD squared exponential covariance function for
