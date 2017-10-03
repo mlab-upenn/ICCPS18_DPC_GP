@@ -20,8 +20,10 @@ SupplyAirMin = 11;
 SupplyAirMax = 15;
 ChwMin = 3.7;
 ChwMax = 9.7;
-
-rampVal = 2;
+ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
+                       'LgtSP', linspace(LgtMin,LgtMax,n_steps),...
+                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
+                       'ChwSP', linspace(ChwMin,ChwMax,n_steps));
 
 % control features will be in same order
 ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
@@ -61,6 +63,20 @@ stepsahead = 0;
 [X_test_norm, y_test_norm] = construct_data(data_test_norm, model_inputs, model_target, stepsahead, model_excepts);
 [~, y_test] = construct_data(data_test, model_inputs, model_target, stepsahead, model_excepts);
 
+% search space for oed
+[X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
+    eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
+    eval(['ctrl_vars_all.' ctrl_vars{3}]));
+X_star = X_grid(:);
+Y_star = Y_grid(:);
+Z_star = Z_grid(:);
+X_c_star = [X_star, Y_star, Z_star];
+
+X_c_star_norm = zeros(size(X_c_star));
+for ii = 1:numel(ctrl_vars)
+    X_c_star_norm(:,ii) = preNorm(X_c_star(:,ii), normparams.(ctrl_vars{ii}).min, normparams.(ctrl_vars{ii}).max);
+end
+        
 %% setup GP model
 
 D = size(X_train_norm,2);
@@ -86,7 +102,7 @@ model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
 
 % problem type: 'IG'-information gain or 'MV'-maximum variance
-problem.type = 'IG';
+problem.type = 'MV';
 problem.num_evaluations = n_samples;
 
 %% create an mlepProcess instance and configure it
@@ -165,27 +181,6 @@ while kStep <= MAXSTEPS
         SP = [ClgSP, LgtSP, SupplyAirSP, ChwSP];
         
     else
-        
-        % define ramp constraints on chilled water
-        ChwPrev = inputs(4,kStep-1);
-        ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
-                       'LgtSP', linspace(LgtMin,LgtMax,n_steps),...
-                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
-                       'ChwSP', linspace(max(ChwMin,ChwPrev-rampVal),min(ChwMax,ChwPrev+rampVal),n_steps));
-        
-        % search space for oed
-        [X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
-            eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
-            eval(['ctrl_vars_all.' ctrl_vars{3}]));
-        X_star = X_grid(:);
-        Y_star = Y_grid(:);
-        Z_star = Z_grid(:);
-        X_c_star = [X_star, Y_star, Z_star];
-        
-        X_c_star_norm = zeros(size(X_c_star));
-        for ii = 1:numel(ctrl_vars)
-            X_c_star_norm(:,ii) = preNorm(X_c_star(:,ii), normparams.(ctrl_vars{ii}).min, normparams.(ctrl_vars{ii}).max);
-        end
         
         % need this because some inputs will follow rule-based schedules
         if kStep ==1    % change if this changed in idf
@@ -308,8 +303,8 @@ while kStep <= MAXSTEPS
         data.SupplyAirSP = inputs(3,1:kStep)';
         data.ChwSP = inputs(4,1:kStep)';
 
-        saveStr = sprintf('doe_%s_noreset_%s_%dramped_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
-            building, problem.type, rampVal, numel(ctrl_vars), n_days, YY, MM, DD, HH, MINS);
+        saveStr = sprintf('doe_%s_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
+            building, problem.type, numel(ctrl_vars), n_days, YY, MM, DD, HH, MINS);
         save(fullfile('../../results', saveStr), 'model', 'results');
         save(fullfile('../../data', saveStr),'-struct','data');
         
