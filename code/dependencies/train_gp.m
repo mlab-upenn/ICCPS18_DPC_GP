@@ -25,7 +25,7 @@ model.mean_function = mean_function;
 
 % solver
 solver = @minimize_minfunc;
-options = struct('Display', 'off', 'MaxFunEvals', 100);
+options = struct('Display', 'on', 'MaxFunEvals', 100);
 
 [hyp, ~, ~] = trainGParx(hyp0, inference_method,...
     mean_function, covariance_function, ...

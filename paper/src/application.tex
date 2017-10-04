@@ -31,7 +31,7 @@ For MPC, we require a predictive model for each time step in the horizon.
 We learn several GP models, one for each prediction step \( \tau \in \{0,\dots,N-1\}\):
 \begin{gather}
 \label{E:gp:casestudy}
-y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}_{t+\tau|t}}{\sigma^2_{t+\tau|t}}, \\
+y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}_{t+\tau|t}}{\sigma^2_{y,t+\tau|t}}, \\
 x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t], \nonumber
 \end{gather}
 where \(w:=[d^w, d^p, d^s]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
@@ -53,16 +53,20 @@ Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and
 OED is powerful when hardly any data is available for training. 
 To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to \(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
 For OED, we only require the first model with \(\tau=0\) in \eqref{E:gp:casestudy}. So we simplify the notation by denoting \(t|t\) by \(t\).
-Now, the goal at time \(t\) is to determine what should be the optimal cooling set point \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) which when applied to the building will require power cnsumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
+Now, the goal at time \(t\) is to determine what should be the optimal cooling set point \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) which when applied to the building will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
 We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms, fixed schedules and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
-In practical situations, the chilled water temperature cannot be changed by more than \(1.5^o\mathrm{C/min}\). We add this constraint accordingly to solve the optimization below every \(15 \mathrm{min}\):
+In practice, the chilled water temperature cannot be changed by more than \(0.15^o\mathrm{C/min}\). Keep this and thermal comfort into consideration, we consider the following operation constraints:
+\begin{gather}
+22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C}, \nonumber \\
+12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C}, \nonumber \\
+ 3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C},\label{E:operation_constraints} \\
+| u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C}. \nonumber
+\end{gather}
+Finally, we solve the optimization below every \(15 \mathrm{min}\) to calculate optimal inputs for OED:
 \begin{align}
 \label{E:casestudy:oed}
 \maximize_{u_{\mathrm{clg},t},u_{\mathrm{sat},t},u_{\mathrm{chw},t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2_{t}(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2_{t}(x_t)}\right) \\
-\st &  \ \ \ \  22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C} \nonumber \\
-&  \ \ \ \  12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C} \nonumber \\
-&  \ \ \ \  3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C} \nonumber \\
-&  \ \ \ \  | u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C} \nonumber
+\st &  \ \ \ \  \text{operations constraints } \eqref{E:operation_constraints}.\nonumber
 \end{align}
 
 \todo[inline]{results}
@@ -75,10 +79,7 @@ We consider a building, which responds to various setpoints resulting in power d
 The building's response to the setpoint changes is modeled by a GP.
 The battery helps improve the tracking quality by absorbing the prediction uncertainty of the GP.
 A controller computes the setpoint values for the building and the power of the battery to optimally track the reference demand signal.
-\\
 
-\noindent
-\textit{Battery's Model and Constraints:}
 For simplicity, we assume an ideal lossless battery model
 \begin{equation}
 \label{eq:battery-model}
@@ -90,64 +91,52 @@ The battery is subject to two operational constraints:
 its power must be bounded by \(\Pbmin \leq \Pbatt_t \leq \Pbmax\), 
 and its SoC must stay in a safe range \(\SOCmin \leq s_t \leq\SOCmax\) where \(\SOCmax\) is the fully-charged level and \(\SOCmin\) is the lowest safe discharged level. 
 
-The link between the buildings and the battery is the tracking constraint, which states that their total power \(p = y + b\) should track the reference \(r\).
-In this way, the battery helps reject the uncertainty of the GP and acts as an energy buffer to increase the tracking capability of the system. Although ideally \(p_t\) should track \(r_t\) exactly at any time \(t\), this strict constraint may be infeasible in certain circumstances, \eg when \(r\) is outside the DR capability of the system.
-Therefore, we introduce a slack variable \(\delta_t = r_t - p_t\).
+The building and the battery are linked via the power tracking constraint which states that \(p_t = y_t + b_t\) should track the reference \(r_t\) at any time \(t\). Therefore, our objective is to minimize \(\delta_t = r_t - p_t\).
+In this way, the battery helps reject the uncertainty of the GP and acts as an energy buffer to increase the tracking capability of the system. 
 The controller tries to keep \(\delta_t = 0\), however when exact tracking is impossible, it will maintain the operational safety of the system while keeping \(\delta_t\)  as small as possible.
-This objective will be reflected in the cost function. 
-In this formulation, \(\delta\) is a decision variable  and the battery power is
-\begin{equation}
-\label{eq:battery-power}
-\Pbatt_t = r_t - \delta_t - y_t \text.
-\end{equation}
-
-
-Since \(\GaussianDistSmall{\predict{\tau}{\bar{\Pbatt}}}{\predict{b,\tau}{\sigma^2}}\), the predicted battery power at time \(\tau \geq t\) has the Gaussian distribution \(\predict{\tau}{\Pbatt} \sim 
-\GaussianDistSmall{\predict{\tau}{\bar{\Pbatt}}}{\predict{b,\tau}{\sigma^2}}\), where
-\begin{equation}
-\label{eq:predicted-battery-power}
-\predict{\tau}{\bar{\Pbatt}} = r_\tau - \predict{\tau}{\delta} - \predict{\tau}{\bar{y}}, \quad
-\predict{b,\tau}{\sigma^2} =  \predict{y,\tau}{\sigma^2} \text.
-\end{equation}
-
-The battery's dynamics \eqref{eq:battery-model} result in the future battery's SoC as
-\(\predict{\tau+1}{s} = s_t + T \textstyle\sum_{k=t}^\tau (r_k - \predict{k}{\delta}) - T \textstyle\sum_{k=t}^\tau \predict{k}{y}\),
-for \(\tau \geq t\).
-It follows that \(\predict{\tau+1}{s} \sim \GaussianDistSmall{\predict{\tau+1}{\bar{s}}}{\predict{s,\tau+1}{\sigma^2}}\) where
-\begin{equation}
-\label{eq:predicted-battery-soc}
-\predict{\tau+1}{\bar{s}} = s_t + T \textstyle\sum_{k=t}^\tau \predict{k}{\bar{\Pbatt}}, \,
-\predict{s,\tau+1}{\sigma^2} = T^2 \textstyle\sum_{k=t}^\tau \predict{y,k}{\sigma^2} 
-\end{equation}
-in which Eq.~\eqref{eq:sum-of-power-random-vars} is used to derive the variance.
-
 The bounds on the battery's power and SoC lead to corresponding chance constraints.
 We wish to guarantee that at each time step, the power and SoC constraints are satisfied with probability at least \((1 - \epsilon_p)\) and  at least \((1 - \epsilon_s)\), respectively, where \(0 < \epsilon_p, \epsilon_s \leq \frac{1}{2}\) are given constants.
 Specifically, for each \(\tau\) in the horizon,
-\begin{subequations}\label{eq:chance-constraints}
 	\begin{gather}
-	\Pr\left( \Pbmin \leq \predict{\tau}{\Pbatt} \leq \Pbmax \right) \geq 1 - \epsilon_p \label{eq:chance-constraints:power} \\
-	\Pr\left( \SOCmin \leq \predict{\tau}{s} \leq \SOCmax \right) \geq 1 - \epsilon_s \label{eq:chance-constraints:soc}
+	\label{E:battery_chance}
+	\Pr\left( \Pbmin \leq b_{\tau+t|t}\leq \Pbmax \right) \geq 1 - \epsilon_p  \\
+	\label{E:SoC_chance}
+	\Pr\left( \SOCmin \leq s_{\tau+t|t} \leq \SOCmax \right) \geq 1 - \epsilon_s 
 	\end{gather}
-\end{subequations}
-where \(\predict{\tau}{\Pbatt}\) and \(\predict{\tau}{s}\) are Gaussian random variables whose means and variances are given in Eqs.~\eqref{eq:predicted-battery-power} and \eqref{eq:predicted-battery-soc}.
+where \(b_{t+\tau|t}\) and \(s_{t+\tau|t}\) are Gaussian random variables whose mean and variance are given by
+\begin{gather}
+\label{E:battery_dist}
+\bar{b}_{t+\tau|t}= r_{t} - \delta_{t+\tau|t} - \bar{y}_{t+\tau|t}, \ \ 
+\sigma^2_{b,t+\tau|t} =  \sigma^2_{y,t+\tau|t} \text, \\
+\label{E:SoC_dist}
+\bar{s}_{t+\tau+1|t}= s_t + T \textstyle\sum_{k=t}^{t+\tau} \predict{k}{\bar{\Pbatt}}, \,
+\predict{s,\tau+1}{\sigma^2} = T^2 \textstyle\sum_{k=t}^{t+\tau} \predict{y,k}{\sigma^2}
+\end{gather}
+Further details on modeling are available in \cite{nghiemetal16gp}.
+To this end, to track a given reference power signal, we solve the following stochastic optimization problem
+\begin{align}
+\label{E:casestudy:mpc}
+\minimize_{\delta, u} & \ \ \ \ \ \ \ \ \ \ \ \ \sum_{\tau=0}^{N-1} (\delta_{\tau+t|t})^2\\
+\st &  \ \ \ \  \text{dynamics constraints } \eqref{E:gp:casestudy}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
+&  \ \ \ \  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
+\end{align}
+At time \(t\), we solve for \(u^*_{t|t},\dots,u^*_{t+N-1|t} \), apply the first input \(u^*_{t|t} \) to the building, and proceed to the next time step.
 
+\todo[inline]{results}
 
 \subsection{Optimizing energy usage under operation constraints}
 \label{SS:energy_management}
 
 \todo[inline]{optimization problem}
-\begin{figure}[!tb]
-	\centering
-	\missingfigure[figwidth=20pc]{}
-	\caption{}
-	\captionsetup{justification=centering}
-	\label{F:MPC2}
-\end{figure}
+%\begin{figure}[!tb]
+%	\centering
+%	\missingfigure[figwidth=20pc]{}
+%	\caption{}
+%	\captionsetup{justification=centering}
+%	\label{F:MPC2}
+%\end{figure}
 
 \subsection{Active Learning}
 
 \subsection{Discussion}
-
-%\input{truongACC.tex}
 
