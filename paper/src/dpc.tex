@@ -13,16 +13,16 @@ We exploit this property in the optimization to generate input trajectories with
 
 At time \(t\), given training data \(\D = (X,Y) \), we consider a different GP model for each time step \(\tau \in \{0,\dots,N-1\}\):
 \begin{gather}
-y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}}{\sigma^2}, \\
+y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}}{\sigma^2_y}, \\
 x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t]. \nonumber
 \end{gather}
 The output at step \(\tau\) depends upon \(x_{t+\tau|t}\)  which is a function of inputs \(u_{t+\tau-m}, \dots, u_{t+\tau}\).
 We are interested in the following optimization problem with quadratic cost with \(R \succ 0\)
 \begin{align}
 \label{E:mpc:generic}
-\minimize & \sum_{\tau=0}^{N-1} (\bar{y}_{t+\tau|t}-y_{\mathrm{ref}})^2 + {u_{t+\tau|t}}^T R {u_{t+\tau|t}}+ \lambda \sigma^2_{t+\tau|t} \nonumber \\
+\minimize & \sum_{\tau=0}^{N-1} (\bar{y}_{t+\tau|t}-y_{\mathrm{ref}})^2 + {u_{t+\tau|t}}^T R {u_{t+\tau|t}}+ \lambda \sigma^2_{y,t+\tau|t} \nonumber \\
 \st & \ \ \ \ \ \bar{y}_{t+\tau|t} = \mu(x_{t+\tau|t}) + K_\star K^{-1} (Y - \mu(X)), \nonumber\\
-& \ \ \ \ \ \ \ \ \ \ \sigma^2_{t+\tau|t} = K_{\star \star} - K_\star K^{-1} K_\star^T, \\
+& \ \ \ \ \ \ \ \ \ \ \sigma^2_{y,t+\tau|t} = K_{\star \star} - K_\star K^{-1} K_\star^T, \\
 & \ \ \ \ \ \ \ \ \ \ \ \ \ \ u_{\mathrm{min}}  \leq u_{t+\tau|t} \leq u_{\mathrm{max}}, \nonumber\\
 & \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \forall \tau \in \{0,\dots,N-1\}, \nonumber
 \end{align}
