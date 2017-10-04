@@ -2,42 +2,44 @@
 clear; close all;
 rng(1);
 
+[YY, MM, DD, HH, MINS, ~] = datevec(now);
+
 %% define variables to control
 
-SimDays = 15;
-n_steps = 25;
-order_autoreg = 3+1;
+SimDays = 28;       % max 28
+n_steps = 20;
+order_autoreg = 1+1;
 n_samples = SimDays*24*4-order_autoreg;
 
 % control variables
-ClgMin = 23;
-ClgMax = 28;
-LgtMin = 0;
-LgtMax = 1;
-SupplyAirMin = 11;
-SupplyAirMax = 15;
+ClgMin = 22;
+ClgMax = 32;
+KitchenClgMin = 24;
+KitchenClgMax = 32;
+GuestClgMin = 22;
+GuestClgMax = 26;
+SupplyAirMin = 12;
+SupplyAirMax = 14;
 ChwMin = 3.7;
 ChwMax = 9.7;
-ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
-                       'LgtSP', linspace(LgtMin,LgtMax,n_steps),...
-                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
-                       'ChwSP', linspace(ChwMin,ChwMax,n_steps));
-                   
-% control features will be in same order
-ctrl_vars = {'ClgSP', 'SupplyAirSP', 'ChwSP'};
-building = 'LargeOffice';
 
-datafname = ['train-unconstrained-' building];
+rampVal = 2;
+
+% control features will be in same order
+ctrl_vars = {'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+building = 'LargeHotel';
+
+datafname = ['unconstrained-' building];
 data_train = load(fullfile('..', 'data', datafname));
 offline_data = data_train;
 
 % Normalize the data (not all fields)
-normalized_fields = {'Ambient', 'Humidity', 'TotalLoad', 'ClgSP', 'LgtSP', 'SupplyAirSP', 'ChwSP'};
+normalized_fields = {'Ambient', 'Humidity', 'TotalLoad', 'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
 [data_train_norm, normparams] = normalize_data(data_train, normalized_fields);
 y_train_min =  normparams.TotalLoad.min;
 y_train_max = normparams.TotalLoad.max;
 
-datafname = ['test-nominal-' building]; %'test-nominal-LargeOffice'; 'test-ramped2-LargeOffice'
+datafname = ['test-unconstrained-' building]; %'test-nominal-LargeHotel'; 'test-ramped2-LargeHotel'
 data_test = load(fullfile('..', 'data', datafname));
 
 % Normalize the data (same as for training)
@@ -46,14 +48,14 @@ data_test_norm = normalize_data(data_test, normalized_fields, normparams);
 model_inputs = {...
         'TOD', ...
         'DOW', ...
-        {'Ambient', 3:-1:0}, ...
-        {'Humidity', 3:-1:0}, ...
-        {'TotalLoad', 3:-1:1}, ...
-        {'ClgSP', 3:-1:0}, ... 
-        {'LgtSP', 3:-1:0}, ...
-        {'SupplyAirSP', 3:-1:0}, ...
-        {'ChwSP', 3:-1:0}};
-    
+        {'Ambient', order_autoreg-1:-1:0}, ...
+        {'Humidity', order_autoreg-1:-1:0}, ...
+        {'TotalLoad', order_autoreg-1:-1:1}, ...
+        {'ClgSP', order_autoreg-1:-1:0}, ...
+        {'KitchenClgSP', order_autoreg-1:-1:0}, ...
+        {'GuestClgSP', order_autoreg-1:-1:0}, ...
+        {'SupplyAirSP', order_autoreg-1:-1:0}, ...
+        {'ChwSP', order_autoreg-1:-1:0}};
 model_target = 'TotalLoad';
 model_excepts = {'TOD', 'DOW'};
 stepsahead = 0;
@@ -61,21 +63,7 @@ stepsahead = 0;
 [X_train_norm, y_train_norm] = construct_data(data_train_norm, model_inputs, model_target, stepsahead, model_excepts);
 [X_test_norm, y_test_norm] = construct_data(data_test_norm, model_inputs, model_target, stepsahead, model_excepts);
 [~, y_test] = construct_data(data_test, model_inputs, model_target, stepsahead, model_excepts);
-    
-% search space for oed
-[X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
-    eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
-    eval(['ctrl_vars_all.' ctrl_vars{3}]));
-X_star = X_grid(:);
-Y_star = Y_grid(:);
-Z_star = Z_grid(:);
-X_c_star = [X_star, Y_star, Z_star];
 
-X_c_star_norm = zeros(size(X_c_star));
-for ii = 1:numel(ctrl_vars)
-    X_c_star_norm(:,ii) = preNorm(X_c_star(:,ii), normparams.(ctrl_vars{ii}).min, normparams.(ctrl_vars{ii}).max);
-end
-        
 %% setup GP model
 
 D = size(X_train_norm,2);
@@ -101,7 +89,7 @@ model.prior = get_prior(@independent_prior, priors);
 model.inference_method = add_prior_to_inference_method(@exact_inference, model.prior);
 
 % problem type: 'IG'-information gain or 'MV'-maximum variance
-problem.type = 'IG';
+problem.type = 'MV';
 problem.num_evaluations = n_samples;
 
 %% create an mlepProcess instance and configure it
@@ -132,7 +120,7 @@ MAXSTEPS = SimDays*24*EPTimeStep;
 
 % variables for plotting:
 outputs = nan(9,MAXSTEPS);
-inputs = nan(4,MAXSTEPS);
+inputs = nan(8,MAXSTEPS);
 LP = zeros(1,n_samples);
 RMSE = zeros(1,n_samples);
 LP_map = zeros(1,n_samples);
@@ -147,6 +135,7 @@ end
 if flag ~= 0, error('check output flag'); end
 
 % DOE in closed loop
+n_days = 0;
 iter = 0;
 tic;
 
@@ -160,56 +149,80 @@ while kStep <= MAXSTEPS
         
     % let sim run for first few steps to get AR terms
     if kStep <= order_autoreg
-        if kStep ==1    % change if this changed in idf
-            dayWeek = 'AllOtherDays';
-        else
-            if outputs(5,kStep-1)>0 || outputs(4,kStep-1)==1
-                dayWeek = 'AllOtherDays';
-            elseif outputs(4,kStep-1)==7
-                dayWeek = 'Saturday';
-            else
-                dayWeek = 'Weekdays';
-            end
-        end
-        ClgSP = schedule('ClgSP', dayTime, dayWeek);
-        LgtSP = schedule('LgtSP', dayTime, dayWeek);
+        ClgSP = 30;
+        KitchenClgSP = 30;
+        GuestClgSP = 24;
         SupplyAirSP = 13;
         ChwSP = 6.7;
+        HtgSP = 16;
+        KitchenHtgSP = 16;
+        GuestHtgSP = 21;
         
-        SP = [ClgSP, LgtSP, SupplyAirSP, ChwSP];
+        SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
     else
         
-        % need this because some inputs will follow rule-based schedules
-        if kStep ==1    % change if this changed in idf
-            dayWeek = 'AllOtherDays';
-        else
-            if outputs(5,kStep-1)>0 || outputs(4,kStep-1)==1
-                dayWeek = 'AllOtherDays';
-            elseif outputs(4,kStep-1)==7
-                dayWeek = 'Saturday';
-            else
-                dayWeek = 'Weekdays';
-            end
+        % define ramp constraints on chilled water
+        ChwPrev = inputs(8,kStep-1);
+        ctrl_vars_all = struct('ClgSP', linspace(ClgMin,ClgMax,n_steps),...
+                       'KitchenClgSP', linspace(KitchenClgMin,KitchenClgMax,n_steps),...
+                       'GuestClgSP', linspace(GuestClgMin,GuestClgMax,n_steps),...
+                       'SupplyAirSP', linspace(SupplyAirMin,SupplyAirMax,n_steps),...
+                       'ChwSP', linspace(max(ChwMin,ChwPrev-rampVal),min(ChwMax,ChwPrev+rampVal),n_steps));
+        
+        % search space for oed
+        [X_grid, Y_grid, Z_grid] = ndgrid(eval(['ctrl_vars_all.' ctrl_vars{1}]), ...
+            eval(['ctrl_vars_all.' ctrl_vars{2}]), ...
+            eval(['ctrl_vars_all.' ctrl_vars{3}]));
+        X_star = X_grid(:);
+        Y_star = Y_grid(:);
+        Z_star = Z_grid(:);
+        X_c_star = [X_star, Y_star, Z_star];
+        
+        X_c_star_norm = zeros(size(X_c_star));
+        for ii = 1:numel(ctrl_vars)
+            X_c_star_norm(:,ii) = preNorm(X_c_star(:,ii), normparams.(ctrl_vars{ii}).min, normparams.(ctrl_vars{ii}).max);
         end
-        ClgSP = schedule('ClgSP', dayTime, dayWeek);
-        LgtSP = schedule('LgtSP', dayTime, dayWeek);
-        SupplyAirSP = 13;
-        ChwSP = 6.7;
+        
+        % need this because some inputs will follow rule-based schedules
+        if dayTime <= 7*3600
+            
+            ClgSP = 30;
+            KitchenClgSP = 30;
+            GuestClgSP = 24;
+            SupplyAirSP = 13;
+            ChwSP = 6.7;
+            HtgSP = 16;
+            KitchenHtgSP = 16;
+            GuestHtgSP = 21;
+            
+        else
+            
+            ClgSP = 24;
+            KitchenClgSP = 26;
+            GuestClgSP = 24;
+            SupplyAirSP = 13;
+            ChwSP = 6.7;
+            HtgSP = 21;
+            KitchenHtgSP = 19;
+            GuestHtgSP = 21;
+            
+        end
         
         iter = iter+1;
         
         data_cur = struct();
         data_cur.TOD = offline_data.TOD(kStep);
         data_cur.DOW = offline_data.DOW(kStep);
-        data_cur.Ambient = offline_data.Ambient(kStep-3:kStep)';
-        data_cur.Humidity = offline_data.Humidity(kStep-3:kStep)';
-        data_cur.TotalLoad = outputs(9, kStep-3:kStep-1);
+        data_cur.Ambient = offline_data.Ambient(kStep-(order_autoreg-1):kStep)';
+        data_cur.Humidity = offline_data.Humidity(kStep-(order_autoreg-1):kStep)';
+        data_cur.TotalLoad = outputs(9, kStep-(order_autoreg-1):kStep-1);
         
-        data_cur.ClgSP = inputs(1,kStep-3:kStep-1);
-        data_cur.LgtSP = [inputs(2,kStep-3:kStep-1), LgtSP];
-        data_cur.SupplyAirSP = inputs(3,kStep-3:kStep-1);
-        data_cur.ChwSP = inputs(4,kStep-3:kStep-1);
+        data_cur.ClgSP = [inputs(1,kStep-(order_autoreg-1):kStep-1), ClgSP];
+        data_cur.KitchenClgSP = [inputs(3,kStep-(order_autoreg-1):kStep-1), KitchenClgSP];
+        data_cur.GuestClgSP = inputs(5,kStep-(order_autoreg-1):kStep-1);
+        data_cur.SupplyAirSP = inputs(7,kStep-(order_autoreg-1):kStep-1);
+        data_cur.ChwSP = inputs(8,kStep-(order_autoreg-1):kStep-1);
         
         data_cur_norm = normalize_data(data_cur, normalized_fields, normparams);
         
@@ -233,11 +246,11 @@ while kStep <= MAXSTEPS
         % select best point
         [results, ind] = learn_gp_hyperparameters_doe(problem, model, iter, results, 'num_restarts', 0);
         X_c_next = X_c_star(ind,:);
-        ClgSP = X_c_next(1);
+        GuestClgSP = X_c_next(1);
         SupplyAirSP  = X_c_next(2);
         ChwSP = X_c_next(3);
         
-        SP = [ClgSP, LgtSP, SupplyAirSP, ChwSP];
+        SP = [ClgSP, HtgSP, KitchenClgSP, KitchenHtgSP, GuestClgSP, GuestHtgSP, SupplyAirSP, ChwSP];
         
     end
     
@@ -261,15 +274,16 @@ while kStep <= MAXSTEPS
         
         % extract features
         data_cur = struct();
-        data_cur.TOD = offline_data.TOD(kStep-3:kStep);
-        data_cur.DOW = offline_data.DOW(kStep-3:kStep);
-        data_cur.Ambient = offline_data.Ambient(kStep-3:kStep);
-        data_cur.Humidity = offline_data.Humidity(kStep-3:kStep);
-        data_cur.TotalLoad = outputs(9,kStep-3:kStep);
-        data_cur.ClgSP = inputs(1,kStep-3:kStep);
-        data_cur.LgtSP = inputs(2,kStep-3:kStep);
-        data_cur.SupplyAirSP = inputs(3,kStep-3:kStep);
-        data_cur.ChwSP = inputs(4,kStep-3:kStep);
+        data_cur.TOD = offline_data.TOD(kStep-(order_autoreg-1):kStep);
+        data_cur.DOW = offline_data.DOW(kStep-(order_autoreg-1):kStep);
+        data_cur.Ambient = offline_data.Ambient(kStep-(order_autoreg-1):kStep);
+        data_cur.Humidity = offline_data.Humidity(kStep-(order_autoreg-1):kStep);
+        data_cur.TotalLoad = outputs(9,kStep-(order_autoreg-1):kStep);
+        data_cur.ClgSP = inputs(1,kStep-(order_autoreg-1):kStep);
+        data_cur.KitchenClgSP = inputs(3,kStep-(order_autoreg-1):kStep);
+        data_cur.GuestClgSP = inputs(5,kStep-(order_autoreg-1):kStep);
+        data_cur.SupplyAirSP = inputs(7,kStep-(order_autoreg-1):kStep);
+        data_cur.ChwSP = inputs(8,kStep-(order_autoreg-1):kStep);
         
         data_cur_norm = normalize_data(data_cur, normalized_fields, normparams);
         [X_init, y_init] = construct_data(data_cur_norm, model_inputs, model_target, stepsahead, model_excepts);
@@ -283,33 +297,29 @@ while kStep <= MAXSTEPS
     if kStep > order_autoreg
         results.chosen_y = [results.chosen_y; ...
             preNorm(outputs(9, kStep), y_train_min, y_train_max)];
+    end
+    
+    % save results after every 1 week
+    if rem(kStep, 96*7) == 0
+        n_days = n_days+7;
         
-        if iter==n_samples
-            % save errors with map
-            [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-                gp(results.map_hyperparameters(iter), model.inference_method, ...
-                model.mean_function, model.covariance_function, model.likelihood, ...
-                results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-            f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-            f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-            
-            LP_map(iter) = mean(log_probabilities);
-            RMSE_map(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
-            
-            % save errors without map
-            model_ = train_gp_final(results.chosen_x, results.chosen_y);
-            results.hyperparameters(iter) = model_.hyp;
-            
-            [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-                gp(results.hyperparameters(iter), model_.inference_method, ...
-                model_.mean_function, model_.covariance_function, model_.likelihood, ...
-                results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-            f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-            f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-            
-            LP(iter) = mean(log_probabilities);
-            RMSE(iter) = sqrt(mean((f_star_mean_active-y_test).^2));
-        end
+        data.Ambient = outputs(6,1:kStep)';
+        data.Humidity =  outputs(7,1:kStep)';
+        data.TotalLoad =  outputs(9,1:kStep)';
+        data.Month = outputs(1,1:kStep)';
+        data.DOM = outputs(2,1:kStep)';
+        data.TOD =  outputs(3,1:kStep)';
+        data.DOW = outputs(4,1:kStep)';
+        data.ClgSP = inputs(1,1:kStep)';
+        data.KitchenClgSP = inputs(3,1:kStep)';
+        data.GuestClgSP = inputs(5,1:kStep)';
+        data.SupplyAirSP = inputs(7,1:kStep)';
+        data.ChwSP = inputs(8,1:kStep)';
+
+        saveStr = sprintf('doe_%s_%s_%dramped_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
+            building, problem.type, rampVal, numel(ctrl_vars), n_days, YY, MM, DD, HH, MINS);
+        save(fullfile('../../results', saveStr), 'model', 'results');
+        save(fullfile('../../data', saveStr),'-struct','data');
         
     end
     
@@ -331,30 +341,16 @@ data.Ambient = outputs(6,:)';
 data.Humidity =  outputs(7,:)';
 data.TotalLoad =  outputs(9,:)';
 data.Month = outputs(1,:)';
-data.DoM = outputs(2,:)';
+data.DOM = outputs(2,:)';
 data.TOD =  outputs(3,:)';
 data.DOW = outputs(4,:)';
 data.ClgSP = inputs(1,:)';
-data.LgtSP = inputs(2,:)';
-data.SupplyAirSP = inputs(3,:)';
-data.ChwSP = inputs(4,:)';
+data.KitchenClgSP = inputs(3,:)';
+data.GuestClgSP = inputs(5,:)';
+data.SupplyAirSP = inputs(7,:)';
+data.ChwSP = inputs(8,:)';
 
 %% DOE post processing
-
-% errors without map estimate
-[f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
-    gp(results.hyperparameters(end), model_.inference_method, ...
-       model_.mean_function, model_.covariance_function, model_.likelihood, ...
-       results.chosen_x, results.chosen_y, X_test_norm, y_test_norm);
-        
-f_star_mean_active = postNorm(f_star_mean_active, y_train_min, y_train_max);
-f_star_variance_active = postNormVar(f_star_variance_active, y_train_min, y_train_max);
-
-report_active = sprintf('\nACTIVE without MAP: E[log p(y* | x*, D)] = %0.3f, RMSE = %0.1f \n', ...
-                 mean(log_probabilities), sqrt(mean((f_star_mean_active-y_test).^2)));
-fprintf('%s\n', report_active);
-
-loss(y_test, f_star_mean_active, f_star_variance_active);
 
 % errors with map estimate                                 
 [f_star_mean_active, f_star_variance_active, ~, ~, log_probabilities] = ...
@@ -391,23 +387,11 @@ yyaxis right
 plot(RMSE, 'LineWidth', 2)
 ylabel('RMSE')
 
-ctrl_vars_all = {'ClgSP', 'LgtSP', 'SupplyAirSP', 'ChwSP'};
-ctrl_idx = [1, 2, 3, 4];
+ctrl_vars_all = {'ClgSP', 'KitchenClgSP', 'GuestClgSP', 'SupplyAirSP', 'ChwSP'};
+ctrl_idx = [1, 3, 5, 7, 8];
 for idn = 1:numel(ctrl_vars)
     figure('Name', 'active learning'); grid on;
     plot(inputs(ctrl_idx(strcmp(ctrl_vars{idn},ctrl_vars_all)),:), 'LineWidth', 2)
     ylabel(ctrl_vars{idn})
     xlabel('sample number')
 end
-
-%% Save results
-
-hyperparameters = results.hyperparameters;
-map_hyperparameters = results.map_hyperparameters;
-
-[YY, MM, DD, HH, MINS, ~] = datevec(now);
-saveStr = sprintf('doe_%s_noreset_%s_%dinput_%dday_%04d%02d%02d_%02d%02d.mat',...
-    building, problem.type, numel(ctrl_vars), SimDays, YY, MM, DD, HH, MINS);
-save(fullfile('results', saveStr), 'model', 'map_hyperparameters', 'hyperparameters', 'X_chosen', 'y_chosen', 'LP', 'RMSE', 'LP_map', 'RMSE_map');
-
-save(fullfile('data', saveStr),'-struct','data');
