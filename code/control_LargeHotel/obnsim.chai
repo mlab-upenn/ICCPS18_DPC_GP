@@ -16,7 +16,7 @@ settings.default_comm("mqtt");	// Select the default communication (yarp, mqtt)
 //settings.MQTT_server("tcp://128.178.5.139:1883");
 settings.MQTT_server("tcp://localhost:1883");
 settings.time_unit(minute);
-settings.final_time(28*day);
+settings.final_time(2*day);
 
 var Tgrid = 15*minute;
 

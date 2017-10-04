@@ -110,7 +110,7 @@ if multipleGPs
 
 else
     % Load the single GP model
-    RESULTS = load(fullfile('..', 'models',  control_gp_model_file));
+    RESULTS = load(fullfile('..', 'models', 'LargeHotel', control_gp_model_file));
             
     gpmodel = RESULTS.training_result.model;
     gpmodel.model_target = RESULTS.training_result.model_target;
