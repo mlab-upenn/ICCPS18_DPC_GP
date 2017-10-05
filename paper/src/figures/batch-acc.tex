@@ -26,7 +26,8 @@ ylabel={power [kW]},
 axis background/.style={fill=white},
 xmajorgrids,
 ymajorgrids,
-legend style={at={(0.5,1.03)}, anchor=south, legend columns=3, legend cell align=left, align=left, fill=none, draw=none}
+legend style={at={(0.5,1.03)}, anchor=south, legend columns=3, legend cell align=left, align=left, fill=none, draw=none},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
 
 \addplot[area legend, draw=mycolor1, fill=mycolor1]
@@ -445,7 +446,8 @@ ylabel style={font=\color{white!15!black}},
 ylabel={power [kW]},
 axis background/.style={fill=white},
 xmajorgrids,
-ymajorgrids
+ymajorgrids,
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
 
 \addplot[area legend, draw=mycolor1, fill=mycolor1, forget plot]

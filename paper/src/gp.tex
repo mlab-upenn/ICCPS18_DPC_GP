@@ -34,6 +34,7 @@ Note that the mean and covariance functions are parameterized by the hyperparame
 The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $\D = (X, Y)$.
 In other words, a GP model specifies the structure of the covariance matrix of, or the relationship between, the input variables rather than a fixed structural input--output relationship.
 It is therefore highly flexible and can capture complex behavior with fewer parameters.
+An example of GP prior and posterior is shown in Fig.~\ref{F:gp:prior:posterior}. We use a constant mean function and a combination of squared exponential kernel and rational quadratic kernel we describe in Sec.~\ref{SS:casestudy:gp}.
 There exists a wide range of covariance functions and combinations to choose from \cite{Rasmussen2006}. 
 
 GPs offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems.
@@ -79,9 +80,9 @@ We mention here two simulation methods for autoregressive GPs.
 	\setlength\fwidth{0.4\textwidth}
 	\setlength\hwidth{0.2\textwidth}	
 	\input{figures/gp-prior-post.tex}  
-  \caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building. Chilled water temperature varies from \(3.7\mathrm{^oC}\) to \(9.7\mathrm{^oC}\).}
+  \caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building for two days. Initially the mean is constant because \(\mu(x)\) is constant, and we observe a high variance. The posterior agrees with the actual power consumption with high confidence.}
   \captionsetup{justification=centering}
-  \label{F:GP}
+  \label{F:gp:prior:posterior}
 \end{figure}
 
 %%% Local Variables:

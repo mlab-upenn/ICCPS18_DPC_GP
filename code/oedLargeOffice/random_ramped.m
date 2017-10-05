@@ -128,7 +128,7 @@ while kStep <= MAXSTEPS
         ChwPrev = inputs(4,kStep-1);
         SP(4) = max(ChwMin,ChwPrev-rampVal)+(min(ChwMax,ChwPrev+rampVal)-max(ChwMin,ChwPrev-rampVal))*rand;
         if strcmp(sample_type, 'prbs')
-            SP(4) = ChwPrev+rampVal*ChwSPprbs(kStep);
+            SP(4) = max(ChwMin,ChwPrev-rampVal)*(ChwSPprbs(kStep)<0)+min(ChwMax,ChwPrev+rampVal)*(ChwSPprbs(kStep)>0);
         end
     end
     
