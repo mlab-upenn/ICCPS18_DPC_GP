@@ -5,22 +5,21 @@ In this section, we briefly introduce modeling with Gaussian Process (GP) and it
 More details can be found in \cite{Rasmussen2006} %on GP for machine learning and in
 and \cite{Kocijan2016}. % on GP modeling of dynamic systems.
 
-\begin{definition}
-A Gaussian process is a collection of random variables, any finite number of which have a joint Gaussian distribution \cite{Rasmussen2006}.
+\begin{definition}[\cite{Rasmussen2006}]
+A Gaussian Process is a collection of random variables, any finite number of which have a joint Gaussian distribution.
 \end{definition}
 Consider noisy observations \(y\) of an underlying function \(f: \RR^n \mapsto \RR\) through a Gaussian noise model: \(y = f(x) + \GaussianDist{0}{\sigma_n^2}\), \(x \in \RR^n\).
 A GP of \(y\) is fully specified by its mean function \(\mu(x)\) and covariance function \(k(x,x')\),
 \begin{align}
 \label{E:gp:prior}
-\mu(x) &= \EE [f(x)] \\
-k(x,x') &= \EE [(f(x)-\mu(x)) (f(x') - \mu(x'))] + \sigma_n^2 \delta(x,x') \nonumber
+\mu(x; \theta) &= \EE [f(x)] \\
+k(x,x'; \theta) &= \EE [(f(x)\!-\!\mu(x)) (f(x') \!-\! \mu(x'))] + \sigma_n^2 \delta(x,x') \nonumber
 \end{align}
 where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
-Given the training data, the hyperparameters can be estimated by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
 
-Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance
+Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance given by
 \begin{subequations}
 \label{E:gp-regression}
 \begin{align}
@@ -34,7 +33,7 @@ Note that the mean and covariance functions are parameterized by the hyperparame
 The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $\D = (X, Y)$.
 In other words, a GP model specifies the structure of the covariance matrix of, or the relationship between, the input variables rather than a fixed structural input--output relationship.
 It is therefore highly flexible and can capture complex behavior with fewer parameters.
-An example of GP prior and posterior is shown in Fig.~\ref{F:gp:prior:posterior}. We use a constant mean function and a combination of squared exponential kernel and rational quadratic kernel we describe in Sec.~\ref{SS:casestudy:gp}.
+An example of GP prior and posterior is shown in Fig.~\ref{F:gp:prior:posterior}. We use a constant mean function and a combination of squared exponential kernel and rational quadratic kernel as described in Sec.~\ref{SS:casestudy:gp}.
 There exists a wide range of covariance functions and combinations to choose from \cite{Rasmussen2006}. 
 
 GPs offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems.
@@ -79,7 +78,8 @@ We mention here two simulation methods for autoregressive GPs.
   \centering
 	\setlength\fwidth{0.4\textwidth}
 	\setlength\hwidth{0.2\textwidth}	
-	\input{figures/gp-prior-post.tex}  
+	\input{figures/gp-prior-post.tex}
+    \todo[inline]{This figure is impossibe to see!!! You can truncate the length by half (show the result for 1 day, or 12 hours instead). Create two smaller plots side by side, or select colors better.}
   \caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building for two days. Initially the mean is constant because \(\mu(x)\) is constant, and we observe a high variance. The posterior agrees with the actual power consumption with high confidence.}
   \captionsetup{justification=centering}
   \label{F:gp:prior:posterior}

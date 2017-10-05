@@ -100,11 +100,18 @@ The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
 In Sec.~\ref{S:casestudy}, for a dynamical model of a building, we add operation constraints on a Chiller system to optimally sample the chilled water temperature, supply air temperature and the zone level cooling set point. For a building model, an example of experiment design is shown in Fig.~\ref{F:oed:example}. Initially the OED is much better. As the experiment is run in closed loop with the building for more and more days, the performance of OED approaches to that of random sampling. 
 
 \begin{figure}[!tb]
-	\centering
-	\setlength\fwidth{0.44\textwidth}
-	\setlength\hwidth{0.2\textwidth}	
-	\input{figures/oed-acc.tex}
-	\caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design initially. After one week of data is generated, the accuracy of OED is similar to random sampling.}
-	\captionsetup{justification=centering}
-	\label{F:oed:example}
+  \centering
+  \todo[inline]{Is this plot still up-to-date?}
+  \setlength\fwidth{0.44\textwidth}
+  \setlength\hwidth{0.2\textwidth}	
+  \input{figures/oed-acc.tex}
+  \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design initially. After one week of data is generated, the accuracy of OED is similar to random sampling.}
+  \captionsetup{justification=centering}
+  \label{F:oed:example}
 \end{figure}
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
