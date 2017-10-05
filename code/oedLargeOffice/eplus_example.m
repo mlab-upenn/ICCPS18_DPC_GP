@@ -51,7 +51,7 @@ stepsahead = 0;
 
 %% GP training
 
-model = train_gp(X_train_norm, y_train_norm);
+model = train_gp_truong(X_train_norm, y_train_norm);
 
 
 %% GP prediction

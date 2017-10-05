@@ -1,4 +1,4 @@
-\section{Active Learning / Evolving GP?}
+\section{Evolving Gaussian Processes}
 \label{S:active}
 
 In this section, we discuss the challenge of ``Model adaptability" listed in Sec.~\ref{SS:practical_challenges}.
@@ -9,6 +9,17 @@ As we generate more data with time, we may not want to use full data set for mod
 First, only selected or the most informative sub set of data may explain the dynamics at the time. Second, the computational complexity of training Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. So the learning becomes computationally hard as the size of data increases.
 Therefore, obtaining the best GP model with least data is highly desired. The solution to this problem lies in \textit{selecting the optimal subset of data} (from the available data) that best explains the system behavior or dynamics.
 For active learning, we extend the result from Sec.~\ref{SS:information-theory}.
+
+\begin{figure*}[t]
+	\centering
+	\setlength\fwidth{0.44\textwidth}
+	\setlength\hwidth{0.25\textwidth}
+	\input{figures/batch-oed.tex}
+	\input{figures/batch-rand.tex}
+	\caption{Left: Optimal subset of data selection. Right: Selection using random sampling. The mean prediction error and prediction variance are both low for the optimal selection done using Algo.~\ref{A:oed:batch}.}
+	\captionsetup{justification=centering}
+	\label{F:active:example}
+\end{figure*}
 
 \subsection{Optimal subset of data selection: selecting most informative data for periodic model update}
 
@@ -23,7 +34,9 @@ Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through
 \maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
 \end{align}
 Then, we add this sample to \(\mathcal{S}\), update the \(\theta\)  and proceed until \(|\mathcal{S}|=k\).
-The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
+The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}. 
+
+Fig.~\ref{F:active:example} shows the improvement in mean prediction error and prediction variance obtained after optimal selection, starting with a model trained using selection based on uniform sampling. We use this method in Sec.~\ref{SS:casestudy:active} to update the learned model from time to time as a controller runs in a closed loop and we generate more data.
 
 \begin{algorithm}[!tb]
 	\caption{Optimal subset of data selection}
@@ -45,12 +58,12 @@ The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}.
 	\end{algorithmic}
 \end{algorithm}
 
-\begin{figure}[!tb]
-	\centering
-	\setlength\fwidth{0.4\textwidth}
-	\setlength\hwidth{0.3\textwidth}	
-	\input{figures/batch-acc.tex}
-	\caption{Prediction of power consumption of a building. Top: 100 most informative samples are selected from available 1000 data points. Bottom: 100 samples are selected randomly. The mean prediction and variance in prediction are much better with active learning.}
-	\captionsetup{justification=centering}
-	\label{F:batch-acc}
-\end{figure}
+%\begin{figure}[!tb]
+%	\centering
+%	\setlength\fwidth{0.4\textwidth}
+%	\setlength\hwidth{0.3\textwidth}	
+%	\input{figures/batch-acc.tex}
+%	\caption{Prediction of power consumption of a building. Top: 100 most informative samples are selected from available 1000 data points. Bottom: 100 samples are selected randomly. The mean prediction and variance in prediction are much better with active learning.}
+%	\captionsetup{justification=centering}
+%	\label{F:batch-acc}
+%\end{figure}

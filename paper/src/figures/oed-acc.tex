@@ -22,9 +22,10 @@ ylabel={error [kW]},
 axis background/.style={fill=white},
 axis x line*=bottom,
 axis y line*=left,
-legend style={legend cell align=left, align=left, fill=none, draw=none}
+legend style={legend cell align=left, align=left, fill=none, draw=none},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
-\addplot [color=black, line width=1.0pt, mark=o, mark options={solid, black}]
+\addplot [color=black, line width=0.8pt, mark=o, mark options={solid, black}]
   table[row sep=crcr]{%
 1	34.3140805588557\\
 2	27.5433343713973\\
@@ -33,7 +34,7 @@ legend style={legend cell align=left, align=left, fill=none, draw=none}
 };
 \addlegendentry{OED: RMSE}
 
-\addplot [color=black, line width=1.0pt, mark=diamond, mark options={solid, black}]
+\addplot [color=black, line width=0.8pt, mark=diamond, mark options={solid, black}]
   table[row sep=crcr]{%
 1	26.8449130224607\\
 2	21.7375133161147\\
@@ -42,7 +43,7 @@ legend style={legend cell align=left, align=left, fill=none, draw=none}
 };
 \addlegendentry{OED: AE}
 
-\addplot [color=black, dashed, line width=1.0pt, mark=o, mark options={solid, black}]
+\addplot [color=black, dashed, line width=0.8pt, mark=o, mark options={solid, black}]
   table[row sep=crcr]{%
 1	46.5079097566504\\
 2	32.6318399699692\\
@@ -51,7 +52,7 @@ legend style={legend cell align=left, align=left, fill=none, draw=none}
 };
 \addlegendentry{Random: RMSE}
 
-\addplot [color=black, dashed, line width=1.0pt, mark=diamond, mark options={solid, black}]
+\addplot [color=black, dashed, line width=0.8pt, mark=diamond, mark options={solid, black}]
   table[row sep=crcr]{%
 1	35.783459827676\\
 2	24.8751433203046\\

@@ -1,0 +1,136 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.49400,0.18400,0.55600}%
+\definecolor{mycolor4}{rgb}{0.46600,0.67400,0.18800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.411\fwidth,
+height=\hwidth,
+at={(0\fwidth,0\hwidth)},
+scale only axis,
+unbounded coords=jump,
+xmin=0.75,
+xmax=5.25,
+xtick={1,2,3,4,5},
+xticklabels={{3},{7},{10},{14},{21}},
+xlabel style={font=\color{white!15!black}},
+xlabel={no of days},
+ymin=100,
+ymax=240,
+ylabel style={font=\color{white!15!black}},
+ylabel={RMSE [kW]},
+axis background/.style={fill=white},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,legend style={at={(0,1)}}, align=center
+]
+\addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}, forget plot]
+  table[row sep=crcr]{%
+1	202.916706713584\\
+2	123.317303637472\\
+3	114.6037119272\\
+4	113.951810031974\\
+5	108.308872828757\\
+6	nan\\
+};
+\addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}, forget plot]
+  table[row sep=crcr]{%
+1	168.449415909196\\
+2	123.911101157714\\
+3	116.678521620139\\
+4	115.852548679535\\
+5	108.095648661131\\
+6	nan\\
+};
+\addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}, forget plot]
+  table[row sep=crcr]{%
+1	222.545060580002\\
+2	135.092384886908\\
+3	120.852590121443\\
+4	118.158218495779\\
+5	106.889101053448\\
+6	nan\\
+};
+\addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}, forget plot]
+  table[row sep=crcr]{%
+1	219.422300879522\\
+2	130.994515470022\\
+3	125.446032559312\\
+4	123.126440363686\\
+5	124.10982696347\\
+6	nan\\
+};
+\end{axis}
+
+\begin{axis}[%
+width=0.411\fwidth,
+height=\hwidth,
+at={(0.54\fwidth,0\hwidth)},
+scale only axis,
+unbounded coords=jump,
+xmin=0.75,
+xmax=5.25,
+xtick={1,2,3,4,5},
+xticklabels={{3},{7},{10},{14},{21}},
+xlabel style={font=\color{white!15!black}},
+xlabel={no of days},
+ymin=-1.5,
+ymax=1,
+ylabel style={font=\color{white!15!black}},
+ylabel={MSLL},
+axis background/.style={fill=white},
+legend style={at={(0.5,1.03)}, anchor=south, legend columns=4, legend cell align=left, align=left, fill=none, draw=none},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,legend style={at={(0,1)}}, align=center
+]
+\addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+1	-0.431251512591452\\
+2	-1.11219989870435\\
+3	-1.1970167867125\\
+4	-1.21292672943036\\
+5	-1.2674514749276\\
+6	nan\\
+};
+\addlegendentry{IG}
+
+\addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+1	-0.276374438592905\\
+2	-1.0815817558078\\
+3	-1.14376474427609\\
+4	-1.15149078446885\\
+5	-1.22773886044186\\
+6	nan\\
+};
+\addlegendentry{MV}
+
+\addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}]
+  table[row sep=crcr]{%
+1	0.759174120362543\\
+2	-0.944151441587627\\
+3	-1.12386652991089\\
+4	-1.15822269745498\\
+5	-1.27519098327653\\
+6	nan\\
+};
+\addlegendentry{Uniform}
+
+\addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}]
+  table[row sep=crcr]{%
+1	-0.140417197047048\\
+2	-1.10320385426257\\
+3	-1.14105547856784\\
+4	-1.15627502207335\\
+5	-1.10813518412733\\
+6	nan\\
+};
+\addlegendentry{PRBS}
+
+\end{axis}
+\end{tikzpicture}%
