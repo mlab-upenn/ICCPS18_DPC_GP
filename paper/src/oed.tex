@@ -1,38 +1,49 @@
 \section{Optimal Experiment Design}
 \label{S:oed}
 
-In this section, we address the practical challenge of ``Data quality" listed in Sec.~\ref{SS:practical_challenges}.
+In this section, we address the practical challenge of ``Data quality'' listed in Sec.~\ref{SS:practical_challenges}.
 
-In general, the more data we have, a better model we can learn using machine learning algorithms. When sufficient training data is not available for learning the behavior of the dynamical system, we resort to \textit{optimal experiment design} (OED) or \textit{functional testing}, a method of exciting the inputs of the dynamical system and measuring its response. For example, in the control literature, a popular technique, especially for linear systems, is measuring the \textit{step response} of the system to estimate the time-constants, and further for designing of controllers. In context of buildings as we discuss in Sec.~\ref{S:casestudy}, it is often the case that very limited data from the installed sensors and multimeters are available. Hence, we need to design a mechanism to recommend control strategies to sample new data.
+In general, the more data we have, the better we can learn a model using machine learning algorithms.
+These data are often obtained by running tests, called \emph{functional tests}, on the real system.
+However, in many applications, the amount of training data we can practically obtain is usually limited due to many factors, such as a short permitted duration for functional tests and operational or safety constraints of the physical system.
+For example, in the context of buildings as we will discuss in Sec.~\ref{S:casestudy}, a functional test typically involves changing various set-points of the building energy control system in order to excite the different components and operation modes of the building, so that the obtained data will reflect their behaviors.
+It is often the case that a functional test in a building is limited by the short time window during which the set-points are allowed to change, and by the maximum allowable rates of change of these set-points.
+Subject to these constraints, it is desirable to optimally design the functional tests so that the data quality is maximized, in the sense that the model obtained from the data with a specific learning technique likely has the best quality possible.
+This practice is known as \emph{optimal experiment design} (OED).
 
-For optimal experiment design with GP as the learned model, we follow the \textit{information theoretic} approach to estimate how well the training samples explain the behavior underlying physical system.
 
 \subsection{Information theoretic approach to OED}
 \label{SS:information-theory}
 
-In this section, we show how the variance in the predictions in GP regression \eqref{E:gp-regression} can be exploited for experiment design.
-The goal here is to update the parameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially. One popular metric of selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}. Since, we can calculate the variance in \(y\) for any \(x\), OED based on MV can be directly computed using \eqref{E:gp-regression}. However, another metric which has proven to more powerful in learning parameters \(\theta\) is the Information Gain (IG) \cite{Krause2008}. 
+In this section, we present an \emph{information theoretic} approach for OED to incrementally design or select the best data points for explaining the behavior of the underlying physical system with GP.
+This is achieved by exploiting the predictive variance in GP regression \eqref{E:gp-regression}.
+The goal here is to update the hyperparameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially.
+One popular method for selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}.
+Since we can calculate the variance in \(y\) for any \(x\), OED based on MV can be directly computed using \eqref{E:gp-regression}.
+However, another approach which has been shown to result in better samples for learning the hyperparameters \(\theta\) is maximizing the Information Gain (IG) \cite{Krause2008}. 
 
-IG metric selects the sample which adds maximum information to the model, i.e.~reduces the maximum uncertainty in \(\theta\). If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
+The IG approach selects the sample which adds the maximum information to the model, i.e.~which reduces the maximum uncertainty in \(\theta\). If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
 \begin{align}
 \argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y),
 \label{E:ig:theta}
 \end{align}
-where, \(H\) is the Shanon's Entropy given by
+where \(H\) is the Shanon's Entropy given by
 \begin{align}
 H(\theta|\D) = -\int p(\theta|\D) \log (p(\theta|\D))d\theta.
 \end{align}
-Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}\), we need to take an expectation over \(y\). When the dimension of \(\theta\) is large, computing entropies is typically computationally intractable. Using equivalence of the expressions \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\),
-we can transform \eqref{E:ig:theta} as
+Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}\), we need to take an expectation over \(y\).
+When the dimension of \(\theta\) is large, computing entropies is typically computationally intractable.
+Using the equality \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\), we can rewrite \eqref{E:ig:theta} equivalently as
 \begin{align}
 \argmax_x H(y|x,\D) - \EE_{\theta \sim p(\theta|\D)}H(y|x,\theta).
 \label{E:ig:y}
 \end{align}
-In this case, the expectation is defined over \(\theta\) the expression \eqref{E:ig:y} is much easier to compute because \(y\) is now single dimension. For further details, we refer the reader to \cite{Houlsby2011}.
+In this case, as the expectation is defined over \(\theta\), \eqref{E:ig:y} is much easier to compute because \(y\) has single dimension.
+For further details, we refer the reader to \cite{Houlsby2011}.
 The first term in \eqref{E:ig:y} can be calculated by marginalizing over the distribution of \(\theta|\D\):
 \begin{align}
-p(y|x,\D) =& \EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \nonumber\\
-=& \int p(y|x,\theta, \D)p(\theta|\D)d\theta
+p(y|x,\D) &= \EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \nonumber\\
+&= \int p(y|x,\theta, \D)p(\theta|\D)d\theta
 \end{align}
 for which the exact solution is difficult to compute. We therefore use an approximation described in \cite{Garnett2013}. It is shown that for \(\theta|\D \sim \GaussianDist{\bar{\theta}}{\Sigma}\), we can find a linear approximation to \(\bar{y}(x) = a^T(x)\theta+b(x)\) such that
 \begin{align}
@@ -48,13 +59,16 @@ Finally, using the relation for the differential entropy for a Gaussian distribu
 \label{E:ig:final}
 \end{align}
 Next, we apply this result for sequential optimal experiment design.
+\todo[inline]{Can you include the final equations as presented in \cite{Garnett2013}?}
 
-\subsection{Sequential sampling: recommending control strategies for experiment design }
+% \subsection{Sequential sampling: recommending control strategies for experiment design }
+\subsection{Sequential experiment design with Gaussian Processes}
 
 %As said before, when the available data is limited, we need a procedure to sample new data. 
-The goal here is to update the model parameters \(\theta\) of the GP efficiently as new data is observed. 
-To begin the experiment design, we assume that we only know about which features \(x\) have an influence on the output \(y\). This is often known in practice. For example, for the case study in Sec.~\ref{S:casestudy}, the output of interest if the building power consumption, and the features we consider include outside air temperature and humidity, time of day to account for occupancy, control set points and lagged terms for the output. Then a covariance structure of GP must be selected. For the example above, we chose a squared exponential kernel.
-If samples \(\D := (X,Y)\) are available, we can assign the prior distribution on \(\theta\) based on the MLE estimate \( \argmax_\theta \Pr(Y \vert X, \theta)\), i.e.~\(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\) where a suitable value of \(\sigma^2_{\mathrm{init}}\) is chosen, otherwise, the mean of the Gaussian priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\) is also initialized manually.
+Our goal is to update the hyperparameters \(\theta\) of the GP efficiently as new data is observed. 
+To begin the experiment design, we assume that we only know about which features \(x\) have an influence on the output \(y\). This is often known in practice. For example, for the case study in Sec.~\ref{S:casestudy}, the output of interest is the building power consumption, and the features we consider include outside air temperature and humidity, time of day to account for occupancy, control set points and lagged terms for the output. Then a covariance structure of GP must be selected. For the example above, we chose a squared exponential kernel.
+If samples \(\D := (X,Y)\) are available, we can assign the prior distribution on \(\theta\) based on the MLE estimate \( \argmax_\theta \Pr(Y \vert X, \theta)\), i.e.~\(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\) where a suitable value of \(\sigma^2_{\mathrm{init}}\) is chosen.
+Otherwise, the Gaussian priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\) are initialized manually.
 
 \begin{algorithm}[!tb]
 	\caption{Sequential sampling for OED}
@@ -89,7 +103,8 @@ where
 x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
 \label{E:GP:features}
 \end{align}
-At time \(t\), the current disturbance, and the lagged terms of the output, control input and disturbance are all known. The current control input \(u_t \in \RR^p \) is the only unknown feature for experiment design. For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
+At time \(t\), the current disturbance, and the lagged terms of the output, the control inputs and the disturbance are all known. The current control input \(u_t \in \RR^p \) is the only unknown feature for experiment design, which we aim to select optimally.
+For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
 \begin{align}
 \label{E:oed:sampling}
 \maximize_{u_{t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2(x_t)}\right) \\
@@ -97,7 +112,10 @@ At time \(t\), the current disturbance, and the lagged terms of the output, cont
 \end{align}
 The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
-In Sec.~\ref{S:casestudy}, for a dynamical model of a building, we add operation constraints on a Chiller system to optimally sample the chilled water temperature, supply air temperature and the zone level cooling set point. For a building model, an example of experiment design is shown in Fig.~\ref{F:oed:example}. Initially the OED is much better. As the experiment is run in closed loop with the building for more and more days, the performance of OED approaches to that of random sampling. 
+
+As an example, in Sec.~\ref{S:casestudy} where we learn a dynamical model of a building, the proposed OED method is used to optimally sample the chilled water temperature, supply air temperature and zone-level cooling set-points, subject to operation constraints on the chiller system.
+The result is illustrated in Fig.~\ref{F:oed:example}, which shows the changes in model accuracy between several experiment design methods, for various durations of functional tests.
+For short functional test durations, our OED methods achieve much more accurate models compared to random sampling methods.  As the duration increases, the performance of all methods converges.
 
 \begin{figure}[!tb]
   \centering
