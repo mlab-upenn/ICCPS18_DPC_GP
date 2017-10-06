@@ -38,7 +38,7 @@ Using the equality \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\), we can rewr
 \argmax_x H(y|x,\D) - \EE_{\theta \sim p(\theta|\D)}H(y|x,\theta).
 \label{E:ig:y}
 \end{align}
-In this case, as the expectation is defined over \(\theta\), \eqref{E:ig:y} is much easier to compute because \(y\) has single dimension.
+In this case, as the expectation is defined over \(\theta\), \eqref{E:ig:y} is much easier to compute because \(y\) is a scaler.
 For further details, we refer the reader to \cite{Houlsby2011}.
 The first term in \eqref{E:ig:y} can be calculated by marginalizing over the distribution of \(\theta|\D\):
 \begin{align}
@@ -103,7 +103,7 @@ where
 x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t] \text.
 \label{E:GP:features}
 \end{align}
-At time \(t\), the current disturbance, and the lagged terms of the output, the control inputs and the disturbance are all known. The current control input \(u_t \in \RR^p \) is the only unknown feature for experiment design, which we aim to select optimally.
+At time \(t\), the current disturbance, and the lagged terms of the output, the control inputs and the disturbance are all known. The current control input \(u_t \in \RR^u \) is the only unknown feature for experiment design, which we aim to select optimally.
 For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
 \begin{align}
 \label{E:oed:sampling}

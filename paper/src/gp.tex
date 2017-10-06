@@ -19,7 +19,7 @@ where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
 
-Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), we define training data by $\D = (X, Y)$. The distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance given by
+Given the regression vectors \(X = [x_1, \dots, x_N]^T\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), we define training data by $\D = (X, Y)$. The distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance given by
 \begin{subequations}
 \label{E:gp-regression}
 \begin{align}

@@ -46,7 +46,7 @@ y_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau} = g_{\mathrm m}(x_{t+\tau})}{\sig
 x_{t + \tau} = [\bar y_{t+ \tau-l}, \dots, \bar y_{t+ \tau-1}, u_{t+ \tau-m}, \dots, u_{t+ \tau}, \nonumber \\
 \qquad\qquad\qquad\qquad  w_{t+ \tau-p}, \dots, w_{t+ \tau-1}, w_{t+ \tau}]\text. \nonumber
 \end{gather}
-where \(w:=[d^w, d^p, d^s]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
+where \(w:=[d^w, d^p]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
 
 As for the mean and covariance functions of the GP, %to define the structure of GP in \eqref{E:gp:prior},
 we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) as
@@ -57,10 +57,7 @@ k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d'
  k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \frac{1}{2\alpha} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
 k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 \end{gather}
-Here, \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}.
-We optimize the hyperparameters \(\theta\) % = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \)
-of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
-% After training, the less important features, i.e.~features with high length scales \(\lambda_d\) are removed and the models are trained again. 
+Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only nontemporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}. We optimize the parameters \(\theta = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \) of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}. After training, the less important features, i.e.~features with high \(\lambda_d\) are removed and the models are trained again. 
 %We denote this final selection by \(\theta^\star\).
 
 \subsection{Optimal Experiment Design}
