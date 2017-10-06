@@ -1,43 +1,55 @@
 \section{Case Study}
 \label{S:casestudy}
 
-In January 2014, the east coast (PJM) electricity grid experienced an 86x increase in the price of electricity from \$31/MWh to \$2,680/MWh in a matter of 10 minutes. Similarly, the price spiked 32x from an average of \$25/MWh to \$800/MWh in July of 2015. This extreme price volatility has become the new norm in our electric grids. Building additional peak generation capacity is not environmentally or economically sustainable. Furthermore, the traditional view of energy efficiency does not address this need for \emph{Energy Flexibility}. The solution lies with Demand Response (DR) from the customer side - curtailing demand during peak capacity for financial incentives. However, this is a very hard problem for commercial, industrial and institutional plants, the largest electricity consumers, to decide which knobs to turn to achieve the required curtailment.
-
-Thus, the problem of energy management during a DR event makes an ideal case for DPC. In the following sections, we apply Optimal Experiment Design, DPC based on GPs and also perform Active Learning on a large scale EnergyPlus model to show how effectively DPC can provide a desired power curtailment as well as a desired thermal comfort. DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
+In January 2014, the east coast electricity grid, managed by PJM, experienced an 86-fold increase in the price of electricity from \$31/MWh to \$2,680/MWh in a matter of 10 minutes.
+Similarly, the price spiked 32 times from an average of \$25/MWh to \$800/MWh in July of 2015.
+This extreme price volatility has become the new norm in our electric grids.
+Building additional peak generation capacity is not environmentally or economically sustainable.
+Furthermore, the traditional view of energy efficiency does not address this need for \emph{Energy Flexibility}.
+A promising solution lies with Demand Response (DR) from the customer side -- curtailing demand during peak capacity for financial incentives.
+However, it is a very hard problem for commercial, industrial and institutional plants -- the largest electricity consumers -- to decide which knobs to turn to achieve the required curtailment, due to the large scale and high complexity of these systems.
+Therefore, the problem of energy management during a DR event makes an ideal case for our proposed approach of combining machine learning and control.
+In this section, we apply optimal experiment design, receding horizon control based on GPs, and evolving GPs on large scale EnergyPlus models to demonstrate the effectiveness of our approach. % can provide a desired power curtailment as well as a desired thermal comfort.
+%DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
 
 \subsection{Building Description}
 \label{SS:casestudy:building}
-We use two different DoE Commercial Reference Building (DoE CRB) simulated in EnergyPlus \cite{Deru2011} as the virtual test-bed building.
-The first one is a 6 story \textit{hotel} consisting of 22 zone with a total area of 120,122 sq.ft, with a peal capacity of 400 kW.
-The second building is a large 12 story \textit{office} building consisting of 19 zones with a total area of 498,588 sq.ft. 
+We use two different U.S. Department of Energy's Commercial Reference Buildings (DoE CRB) simulated in EnergyPlus \cite{Deru2011} as the virtual test-bed buildings.
+The first is a 6-story hotel consisting of 22 zones with a total area of 120,122 sq.ft, with a peak load of about 400 kW.
+The second building is a large 12-story office building consisting of 19 zones with a total area of 498,588 sq.ft. 
 Under peak load conditions the office can consume up to 1.4 MW of power. 
-Developing a high fidelity physics-based model for these buildings would require massive cost and years of efforts.
+Developing a high fidelity physics-based model for these buildings would require massive cost and effort.
 Leveraging machine learning algorithms, we can now do both prediction and control with high confidence at a very low cost.
 
 We use the following data to validate our results. We limit ourselves to data which can be measured directly from installed sensors like thermostats, multimeters and weather forecasts, thus making it scalable to any other building or a campus of buildings.
 
-\textit{Weather variables \(d^w\):} outside temperature and humidity - these features are defined in EnergyPlus.
-
-\textit{Proxy features \(d^p\):} time of day, day of week - these features are a good indicator of occupancy and periodic trends.
+\begin{itemize}
+\item \textit{Weather variables \(d^w\):} outside temperature and humidity -- these features are defined in EnergyPlus.
+\item \textit{Proxy features \(d^p\):} time of day, day of week -- these features are a good indicator of occupancy and periodic trends.
 %\textit{Fixed schedules  \(d^s\):} kitchen cooling set point, corridor cooling set point - these set points follow predefined rules. 
+\item \textit{Control variables \(u\):} cooling, supply air temperature and chilled water setpoints -- these will be optimized in the MPC problem. % for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
+\item \textit{Output variable \(y\):} total power consumption -- this is the output of interest which we will predict using all the above features in the GP model.
+\end{itemize}
 
-\textit{Control variables \(u\):} cooling, supply air temperature and chilled water setpoints - these will be optimized in the MPC problem for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
+The time step for modeling and control is 15 minutes.
 
-\textit{Output variable \(y\):} total power consumption - this is the output of interest which we will predict using all the above features in the GP model.
-
-\subsection{Structure of  Gaussian Process Models}
+\subsection{Gaussian Process Models}
 \label{SS:casestudy:gp}
 
-For MPC, we require a predictive model for each time step in the horizon.
-We learn a single GP model and use the \emph{zero-variance method} to predict the outputs \(y\) at the following time steps. For each prediction step $t+\tau$, \( \tau \in \{0,\dots,N-1\}\), the output \(y_{t+\tau} | x_{t+\tau}\) is a Gaussian random variable given by:
+% For MPC, we require a predictive model for each time step in the horizon.
+We learn a single GP model of the building and use the \emph{zero-variance method} to predict the outputs \(y\) at the future time steps following the current time step.
+For each prediction step $t+\tau$, where $t$ is the current time and \( \tau \ge 0\), %\in \{0,\dots,,N-1\}\),
+the output \(y_{t+\tau}\) is a Gaussian random variable given by \eqref{eq:dpc:prediction}.
 \begin{gather}
 \label{E:gp:casestudy}
-y_{t+\tau} | x_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau}}{\sigma^2_{y,t+\tau}}, \\
-x_{t}\!=\![\bar y_{t-l}, \dots, \bar y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t], \nonumber
+y_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau} = g_{\mathrm m}(x_{t+\tau})}{\sigma^2_{y, t+\tau} = g_{\mathrm v}(x_{t+\tau})}, \\
+x_{t + \tau} = [\bar y_{t+ \tau-l}, \dots, \bar y_{t+ \tau-1}, u_{t+ \tau-m}, \dots, u_{t+ \tau}, \nonumber \\
+\qquad\qquad\qquad\qquad  w_{t+ \tau-p}, \dots, w_{t+ \tau-1}, w_{t+ \tau}]\text. \nonumber
 \end{gather}
 where \(w:=[d^w, d^p, d^s]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
 
-As for the mean and covariance functions to define the structure of GP in \eqref{E:gp:prior}, we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) defined by
+As for the mean and covariance functions of the GP, %to define the structure of GP in \eqref{E:gp:prior},
+we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) as
 \begin{gather}
 k_1(x,x')  = k, \nonumber\\
 k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda_d^2}}^2 \right),
@@ -45,7 +57,10 @@ k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d'
  k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \frac{1}{2\alpha} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
 k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 \end{gather}
-Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}. We optimize the parameters \(\theta = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \) of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}. After training, the less important features, i.e.~features with high \(\lambda_d\) are removed and the models are trained again. 
+Here, \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}.
+We optimize the hyperparameters \(\theta\) % = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \)
+of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
+% After training, the less important features, i.e.~features with high length scales \(\lambda_d\) are removed and the models are trained again. 
 %We denote this final selection by \(\theta^\star\).
 
 \subsection{Optimal Experiment Design}
@@ -62,23 +77,24 @@ Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and
 \end{figure*}
 
 OED is powerful when limited data are available for training. 
-To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to \(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
-For OED, we only require the first model with \(\tau=0\) in \eqref{E:gp:casestudy}. We simplify the notation by denoting \(t|t\) by \(t\).
-Now, the goal at time \(t\) is to determine what should be the optimal cooling \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) setpoints which when applied to the building will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
+To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to the kernel hyperparameters. %\(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
+For OED, we only consider the one-step-ahead model with \(\tau=0\) in \eqref{E:gp:casestudy}.
+The goal at time \(t\) is to determine what should be the optimal cooling set-point \(u_{\mathrm{clg},t}\), supply air temperature set-point \(u_{\mathrm{sat},t}\), and chilled water temperature set-point \(u_{\mathrm{chw},t}\) which, when applied to the building, will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
 We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
-In practice, the chilled water temperature cannot be changed by more than \(0.15^o\mathrm{C/min}\). Keeping this and thermal comfort into consideration, we consider the following operation constraints:
+We assume a practical operational constraint that the chilled water temperature set-point cannot be changed faster than \(0.13^o\mathrm{C}\) every minutes.
+Keeping this constraint and thermal comfort constraints into consideration, we consider the following operational constraints:
 \begin{gather}
 22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C}, \nonumber \\
 12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C}, \nonumber \\
  3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C},\label{E:operation_constraints} \\
 | u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C}. \nonumber
 \end{gather}
-Finally, we solve the optimization below every \(15 \mathrm{min}\) to calculate optimal inputs for OED:
-\begin{align}
-\label{E:casestudy:oed}
-\maximize_{u_{\mathrm{clg},t},u_{\mathrm{sat},t},u_{\mathrm{chw},t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2_{t}(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2_{t}(x_t)}\right) \\
-\st &  \ \ \ \  \text{operations constraints } \eqref{E:operation_constraints}.\nonumber
-\end{align}
+Finally, we solve the optimization \eqref{E:oed:batch}, subject to the operational constraints \eqref{E:operation_constraints}, every \(15 \mathrm{min}\) to calculate optimal inputs for OED.
+% \begin{align}
+% \label{E:casestudy:oed}
+% \maximize_{u_{\mathrm{clg},t},u_{\mathrm{sat},t},u_{\mathrm{chw},t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2_{t}(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2_{t}(x_t)}\right) \\
+% \st &  \ \ \ \  \text{operations constraints } \eqref{E:operation_constraints}.\nonumber
+% \end{align}
 
 The results for experiment design in closed-loop with the EnergyPlus building models described in Sec.~\ref{SS:casestudy:building} are shown in Fig.~\ref{F:casestudy:oed}.
 We compare 4 different methods: OED based on maximum information gain (IG), OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS).
@@ -89,22 +105,25 @@ As the days progress, we add more training samples and therefore the model accur
 This is visible in both metrics Root Mean Square Error (RMSE) and Standardized Mean Square Error (SMSE) for both buildings.
 
 For OED based on information gain as well as maximum variance, the learning rate is much faster than any random sampling.
-For the hotel building on the left, information gain is the best in terms of RMSE and SMSE.
-Uniform random sampling and PRBS are far worse in both metrics for first \(7-10\) days (\(\sim200\) hrs), beyond which we obtain sufficient data that it is hard to distinguish between the performance and model accuracies.
+For the hotel building on the left, the IG method is the best in terms of accuracy. %RMSE and SMSE.
+Uniform random sampling and PRBS are far worse in both metrics for the first \(7-10\) days (\(\approx200\) hrs), beyond which we obtain sufficient data that it is hard to distinguish between the %performance and
+model accuracies.
 For the office building on the right, IG is marginally better than MV in terms of SMSE for all days, while MV shows faster learning rate with lower RMSE. 
 Thus for the office building, OED based on IG and MV are comparable. 
-With the random sampling, we observe the same trend as before, i.e.~much worse for first \(\sim200\) hrs of experiment after which model accuracies are similar for IG, MV, Uniform and PRBS.
+With the random sampling, we observe the same trend as before, i.e.~much worse for the first \(\approx200\) hrs of experiment, after which model accuracies are similar for IG, MV, Uniform and PRBS.
 
-It is observed that OED can be used to learn a model vary fast. However, when random sampling can be done for sufficiently long time, the two approaches result in similar models. Due to operation constraints, often, function tests cannot be done for sufficiently long time, in which case even few hours of periodic OED can provide far better models due to its ability to capture more information.
+It is observed that OED can be used to learn a model very fast. However, when random sampling can be done for sufficiently long time, the two approaches result in similar models. Due to operational constraints, function tests usually cannot be performed for sufficiently long time, in which case even few hours of periodic OED can provide far better models due to its ability to capture more information in the same amount of time.
+
 
 \subsection{Power Reference Tracking Control}
 \label{SS:power_tracking}
 
-This section formulates a model predictive control (MPC) approach for the demand tracking problem.
-We consider a building, which responds to various setpoints resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
+This section formulates an MPC approach for the following demand tracking problem.
+Consider a building, which responds to various setpoints resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
+Given a power reference trajectory, for example a curtailed demand trajectory from the nominal energy consumption profile (the \emph{baseline}), our objective is to control the building and the battery to track the reference trajectory as closely as possible without violating the operational constraints.
 The building's response to the setpoint changes is modeled by a GP.
 The battery helps improve the tracking quality by absorbing the prediction uncertainty of the GP.
-A controller computes the setpoints for the building and the power of the battery to optimally track the reference demand signal.
+An MPC based on the GP model computes the setpoints for the building and the power of the battery to optimally track the reference demand signal.
 
 For simplicity, we assume an ideal lossless battery model
 \begin{equation}
@@ -113,9 +132,9 @@ s_{t+1} = s_t + T \Pbatt_t
 \end{equation}
 where \(\Pbatt_t\) is the battery's power at time step \(t\) and \(s\) is the battery's SoC.
 Here, \(\Pbatt\) is positive if the battery is charging and negative if discharging.
-The battery is subject to two operational constraints:
-its power is bounded by \(\Pbmin \leq \Pbatt_t \leq \Pbmax\), 
-and its SoC must stay in a safe range \(\SOCmin \leq s_t \leq\SOCmax\) where \(\SOCmax\) is the fully-charged level and \(\SOCmin\) is the lowest safe discharged level. 
+The battery is subject to power and SoC constraints:
+\(\Pbmin \leq \Pbatt_t \leq \Pbmax\), 
+and \(\SOCmin \leq s_t \leq\SOCmax\) where \(\SOCmax\) is the fully-charged level and \(\SOCmin\) is the lowest safe discharged level. 
 
 The building and the battery are linked via the power tracking constraint which states that \(p_t = y_t + b_t\) should track the reference \(r_t\) at any time \(t\). Therefore, our objective is to minimize \(\delta_t = r_t - p_t\).
 In this way, the battery helps reject the uncertainty of the GP and acts as an energy buffer to increase the tracking capability of the system. 
@@ -191,7 +210,7 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 %	\caption{Sustained curtailment using predictive control with Gaussian Processes.}
 \end{figure}
 
-The office building has a larger HVAC system, so for this building we consider the following Demand Response scenario. 
+The office building has a large HVAC system, so for this building we consider the following Demand Response scenario. 
 Due to price volatility, the office receives a request from the aggregator to shed \(90\) kW load between 2-4pm. 
 Now, the goal of the operators is to decide setpoints that would guarantee this curtailment while following stringent operation and thermal comfort constraints. 
 Rule-based strategies do not guarantee this curtailment and hence pose a huge financial risk. 
@@ -199,7 +218,7 @@ Using our data-driven approach for control, we can synthesize optimal setpoint r
 Fig~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
 The baseline power consumption indicates the usage if there was no DR event, or in other words if the building would have continued to operate under normal conditions. The reference for tracking differs from baseline by \(90\) kW during 2-4pm.
 The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum tracking error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm increase the cooling set point, chilled water temperature and supply air temperature to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of kickback.
-
+\todo[inline]{Is the tracking error calculated by reference - actual building power? Does it also include the battery power (i.e., reference - (building + battery))? Anyways, 22.5 kW error is not 1.7\% but you must calculate the error as 22.5/90 = 25\% error, i.e., versus the curtailment, not the total power. I think it would be better to plot the HVAC power instead of the total power, to hide the small fraction of 90kW to the total power of 1.4 MW. And to plot the (building + battery) power instead of building-only power.}
 
 \subsection{Active Learning}
 \label{SS:casestudy:active}

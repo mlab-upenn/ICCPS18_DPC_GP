@@ -19,6 +19,7 @@ We exploit this property in the optimization to generate input trajectories with
 % \end{gather}
 Given a GP model of the plant, the \emph{zero-variance} method is used to predict the plant's outputs in a horizon of $N$ time steps starting from the current time $t$, for \(\tau \in \{0,\dots,N-1\}\):
 \begin{gather}
+  \label{eq:dpc:prediction}
 y_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau} = g_{\mathrm m}(x_{t+\tau})}{\sigma^2_{t+\tau} = g_{\mathrm v}(x_{t+\tau})}, \\
 x_{t + \tau} = [\bar y_{t+ \tau-l}, \dots, \bar y_{t+ \tau-1}, u_{t+ \tau-m}, \dots, u_{t+ \tau}, \nonumber \\
 \qquad\qquad\qquad\qquad  w_{t+ \tau-p}, \dots, w_{t+ \tau-1}, w_{t+ \tau}]\text. \nonumber
