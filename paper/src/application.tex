@@ -149,19 +149,29 @@ To this end, to track a given reference power signal, we solve the following sto
 The term \( \sigma_{y,\tau+t|t}^2\) in the objective functions ensures control setpoints where model is more confident.
 At time \(t\), we solve for \(u^*_{t|t},\dots,u^*_{t+N-1|t} \), apply the first input \(u^*_{t|t} \) to the building, and proceed to the next time step.
 
+\begin{figure}[!tb]
+	\centering
+	\setlength\fwidth{0.44\textwidth}
+	\setlength\hwidth{0.15\textwidth}	
+	\input{figures/control-tracking.tex}
+	\setlength\fwidth{0.44\textwidth}
+	\setlength\hwidth{0.1\textwidth}	
+	\input{figures/control-error.tex}
+	\setlength\fwidth{0.44\textwidth}
+	\setlength\hwidth{0.15\textwidth}	
+	\input{figures/control-inputs.tex}	
+	\caption{jaddjndn.}
+	\captionsetup{justification=centering}
+	\label{F:control:tracking}
+\end{figure}
+
 \todo[inline]{results}
 
 \subsection{Optimizing energy usage under operation constraints}
 \label{SS:energy_management}
 
 \todo[inline]{optimization problem}
-%\begin{figure}[!tb]
-%	\centering
-%	\missingfigure[figwidth=20pc]{}
-%	\caption{}
-%	\captionsetup{justification=centering}
-%	\label{F:MPC2}
-%\end{figure}
+
 
 \subsection{Active Learning}
 \label{SS:casestudy:active}
