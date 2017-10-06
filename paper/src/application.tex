@@ -29,11 +29,11 @@ We use the following data to validate our results. We limit ourselves to data wh
 \label{SS:casestudy:gp}
 
 For MPC, we require a predictive model for each time step in the horizon.
-We learn single GP model and use the \emph{zero-variance method} to estimate the output \(y\) for next time steps. For each prediction step \( \tau \in \{0,\dots,N-1\}\), the output \(y_{t+\tau|t} | x_{t+\tau|t}\) is a Gaussian random variable given by:
+We learn a single GP model and use the \emph{zero-variance method} to predict the outputs \(y\) at the following time steps. For each prediction step $t+\tau$, \( \tau \in \{0,\dots,N-1\}\), the output \(y_{t+\tau} | x_{t+\tau}\) is a Gaussian random variable given by:
 \begin{gather}
 \label{E:gp:casestudy}
-y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}_{t+\tau|t}}{\sigma^2_{y,t+\tau|t}}, \\
-x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t], \nonumber
+y_{t+\tau} | x_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau}}{\sigma^2_{y,t+\tau}}, \\
+x_{t}\!=\![\bar y_{t-l}, \dots, \bar y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_{t-1}, w_t], \nonumber
 \end{gather}
 where \(w:=[d^w, d^p, d^s]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
 
@@ -125,29 +125,27 @@ We wish to guarantee that at each time step, the power and SoC constraints are s
 Specifically, for each \(\tau\) in the horizon,
 	\begin{gather}
 	\label{E:battery_chance}
-	\Pr\left( \Pbmin \leq b_{\tau+t|t}\leq \Pbmax \right) \geq 1 - \epsilon_p  \\
+	\Pr\left( \Pbmin \leq b_{\tau+t}\leq \Pbmax \right) \geq 1 - \epsilon_p  \\
 	\label{E:SoC_chance}
-	\Pr\left( \SOCmin \leq s_{\tau+t|t} \leq \SOCmax \right) \geq 1 - \epsilon_s 
+	\Pr\left( \SOCmin \leq s_{\tau+t} \leq \SOCmax \right) \geq 1 - \epsilon_s 
 	\end{gather}
-where \(b_{t+\tau|t}\) and \(s_{t+\tau|t}\) are Gaussian random variables whose mean and variance are given by
+where \(b_{t+\tau}\) and \(s_{t+\tau}\) are Gaussian random variables whose mean and variance are given by
 \begin{gather}
-\label{E:battery_dist}
-\bar{b}_{t+\tau|t}= r_{t} - \delta_{t+\tau|t} - \bar{y}_{t+\tau|t}, \ \ 
-\sigma^2_{b,t+\tau|t} =  \sigma^2_{y,t+\tau|t} \text, \\
-\label{E:SoC_dist}
-\bar{s}_{t+\tau+1|t}= s_t + T \textstyle\sum_{k=t}^{t+\tau} \predict{k}{\bar{\Pbatt}}, \,
-\predict{s,\tau+1}{\sigma^2} = T^2 \textstyle\sum_{k=t}^{t+\tau} \predict{y,k}{\sigma^2}
+\bar{b}_{t+\tau}= r_{t} - \delta_{t+\tau} - \bar{y}_{t+\tau}, \ \ 
+\sigma^2_{b,t+\tau} =  \sigma^2_{y,t+\tau} \text, \label{E:battery_dist} \\
+\bar{s}_{t+\tau+1}\!=\! s_t \!+\! T \textstyle\sum_{k=t}^{t+\tau} \predict{k}{\bar{\Pbatt}}, \,
+\predict{s,\tau+1}{\sigma^2} \!=\! T^2 \textstyle\sum_{k=t}^{t+\tau} \predict{y,k}{\sigma^2} \text. \label{E:SoC_dist}
 \end{gather}
 For further details on modeling we refer the reader to our previous work \cite{nghiemetal16gp}.
-To this end, to track a given reference power signal, we solve the following stochastic optimization problem to optimize \(\delta_{\tau+t|t},u_{\mathrm{clg},\tau+t|t},u_{\mathrm{sat},\tau+t|t},u_{\mathrm{chw},\tau+t|t} \ \forall \tau \in \{0,\dots,N-1\}\)
+To track a given reference power signal, we solve the following stochastic optimization problem to optimize \(\delta_{\tau+t},u_{\mathrm{clg},\tau+t},u_{\mathrm{sat},\tau+t},u_{\mathrm{chw},\tau+t} \ \forall \tau \in \{0,\dots,N-1\}\)
 \begin{align}
 \label{E:casestudy:mpc}
-\minimize_{\delta, u} & \ \ \ \ \ \ \ \ \ \sum_{\tau=0}^{N-1} (\delta_{\tau+t|t})^2 + \sigma_{y,\tau+t|t}^2\\
-\st &  \ \ \ \  \text{dynamics constraints } \eqref{E:gp:casestudy}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
-&  \ \ \ \  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
+\minimize_{\delta, u} \quad & \sum_{\tau=0}^{N-1} (\delta_{\tau+t})^2 + \lambda \sigma_{y,\tau+t}^2\\
+\st \quad & \text{dynamics constraints } \eqref{E:gp:casestudy}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
+&  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
 \end{align}
-The term \( \sigma_{y,\tau+t|t}^2\) in the objective functions ensures control setpoints where model is more confident.
-At time \(t\), we solve for \(u^*_{t|t},\dots,u^*_{t+N-1|t} \), apply the first input \(u^*_{t|t} \) to the building, and proceed to the next time step.
+The term \( \sigma_{y,\tau+t}^2\) in the objective functions ensures control setpoints where model is more confident.
+At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first input \(u^*_{t} \) to the building, and proceed to the next time step.
 
 %\textit{\begin{figure}[!tb]
 %	\centering
@@ -200,7 +198,7 @@ Rule-based strategies do not guarantee this curtailment and hence pose a huge fi
 Using our data-driven approach for control, we can synthesize optimal setpoint recommendations.
 Fig~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
 The baseline power consumption indicates the usage if there was no DR event, or in other words if the building would have continued to operate under normal conditions. The reference for tracking differs from baseline by \(90\) kW during 2-4pm.
-The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t|t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum tracking error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm increase the cooling set point, chilled water temperature and supply air temperature to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of kickback.
+The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum tracking error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm increase the cooling set point, chilled water temperature and supply air temperature to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of kickback.
 
 
 \subsection{Active Learning}
