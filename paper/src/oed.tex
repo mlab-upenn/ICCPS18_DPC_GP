@@ -20,7 +20,7 @@ This is achieved by exploiting the predictive variance in GP regression \eqref{E
 The goal here is to update the hyperparameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially.
 One popular method for selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}.
 Since we can calculate the variance in \(y\) for any \(x\), OED based on MV can be directly computed using \eqref{E:gp-regression}.
-However, another approach which has been shown to result in better samples for learning the hyperparameters \(\theta\) is maximizing the Information Gain (IG) \cite{Krause2008}. In Sec.~\ref{S:casestudy}, we compare both approaches.
+However, another approach which has been shown to result in better samples for learning the hyperparameters \(\theta\) is maximizing the Information Gain (IG) \cite{Krause2008}. In Sec.~\ref{S:casestudy}, we will compare both approaches in a case study.
 
 The IG approach selects the sample which adds the maximum information to the model, i.e.~which reduces the maximum uncertainty in \(\theta\). If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
 \begin{align}

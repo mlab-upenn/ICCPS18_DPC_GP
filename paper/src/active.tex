@@ -3,40 +3,36 @@
 
 In this section, we discuss the challenge of ``Model adaptability" listed in Sec.~\ref{SS:practical_challenges}.
 
-As the system properties change with time, the learned model must actively update itself for best control performance.
-For example, the same GP model may be not be suitable to control a building in both Summer and Winter season.
-As we generate more data with time, we may not want to use full data set for model update because of multiple reasons.
-First, only selected or the most informative sub set of data may explain the dynamics at the time. Second, the computational complexity of training Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. So the learning becomes computationally hard as the size of data increases.
-Therefore, obtaining the best GP model with least data is highly desired. The solution to this problem lies in \textit{selecting the optimal subset of data} (from the available data) that best explains the system behavior or dynamics.
+As the system properties change with time, the learned model must actively update itself so that it best reflects the current behavior of the system. %  for best control performance.
+For example, the same GP model may not be suitable to control a building in both Summer and Winter seasons.
+As we generate more data with time with the controller in the loop, it is intuitive to incorporate the new data into the existing model to improve its accuracy.
+However, we may not want to use the full new data set for model update for multiple reasons.
+First, because not all data are created equal, especially in closed loop with a controller, we should select only the most informative subset of data that best explain the system dynamics at the time.
+Second, since the computational complexity of training and predicting with Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples, the learning and control problems become computationally hard as the size of data increases.
+Therefore, obtaining the best GP model with the least amount data is highly desired.
+The solution to this problem lies in \textit{selecting the optimal subset of data}, from the available data, that best explains the system behavior or dynamics.
 Towards this goal, we extend the result from Sec.~\ref{SS:information-theory}.
 
-\begin{figure*}[t]
-	\centering
-	\setlength\fwidth{0.4\textwidth} 
-	\setlength\hwidth{0.25\textwidth}
-	\input{figures/batch-oed.tex} \hspace{0.5cm}
-	\input{figures/batch-rand.tex}
-	\caption{Left: Optimal subset of data selection. Right: Selection using random sampling. The mean prediction error and prediction variance are both low for the optimal selection done using Algo.~\ref{A:oed:batch}.}
-	\captionsetup{justification=centering}
-	\label{F:active:example}
-\end{figure*}
+\subsection{Optimal subset of data selection: selecting the most informative data for periodic model update}
 
-\subsection{Optimal subset of data selection: selecting most informative data for periodic model update}
+Out goal is to filter the most informative subset of data that best explain the dynamics.
+In this section, we outline a systematic procedure that aims to select the best $k$ samples from a given set $D$ of $n$ observations.
+The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable \todo{What do you mean by features are variable; not clear!}, and (2) the decision has to be made only from the available data rather than sampling. 
 
-The goal of active learning is to filter the most informative subset of data that best explain the dynamics.
-In this section, we outline a systematic procedure to select best $k$ samples from given $n$ observations.
-The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable, and (2) the decision has to be made only from the available data rather than sampling. 
-
-We begin by selecting \(k\) samples randomly. This is the best result we can obtain using random sampling. We assign priors of \(\theta\) based on MLE estimate obtained by learning a GP on the drawn set.
-Starting with a set \(\mathcal{S}\) consisting of single sample, we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. In this setup, we solve the following optimization problem
+We begin by selecting \(k\) samples randomly, %. This is the best result we can obtain using random sampling. We
+then assign the priors of the hyperparameters \(\theta\) based on the MLE estimate obtained by learning a GP on the drawn set.
+Starting with an empty set of samples \(\mathcal{S}\), %a set \(\mathcal{S}\) consisting of single sample,
+we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. In this setup, we solve the following optimization problem
 \begin{align}
 \label{E:oed:batch}
 \maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
 \end{align}
-Then, we add this sample to \(\mathcal{S}\), update the \(\theta\)  and proceed until \(|\mathcal{S}|=k\).
-The algorithm for OED is summarized in Algo.~\ref{A:oed:batch}. 
+\todo[inline]{The above equation needs to be fixed. Either use the final equation as in the cited paper, or write the general $\text{IG}(\dots)$.}
+Then, we add this sample to \(\mathcal{S}\), update \(\theta\) and proceed until \(|\mathcal{S}|=k\).
+This algorithm is summarized in Algo.~\ref{A:oed:batch}. 
 
-Fig.~\ref{F:active:example} shows the improvement in mean prediction error and prediction variance obtained after optimal selection, starting with a model trained using selection based on uniform sampling. We use this method in Sec.~\ref{SS:casestudy:active} to update the learned model from time to time as a controller runs in a closed loop and we generate more data.
+The proposed method is used in a case study in Sec.~\ref{SS:casestudy:active} to update the learned model from time to time as a controller runs in a closed loop and we generate more data.
+Fig.~\ref{F:active:example} shows the improvement in mean prediction error and prediction variance obtained after optimal selection, starting with a model trained on uniformly random sampled data. %  using selection based on uniform sampling. 
 
 \begin{algorithm}[!tb]
 	\caption{Optimal subset of data selection}
@@ -57,6 +53,18 @@ Fig.~\ref{F:active:example} shows the improvement in mean prediction error and p
 		\EndProcedure
 	\end{algorithmic}
 \end{algorithm}
+
+\begin{figure*}[t]
+	\centering
+	\setlength\fwidth{0.4\textwidth} 
+	\setlength\hwidth{0.25\textwidth}
+	\input{figures/batch-oed.tex} \hspace{0.5cm}
+	\input{figures/batch-rand.tex}
+	\caption{Left: Optimal subset of data selection. Right: Selection using random sampling. The mean prediction error and prediction variance are both lower for the optimal selection done using Algo.~\ref{A:oed:batch}.}
+	\captionsetup{justification=centering}
+	\label{F:active:example}
+\end{figure*}
+
 
 %\begin{figure}[!tb]
 %	\centering
