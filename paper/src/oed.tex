@@ -31,7 +31,7 @@ where \(H\) is the Shannon's Entropy given by
 \begin{align}
 H(\theta|\D) = -\int p(\theta|\D) \log (p(\theta|\D))d\theta.
 \end{align}
-Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}\), we need to take an expectation over \(y\).
+Since \(y|x \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x);\theta}\), we need to take an expectation over \(y\).
 When the dimension of \(\theta\) is large, computing entropies is typically computationally intractable.
 Using the equality \(H(\theta) - H(\theta|y) = H(y) - H(y|\theta)\), we can rewrite \eqref{E:ig:theta} equivalently as
 \begin{align}
@@ -47,19 +47,17 @@ p(y|x,\D) &= \EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \nonumber\\
 \end{align}
 for which the exact solution is difficult to compute. We therefore use an approximation described in \cite{Garnett2013}. It is shown that for \(\theta|\D \sim \GaussianDist{\bar{\theta}}{\Sigma}\), we can find a linear approximation to \(\bar{y}(x) = a^T(x)\theta+b(x)\) such that
 \begin{align}
-\EE_{\theta \sim p(\theta|\D)}p(y|x,\theta,\D) \sim \GaussianDist{a^T\bar{\theta}+b}{\sigma^2+a^T\Sigma a}.
+p(y|x,\D) \sim \GaussianDist{a^T\bar{\theta}+b}{\sigma^2+a^T\Sigma a}
 \end{align}
-Under the same approximation, the second term in \eqref{E:ig:y} can be written as \(H(y|x,\hat{\theta})\). 
-Finally, using the relation for the differential entropy for a Gaussian distribution, the information gain in \eqref{E:ig:y} is approximated as
-%\begin{align}
-%H(y|x,\D) = \frac{1}{2}\log(2\pi e \sigma^2(x)).
-%\end{align}
+in the neighborhood of \(\bar{\theta}\).
+Under the same approximation, the variance \(p(y|x,\D)\) is approximated to be
 \begin{align}
-\text{IG} = \frac{1}{2}\log\left(\frac{\sigma^2(x)+a^T(x)\Sigma a(x)}{\sigma^2(x)}\right).
-\label{E:ig:final}
+\tilde{\sigma}^2(x) = \frac{4}{3}\sigma^2(x) + \frac{\partial \bar{y}(x)}{\partial \theta}^T \Sigma \frac{\partial \bar{y}(x)}{\partial \theta} + \nonumber \\
+\qquad\qquad \frac{1}{3\sigma^2(x)}\frac{\partial \sigma^2(x)}{\partial \theta}^T \Sigma \frac{\partial \sigma^2(x)}{\partial \theta}
 \end{align}
+evaluated at \(\bar{\theta}\) while the second term in \eqref{E:ig:y} can be written as \(H(y|x,\bar{\theta})\). 
+Finally, maximizing the information gain in \eqref{E:ig:theta} is equivalent to maximizing \(\tilde{\sigma}^2(x)/{\sigma}^2(x)\).
 Next, we apply this result for sequential optimal experiment design.
-\todo[inline]{Can you include the final equations as presented in \cite{Garnett2013}?}
 
 % \subsection{Sequential sampling: recommending control strategies for experiment design }
 \subsection{Sequential experiment design with Gaussian Processes}
@@ -107,10 +105,10 @@ At time \(t\), the current disturbance, and the lagged terms of the output, the 
 For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
 \begin{align}
 \label{E:oed:sampling}
-\maximize_{u_{t}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_t)+a^T(x_t)\Sigma a(x_t)}{\sigma^2(x_t)}\right) \\
+\maximize_{u_{t}} & \ \ \ \tilde{\sigma}^2(x_t)/{\sigma}^2(x_t) \\
 \st &  \ \ \ \   u_t \in \mathcal{U} \nonumber
 \end{align}
-The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
+where \(x_t\) is a function of \(u_t\). The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
 
 As an example, in Sec.~\ref{S:casestudy} where we learn a dynamical model of a building, the proposed OED method is used to optimally sample the chilled water temperature, supply air temperature and zone-level cooling set-points, subject to operation constraints on the chiller system.

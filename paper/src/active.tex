@@ -16,18 +16,17 @@ Towards this goal, we extend the result from Sec.~\ref{SS:information-theory}.
 \subsection{Optimal subset of data selection: selecting the most informative data for periodic model update}
 
 Out goal is to filter the most informative subset of data that best explain the dynamics.
-In this section, we outline a systematic procedure that aims to select the best $k$ samples from a given set $D$ of $n$ observations.
-The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features are variable \todo{What do you mean by features are variable; not clear!}, and (2) the decision has to be made only from the available data rather than sampling. 
+In this section, we outline a systematic procedure that aims to select the best $k$ samples from a given set $\D$ of $n$ observations.
+The main differences between the problem of selecting the best or the most informative subset of data and the sequential sampling for OED are that in the former, (1) all the features \(x\) must be optimized as opposed to only control variables \(u\), and (2) the decision has to be made only from the available data rather than sampling. 
 
 We begin by selecting \(k\) samples randomly, %. This is the best result we can obtain using random sampling. We
 then assign the priors of the hyperparameters \(\theta\) based on the MLE estimate obtained by learning a GP on the drawn set.
 Starting with an empty set of samples \(\mathcal{S}\), %a set \(\mathcal{S}\) consisting of single sample,
-we loop through the full data set \(\D\) to identify which sample maximizes the information gain defined in \eqref{E:ig:final}. In this setup, we solve the following optimization problem
+we loop through the full data set \(\D\) to identify which sample maximizes the information gain. In this setup, we solve the following optimization problem
 \begin{align}
 \label{E:oed:batch}
-\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \frac{1}{2}\log\left(\frac{\sigma^2(x_j)+a^T(x_j)\Sigma a(x_j)}{\sigma^2(x_j)}\right)
+\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \tilde{\sigma}^2(x_j)/{\sigma}^2(x_j) 
 \end{align}
-\todo[inline]{The above equation needs to be fixed. Either use the final equation as in the cited paper, or write the general $\text{IG}(\dots)$.}
 Then, we add this sample to \(\mathcal{S}\), update \(\theta\) and proceed until \(|\mathcal{S}|=k\).
 This algorithm is summarized in Algo.~\ref{A:oed:batch}. 
 
