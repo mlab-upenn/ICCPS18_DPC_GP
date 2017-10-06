@@ -27,8 +27,7 @@ We are interested in the following optimization problem with quadratic cost with
 \end{align}
 where \(K_\star = [k(x_{t+\tau|t}, x_1), \dots, k(x_{t+\tau|t}, x_N)]\), \(K_{\star \star} = k(x_{t+\tau|t}, x_{t+\tau|t})\), and $K$ is the covariance matrix with elements \(K_{ij} = k(x_i, x_j)\). The parameters \(\theta\), i.e. the mean \(\mu\) and the covariance function \(k\) are optimized while training GPs as described in Sec.~\ref{S:gp} or by experiment design in \ref{S:oed}. We solve \eqref{E:mpc:generic} to compute optimal \(u_{t|t}^*, \dots, u_{t+N-1|t}^*\), apply \(u_{t|t}^*\) to the system and proceed to time \(t+1\).
 
-Although we have an analytical expressions for all the constraints in the optimization, depending upon the choice of mean and covariance functions, the optimization can be computationally hard to solve. For the case study in Sec.~\ref{S:casestudy} we choose a combination of a squared exponential and rational quadratic kernel which results in nonconvex problem. We solve \eqref{E:mpc:generic} using IPOPT \cite{Waechter2009b}.
-\todo[inline]{If there is space, cite CasADi as well.}
+Although we have an analytical expressions for all the constraints in the optimization, depending upon the choice of mean and covariance functions, the optimization can be computationally hard to solve. For the case study in Sec.~\ref{S:casestudy} we choose a combination of a squared exponential and rational quadratic kernel which results in nonconvex problem. We solve \eqref{E:mpc:generic} using IPOPT \cite{Waechter2009b} and CasADi \cite{Andersson2013b}.
 
 
 

@@ -45,16 +45,16 @@ for idm = 1:numel(metrics)
         else
             
             load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_MV_2ramped_3input_14day_20171004_0313.mat'));
-            mv(iter) = 1-results(ids).test_results.(metric);
+            mv(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_IG_2ramped_3input_14day_20171003_2220.mat'));
-            ig(iter) = 1-results(ids).test_results.(metric);
+            ig(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_uniform_2ramped_3input_30day_20171004_2030.mat'));
-            unif(iter) = 1-results(ids).test_results.(metric);
+            unif(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_prbs_2ramped_3input_30day_20171004_2025.mat'));
-            prbs(iter) = 1-results(ids).test_results.(metric);
+            prbs(iter) = 100*(1-results(ids).test_results.(metric));
         end
         iter = iter + 1;
         
@@ -73,16 +73,17 @@ for idm = 1:numel(metrics)
     h3 = plot(1:numel(sim_samples), unif, '--o', 'LineWidth', lw, 'MarkerSize', ms, 'Color',[0.4940    0.1840    0.5560]);
     h4 = plot(1:numel(sim_samples), prbs, '--o', 'LineWidth', lw, 'MarkerSize', ms, 'Color', [0.4660    0.6740    0.1880]);
     yy = ylabel(labels{idm});
-    xlabel('no of days');
+    xlabel('no of hours');
     ax = gca;
     ax.XTick = [1, 2, 3, 4];
-    ax.XTickLabel = {'3','7','10','14'}';
+%     ax.XTickLabel = {'3','7','10','14'}';
+    ax.XTickLabel = {'72','168','240','336', '504'}';
     xlim([0.75, 4.25])
     hold off
     title('HOTEL')
     if idm==2
         ax = gca;
-        ax.YTick = [0.5, 0.6, 0.7, 0.8, 0.9];
+        ax.YTick = [50, 60, 70, 80, 90];
     end
     
 end

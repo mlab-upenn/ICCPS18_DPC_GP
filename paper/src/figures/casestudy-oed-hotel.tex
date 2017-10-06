@@ -20,9 +20,9 @@ unbounded coords=jump,
 xmin=0.75,
 xmax=4.25,
 xtick={1,2,3,4},
-xticklabels={{3},{7},{10},{14}},
+xticklabels={{72},{168},{240},{336},{504}},
 xlabel style={font=\color{white!15!black}},
-xlabel={no of days},
+xlabel={no of hours},
 ymin=20,
 ymax=65,
 ylabel style={font=\color{white!15!black}},
@@ -75,12 +75,12 @@ unbounded coords=jump,
 xmin=0.75,
 xmax=4.25,
 xtick={1,2,3,4},
-xticklabels={{3},{7},{10},{14}},
+xticklabels={{72},{168},{240},{336},{504}},
 xlabel style={font=\color{white!15!black}},
-xlabel={no of days},
-ymin=0.5,
-ymax=0.95,
-ytick={0.5, 0.6, 0.7, 0.8, 0.9},
+xlabel={no of hours},
+ymin=50,
+ymax=95,
+ytick={50, 60, 70, 80, 90},
 ylabel style={font=\color{white!15!black}},
 ylabel={1-SMSE [\%]},
 axis background/.style={fill=white},
@@ -91,40 +91,40 @@ xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style
 ]
 \addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}]
   table[row sep=crcr]{%
-1	0.803327193943856\\
-2	0.925700556917536\\
-3	0.933895825369972\\
-4	0.935144735780913\\
+1	80.3327193943855\\
+2	92.5700556917536\\
+3	93.3895825369972\\
+4	93.5144735780913\\
 5	nan\\
 };
 \addlegendentry{IG}
 
 \addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}]
   table[row sep=crcr]{%
-1	0.758132003718017\\
-2	0.907111921826193\\
-3	0.920035619815826\\
-4	0.925844057134119\\
+1	75.8132003718017\\
+2	90.7111921826193\\
+3	92.0035619815826\\
+4	92.5844057134119\\
 5	nan\\
 };
 \addlegendentry{MV}
 
 \addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}]
   table[row sep=crcr]{%
-1	0.50918753883645\\
-2	0.84740828201528\\
-3	0.915703850575905\\
-4	0.923446340971381\\
+1	50.918753883645\\
+2	84.7408282015279\\
+3	91.5703850575905\\
+4	92.3446340971381\\
 5	nan\\
 };
 \addlegendentry{Uniform}
 
 \addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}]
   table[row sep=crcr]{%
-1	0.565908354542458\\
-2	0.80615912780776\\
-3	0.870825109483224\\
-4	0.90297838916829\\
+1	56.5908354542458\\
+2	80.615912780776\\
+3	87.0825109483225\\
+4	90.297838916829\\
 5	nan\\
 };
 \addlegendentry{PRBS}

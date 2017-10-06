@@ -1,6 +1,6 @@
 
 % figure settings
-lw = 1;
+lw = 0.75;
 ms = 6;
 
 n_days = [3, 4, 7, 10, 14];

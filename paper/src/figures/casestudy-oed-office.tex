@@ -20,9 +20,9 @@ unbounded coords=jump,
 xmin=0.75,
 xmax=5.25,
 xtick={1,2,3,4,5},
-xticklabels={{3},{7},{10},{14},{21}},
+xticklabels={{72},{168},{240},{336},{504}},
 xlabel style={font=\color{white!15!black}},
-xlabel={no of days},
+xlabel={no of hrs},
 ymin=100,
 ymax=240,
 ylabel style={font=\color{white!15!black}},
@@ -79,12 +79,12 @@ unbounded coords=jump,
 xmin=0.75,
 xmax=5.25,
 xtick={1,2,3,4,5},
-xticklabels={{3},{7},{10},{14},{21}},
+xticklabels={{72},{168},{240},{336},{504}},
 xlabel style={font=\color{white!15!black}},
-xlabel={no of days},
-ymin=0.7,
-ymax=0.95,
-ytick={0.5, 0.6, 0.7, 0.8, 0.9},
+xlabel={no of hrs},
+ymin=70,
+ymax=95,
+ytick={50, 60, 70, 80, 90},
 ylabel style={font=\color{white!15!black}},
 ylabel={1-SMSE [\%]},
 axis background/.style={fill=white},
@@ -95,44 +95,44 @@ xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style
 ]
 \addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}]
   table[row sep=crcr]{%
-1	0.757939596885657\\
-2	0.910600275142315\\
-3	0.922787874050633\\
-4	0.923663789333296\\
-5	0.931036989146124\\
+1	75.7939596885657\\
+2	91.0600275142315\\
+3	92.2787874050633\\
+4	92.3663789333296\\
+5	93.1036989146124\\
 6	nan\\
 };
 \addlegendentry{IG}
 
 \addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}]
   table[row sep=crcr]{%
-1	0.833188049457844\\
-2	0.909737247138586\\
-3	0.919966837697047\\
-4	0.921095944313054\\
-5	0.931308252358214\\
+1	83.3188049457844\\
+2	90.9737247138586\\
+3	91.9966837697047\\
+4	92.1095944313054\\
+5	93.1308252358214\\
 6	nan\\
 };
 \addlegendentry{MV}
 
 \addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}]
   table[row sep=crcr]{%
-1	0.708845128632555\\
-2	0.892712313833069\\
-3	0.914138184505961\\
-4	0.917924032558296\\
-5	0.932833148474353\\
+1	70.8845128632555\\
+2	89.2712313833069\\
+3	91.4138184505961\\
+4	91.7924032558296\\
+5	93.2833148474353\\
 6	nan\\
 };
 \addlegendentry{Uniform}
 
 \addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}]
   table[row sep=crcr]{%
-1	0.716958790532887\\
-2	0.899122486843102\\
-3	0.907487162213807\\
-4	0.910876796263175\\
-5	0.909447492273487\\
+1	71.6958790532887\\
+2	89.9122486843102\\
+3	90.7487162213807\\
+4	91.0876796263175\\
+5	90.9447492273487\\
 6	nan\\
 };
 \addlegendentry{PRBS}

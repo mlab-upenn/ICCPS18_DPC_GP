@@ -44,16 +44,16 @@ for idm = 1:numel(metrics)
             prbs(iter) = results(ids).test_results.(metric);
         else
             load(fullfile([prefix 'results_' kernel], 'doe_LargeOffice_MV_2ramped_3input_28day_20171003_1817.mat'));
-            mv(iter) = 1-results(ids).test_results.(metric);
+            mv(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'doe_LargeOffice_IG_2ramped_3input_21day_20171003_1804.mat'));
-            ig(iter) = 1-results(ids).test_results.(metric);
+            ig(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'random_LargeOffice_uniform_2ramped_3input_28day_20171003_1922.mat'));
-            unif(iter) = 1-results(ids).test_results.(metric);
+            unif(iter) = 100*(1-results(ids).test_results.(metric));
             
             load(fullfile([prefix 'results_' kernel], 'random_LargeOffice_prbs_2ramped_3input_28day_20171004_2034.mat'));
-            prbs(iter) = 1-results(ids).test_results.(metric);
+            prbs(iter) = 100*(1-results(ids).test_results.(metric));
         end
         iter = iter + 1;
         
@@ -72,16 +72,17 @@ for idm = 1:numel(metrics)
     h3 = plot(1:numel(sim_samples), unif, '--o', 'LineWidth', lw, 'MarkerSize', ms, 'Color',[0.4940    0.1840    0.5560]);
     h4 = plot(1:numel(sim_samples), prbs, '--o', 'LineWidth', lw, 'MarkerSize', ms, 'Color', [0.4660    0.6740    0.1880]);
     ylabel(labels{idm});
-    xlabel('no of days');
+    xlabel('no of hrs');
     ax = gca;
     ax.XTick = [1, 2, 3, 4, 5];
-    ax.XTickLabel = {'3','7','10','14', '21'}';
+%     ax.XTickLabel = {'3','7','10','14'}';    
+    ax.XTickLabel = {'72','168','240','336', '504'}';
     xlim([0.75, 5.25])
     hold off
     title('OFFICE')
     if idm==2
         ax = gca;
-        ax.YTick = [0.5, 0.6, 0.7, 0.8, 0.9];
+        ax.YTick = [50, 60, 70, 80, 90];
     end
 end
 
