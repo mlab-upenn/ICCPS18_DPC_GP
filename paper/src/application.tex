@@ -16,14 +16,14 @@ Leveraging machine learning algorithms, we can now do both prediction and contro
 
 We use the following data to validate our results. We limit ourselves to data which can be measured directly from installed sensors like thermostats, multimeters and weather forecasts, thus making it scalable to any other building or a campus of buildings.
 
-\textit{Weather variables \(d^w\):} outside temperature and humidity - these features are defined in a weather file in EnergyPlus.
+\textit{Weather variables \(d^w\):} outside temperature and humidity - these features are defined in EnergyPlus.
 
 \textit{Proxy features \(d^p\):} time of day, day of week - these features are a good indicator of occupancy and periodic trends.
 %\textit{Fixed schedules  \(d^s\):} kitchen cooling set point, corridor cooling set point - these set points follow predefined rules. 
 
-\textit{Control variables \(u\):} cooling set point, supply air temperature and chilled water set point - these set points will be optimized in the MPC problem for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
+\textit{Control variables \(u\):} cooling, supply air temperature and chilled water setpoints - these will be optimized in the MPC problem for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
 
-\textit{Output variable \(y\):} total power consumption - this is output of interest which we will predict using all the above features in the GP model.
+\textit{Output variable \(y\):} total power consumption - this is the output of interest which we will predict using all the above features in the GP model.
 
 \subsection{Structure of  Gaussian Process Models}
 \label{SS:casestudy:gp}
@@ -48,8 +48,6 @@ k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}. We optimize the parameters \(\theta = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \) of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}. After training, the less important features, i.e.~features with high \(\lambda_d\) are removed and the models are trained again. 
 %We denote this final selection by \(\theta^\star\).
 
-\todo[inline]{model validation?}
-
 \subsection{Optimal Experiment Design}
 
 \begin{figure*}[t]
@@ -65,10 +63,10 @@ Here, \(k_3(x,x')\) is applied to only nontemporal features like time of day and
 
 OED is powerful when limited data are available for training. 
 To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to \(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
-For OED, we only require the first model with \(\tau=0\) in \eqref{E:gp:casestudy}. So we simplify the notation by denoting \(t|t\) by \(t\).
-Now, the goal at time \(t\) is to determine what should be the optimal cooling set point \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) which when applied to the building will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
-We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
-In practice, the chilled water temperature cannot be changed by more than \(0.15^o\mathrm{C/min}\). Keep this and thermal comfort into consideration, we consider the following operation constraints:
+For OED, we only require the first model with \(\tau=0\) in \eqref{E:gp:casestudy}. We simplify the notation by denoting \(t|t\) by \(t\).
+Now, the goal at time \(t\) is to determine what should be the optimal cooling \(u_{\mathrm{clg},t}\), supply air temperature \(u_{\mathrm{sat},t}\), and chilled water temperature \(u_{\mathrm{chw},t}\) setpoints which when applied to the building will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
+We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
+In practice, the chilled water temperature cannot be changed by more than \(0.15^o\mathrm{C/min}\). Keeping this and thermal comfort into consideration, we consider the following operation constraints:
 \begin{gather}
 22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C}, \nonumber \\
 12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C}, \nonumber \\
@@ -92,7 +90,7 @@ This is visible in both metrics Root Mean Square Error (RMSE) and Standardized M
 
 For OED based on information gain as well as maximum variance, the learning rate is much faster than any random sampling.
 For the hotel building on the left, information gain is the best in terms of RMSE and SMSE.
-Uniform random sampling and PRBS are far worse in both metrics for first \(7-10\) days (\(\sim200\) hrs), beyond we obtain sufficient data that it is hard to distinguish between the performance and model accuracies.
+Uniform random sampling and PRBS are far worse in both metrics for first \(7-10\) days (\(\sim200\) hrs), beyond which we obtain sufficient data that it is hard to distinguish between the performance and model accuracies.
 For the office building on the right, IG is marginally better than MV in terms of SMSE for all days, while MV shows faster learning rate with lower RMSE. 
 Thus for the office building, OED based on IG and MV are comparable. 
 With the random sampling, we observe the same trend as before, i.e.~much worse for first \(\sim200\) hrs of experiment after which model accuracies are similar for IG, MV, Uniform and PRBS.
@@ -106,14 +104,14 @@ This section formulates a model predictive control (MPC) approach for the demand
 We consider a building, which responds to various setpoints resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
 The building's response to the setpoint changes is modeled by a GP.
 The battery helps improve the tracking quality by absorbing the prediction uncertainty of the GP.
-A controller computes the setpoint values for the building and the power of the battery to optimally track the reference demand signal.
+A controller computes the setpoints for the building and the power of the battery to optimally track the reference demand signal.
 
 For simplicity, we assume an ideal lossless battery model
 \begin{equation}
 \label{eq:battery-model}
 s_{t+1} = s_t + T \Pbatt_t
 \end{equation}
-where \(\Pbatt_t\) is the battery's power during the time step \(t\) and \(s\) is the battery's SoC.
+where \(\Pbatt_t\) is the battery's power at time step \(t\) and \(s\) is the battery's SoC.
 Here, \(\Pbatt\) is positive if the battery is charging and negative if discharging.
 The battery is subject to two operational constraints:
 its power is bounded by \(\Pbmin \leq \Pbatt_t \leq \Pbmax\), 
@@ -140,7 +138,7 @@ where \(b_{t+\tau|t}\) and \(s_{t+\tau|t}\) are Gaussian random variables whose 
 \bar{s}_{t+\tau+1|t}= s_t + T \textstyle\sum_{k=t}^{t+\tau} \predict{k}{\bar{\Pbatt}}, \,
 \predict{s,\tau+1}{\sigma^2} = T^2 \textstyle\sum_{k=t}^{t+\tau} \predict{y,k}{\sigma^2}
 \end{gather}
-Further details on modeling we refer the reader to our previous work \cite{nghiemetal16gp}.
+For further details on modeling we refer the reader to our previous work \cite{nghiemetal16gp}.
 To this end, to track a given reference power signal, we solve the following stochastic optimization problem to optimize \(\delta_{\tau+t|t},u_{\mathrm{clg},\tau+t|t},u_{\mathrm{sat},\tau+t|t},u_{\mathrm{chw},\tau+t|t} \ \forall \tau \in \{0,\dots,N-1\}\)
 \begin{align}
 \label{E:casestudy:mpc}
