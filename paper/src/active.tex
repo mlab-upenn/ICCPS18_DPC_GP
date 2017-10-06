@@ -8,7 +8,7 @@ For example, the same GP model may be not be suitable to control a building in b
 As we generate more data with time, we may not want to use full data set for model update because of multiple reasons.
 First, only selected or the most informative sub set of data may explain the dynamics at the time. Second, the computational complexity of training Gaussian Processes is $\bigO(n^3)$, where $n$ is number of training samples. So the learning becomes computationally hard as the size of data increases.
 Therefore, obtaining the best GP model with least data is highly desired. The solution to this problem lies in \textit{selecting the optimal subset of data} (from the available data) that best explains the system behavior or dynamics.
-For active learning, we extend the result from Sec.~\ref{SS:information-theory}.
+Towards this goal, we extend the result from Sec.~\ref{SS:information-theory}.
 
 \begin{figure*}[t]
 	\centering
@@ -67,3 +67,8 @@ Fig.~\ref{F:active:example} shows the improvement in mean prediction error and p
 %	\captionsetup{justification=centering}
 %	\label{F:batch-acc}
 %\end{figure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "main"
+%%% End:
