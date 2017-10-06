@@ -57,8 +57,12 @@ k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d'
  k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \frac{1}{2\alpha} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
 k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 \end{gather}
-Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only nontemporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}. We optimize the parameters \(\theta = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \) of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}. After training, the less important features, i.e.~features with high \(\lambda_d\) are removed and the models are trained again. 
-%We denote this final selection by \(\theta^\star\).
+Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}.
+We optimize the hyperparameters \(\theta\) % = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \)
+of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
+% After training, the less important features, i.e.~features with high length scales \(\lambda_d\) are removed and the models are trained again. 
+
+
 
 \subsection{Optimal Experiment Design}
 

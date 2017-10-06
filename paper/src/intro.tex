@@ -3,16 +3,27 @@
 \todo[inline]{shorten and rephrase the CDC part.}
 \todo[inline]{Need a discussion on related work, including RT papers, GP papers \protect\cite{nghiemetal16gp}, especially for buildings.}
 
-Machine learning and control theory are two foundational but disjoint communities. Machine learning requires data to produce models, and control systems require models to provide stability, safety or other performance guarantees. Machine learning is widely used for regression or classification, but thus far data-driven models have not been suitable for closed-loop control of physical plants. The challenge now, with using data-driven approaches, is to close the loop for real-time control and decision making.
+Machine learning and control theory are two foundational but disjoint communities.
+Machine learning requires data to produce models, and control systems require models to provide stability, safety or other performance guarantees.
+Machine learning is widely used for regression or classification, but thus far data-driven models have not been suitable for closed-loop control of physical plants.
+The current challenge with data-driven approaches is to close the loop for real-time control and decision making.
 
-Consider a multivariable dynamical system subject to external disturbances. The first and foremost requirement for making any decision is to obtain the underlying control-oriented predictive model of the system. With a reasonable forecast of the external disturbances, these models should predict the state of the system in the future and thus a predictive controller based on Model Predictive Control (MPC) can act preemptively to provide a desired behavior. In particular, MPC has been proven to be very powerful for multivariable systems in the presence of input and output constraints, and forecast of the disturbances. The caveat is that MPC requires a reasonably accurate physical representation of the system. This makes MPC unsuitable for control of complex plants such as natural gas processing, oil refineries, boilers, manufacturing plants, and buildings where the user expertise, time, and associated sensor costs required to develop a model are very high \cite{Sturzenegger2016,vzavcekova2014}.
+Consider a dynamical system subject to external disturbances.
+The first and foremost requirement for making any control decision is to obtain the underlying control-oriented predictive model of the system.
+With a reasonable forecast of the external disturbances, these models should predict the state of the system in the future and thus a predictive controller based on Model Predictive Control (MPC) can act preemptively to provide a desired behavior.
+In particular, MPC has been proven to be very powerful for multivariable systems in the presence of input and output constraints, and forecast of the disturbances.
+The caveat is that MPC requires a reasonably accurate physical representation of the system.
+This makes MPC unsuitable for control of complex plants such as natural gas processing, oil refineries, boilers, manufacturing plants, and buildings where the user expertise, time, and associated sensor costs required to develop a model are very high \cite{Sturzenegger2016,vzavcekova2014}.
+\todo[inline]{You need to be very careful about the above statement. It can be difficult for buildings, but as I know, MPC is very popular and widely used in process control. All industrial control systems like Siemens PLC, ABB have software and libraries and great support for MPC for these control applications.  Your net catches too wide, it may backfire.}
 
 There are two main reasons for model complexity. 
 (1) The prime contributor is the change in model properties over time. Even if the model is identified once via an expensive route, as the model changes with time, the system identification must be repeated to update the model. Thus, model adaptability or adaptive control is desirable for such systems. 
 (2) A secondary reason is the model heterogeneity which further prohibits the use of model-based control. For example, unlike the automobile or the aircraft industry, each building is designed and used in a different way. Therefore, this modeling process must be repeated for every new building. 
 Due to aforementioned reasons, the control strategies in such systems are often limited to fuzzy logic rules that are based on best practices. 
 
-The question now is, can we employ data-driven techniques to reduce the cost of modeling, and still exploit the benefits that MPC has to offer? We therefore look for automatic and data-driven approaches to control that are also adaptive, scalable and interpretable. We solve this problem by bridging the gap between Machine Learning and Predictive Control.
+The key question now is: can we employ data-driven techniques to reduce the cost of modeling, and still exploit the benefits that MPC has to offer?
+We therefore look for automatic data-driven approaches to control that are also adaptive, scalable and interpretable.
+We solve this problem by bridging the gap between Machine Learning and Predictive Control.
 
 \subsection{Challenges in bridging machine learning and controls}
 \label{SS:practical_challenges}
@@ -44,7 +55,7 @@ For the application to building control in context of Demand Response, where the
 
 \begin{figure}[!t]
 	\centering
-	\includegraphics[width=1\linewidth]{figures/overview.eps}
+	\includegraphics[width=0.8\linewidth]{figures/overview.eps}
 	\caption{Paper organization and contributions}
 	\captionsetup{justification=centering}
 	\label{F:intro}
@@ -54,6 +65,8 @@ For the application to building control in context of Demand Response, where the
 
 \todo[inline]{revisit when case study is ready}
 \todo[inline]{Highlight contributions better and more strongly (here and in each section). Do not create the impression that we are ony applying existing methods.  For example, for OED, do not write as if we only apply informatics theoretic approach. Write that the original papers only use this approach for batch selection in sensor placement, while we develop sequential approach for OED.  Emphasizing the differences between our work and others.}
+
+\todo[inline]{Use affirmative and stronger words, like we do this, we achieve that, rather than we attempt to answer this and do that (which sound very weak, close to failure).}
 
 This paper attempts to answer the aforementioned practical challenges using fully black-box models based on Gaussian Processes.
 This paper has the following contributions.
