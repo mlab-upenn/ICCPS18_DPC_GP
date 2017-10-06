@@ -29,8 +29,7 @@ We use the following data to validate our results. We limit to data which can be
 \label{SS:casestudy:gp}
 
 For MPC, we require a predictive model for each time step in the horizon.
-\todo[inline]{This is not true! Currently we use a single GP and propagate the mean over the time steps.}
-We learn several GP models, one for each prediction step \( \tau \in \{0,\dots,N-1\}\):
+We learn single GP model and use the \emph{zero-variance method} to estimate the output \(y\) for next time steps. For each prediction step \( \tau \in \{0,\dots,N-1\}\), the output \(y_{t+\tau|t} | x_{t+\tau|t}\) is a Gaussian random variable given by:
 \begin{gather}
 \label{E:gp:casestudy}
 y_{t+\tau|t} | x_{t+\tau|t} \sim \GaussianDist{\bar{y}_{t+\tau|t}}{\sigma^2_{y,t+\tau|t}}, \\

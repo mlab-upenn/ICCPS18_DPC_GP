@@ -8,7 +8,7 @@ lik = model.likelihood;
 inff = model.inference_method;
 meanf = model.mean_function;
 
-n_test_samples = 2*96;
+n_test_samples = 0.5*96;
 
 y_train_min = normparams.TotalLoad.min;
 y_train_max = normparams.TotalLoad.max;
@@ -32,7 +32,7 @@ t = [1:n_test_samples]';
 y = postNorm(zeros(n_test_samples,1), y_train_min, y_train_max)/1e3-70;
 pm = y(1);
 
-std = sqrt(postNormVar(diag(K_ss), y_train_min, y_train_max))/1e3/2.5;
+std = sqrt(postNormVar(diag(K_ss), y_train_min, y_train_max))/1e3/3;
 ps = std(1);
 
 ix_plot = 1:length(t);
@@ -58,8 +58,8 @@ yfill = [y(ix_plot)+2*std(ix_plot);flipdim(y(ix_plot)-2*std(ix_plot),1)];
 h3 = fill(xfill, yfill, [249, 229, 255]/255, 'EdgeColor', [249, 229, 255]/255);
 h4 = plot(t,y, '-r', 'LineWidth', 0.5); 
 ax = gca;
-ax.XTick = 2*[16, 32, 48, 64, 80];
-ax.XTickLabel = {'8am','4am','12am','8am', '4pm'}';
+ax.XTick = 0.5*[16, 32, 48, 64, 80];
+ax.XTickLabel = {'2am','4am','6am','8am', '10am'}';
 axis([1, n_test_samples, pm-2.2*ps,pm+2.2*ps]);
 hleg = legend([h2, h1, h4, h3], ['prior \mu'], ['prior \mu \pm 2\sigma'], 'posterior \mu', 'posterior \mu \pm 2\sigma');
 set(hleg, 'Location','NorthOutside', 'box', 'off', 'Orientation', 'Horizontal'); 

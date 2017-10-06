@@ -7,8 +7,8 @@ n_days = [3, 4, 7, 10, 14];
 sim_samples = 96*n_days;
 prefix = '../oedLargeHotel/';
 kernel = 'sqexp'; % choose 'truong' or 'sqexp'
-metrics = {'rmse', 'msll'};
-labels = {'RMSE [kW]', 'MSLL'};
+metrics = {'rmse', 'smse'};
+labels = {'RMSE [kW]', '1-SMSE [%]'};
 
 figure;
 hs = cell(1,2);
@@ -28,18 +28,34 @@ for idm = 1:numel(metrics)
         if ids ==2
             continue;
         end
-        load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_MV_2ramped_3input_14day_20171004_0313.mat'));
-        mv(iter) = results(ids).test_results.(metric);
         
-        load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_IG_2ramped_3input_14day_20171003_2220.mat'));
-        ig(iter) = results(ids).test_results.(metric);
-        
-        load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_uniform_2ramped_3input_30day_20171004_2030.mat'));
-        unif(iter) = results(ids).test_results.(metric);
-        
-        load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_prbs_2ramped_3input_30day_20171004_2025.mat'));
-        prbs(iter) = results(ids).test_results.(metric);
-        
+        if idm==1
+            load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_MV_2ramped_3input_14day_20171004_0313.mat'));
+            mv(iter) = results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_IG_2ramped_3input_14day_20171003_2220.mat'));
+            ig(iter) = results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_uniform_2ramped_3input_30day_20171004_2030.mat'));
+            unif(iter) = results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_prbs_2ramped_3input_30day_20171004_2025.mat'));
+            prbs(iter) = results(ids).test_results.(metric);
+            
+        else
+            
+            load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_MV_2ramped_3input_14day_20171004_0313.mat'));
+            mv(iter) = 1-results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'doe_LargeHotel_IG_2ramped_3input_14day_20171003_2220.mat'));
+            ig(iter) = 1-results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_uniform_2ramped_3input_30day_20171004_2030.mat'));
+            unif(iter) = 1-results(ids).test_results.(metric);
+            
+            load(fullfile([prefix 'results_' kernel], 'random_LargeHotel_prbs_2ramped_3input_30day_20171004_2025.mat'));
+            prbs(iter) = 1-results(ids).test_results.(metric);
+        end
         iter = iter + 1;
         
     end
@@ -62,7 +78,12 @@ for idm = 1:numel(metrics)
     ax.XTick = [1, 2, 3, 4];
     ax.XTickLabel = {'3','7','10','14'}';
     xlim([0.75, 4.25])
-%     ylim([5, 50])
+    hold off
+    title('HOTEL')
+    if idm==2
+        ax = gca;
+        ax.YTick = [0.5, 0.6, 0.7, 0.8, 0.9];
+    end
     
 end
 
@@ -77,4 +98,6 @@ matlab2tikz('width', '\fwidth', 'height', '\hwidth', '../../paper/src/figures/ca
                        'ticklabel style={font=\footnotesize},'...
                        'ylabel shift = -5 pt,'...
                        'xlabel shift = -5 pt,'...
-                       'legend style={at={(0,1)}}, align=center,']);
+                       'title style={font=\normalsize},'...
+                       'title style={yshift=1.5ex},'...
+                       'legend style={at={(0,1)}}, align=center']);

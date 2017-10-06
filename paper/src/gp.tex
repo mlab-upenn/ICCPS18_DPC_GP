@@ -19,7 +19,7 @@ where \(\delta(x,x')\) is the Kronecker delta function.
 The hyperparameter vector \(\theta\) parameterizes the mean and covariance functions.
 This GP is denoted by \(y \sim \mathcal{GP}(\mu, k; \theta)\).
 
-Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), the distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance given by
+Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding observed outputs \(Y = [y_1, \dots, y_N]^T\), we define training data by $\D = (X, Y)$. The distribution of the output \(y_\star\) corresponding to a new input vector \(x_\star\) is a Gaussian distribution \(y_\star | x_\star \sim \GaussianDist{\bar{y}_\star}{\sigma_\star^2}\), with mean and variance given by
 \begin{subequations}
 \label{E:gp-regression}
 \begin{align}
@@ -30,7 +30,7 @@ Given the regression vectors \(X = [x_1, \dots, x_N]\) and the corresponding obs
 where \(K_\star = [k(x_\star, x_1), \dots, k(x_\star, x_N)]\), \(K_{\star \star} = k(x_\star, x_\star)\), and $K$ is the covariance matrix with elements \(K_{ij} = k(x_i, x_j)\).
 
 Note that the mean and covariance functions are parameterized by the hyperparameters $\theta$, which can be learned by maximizing the likelihood: \(\argmax_\theta \Pr(Y \vert X, \theta)\).
-The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $\D = (X, Y)$.
+The covariance function \(k(x,x')\) indicates how correlated the outputs are at \(x\) and \(x'\), with the intuition that the output at an input is influenced more by the outputs of nearby inputs in the training data $\D$.
 In other words, a GP model specifies the structure of the covariance matrix of, or the relationship between, the input variables rather than a fixed structural input--output relationship.
 It is therefore highly flexible and can capture complex behavior with fewer parameters.
 An example of GP prior and posterior is shown in Fig.~\ref{F:gp:prior:posterior}. We use a constant mean function and a combination of squared exponential kernel and rational quadratic kernel as described in Sec.~\ref{SS:casestudy:gp}.
@@ -47,6 +47,16 @@ GPs offer several advantages over other machine learning algorithms that make th
 \subsection{Gaussian Processes for Dynamical Systems}
 \label{SS:intro-gp:control}
 
+\begin{figure}[!tb]
+	\centering
+	\setlength\fwidth{0.4\textwidth}
+	\setlength\hwidth{0.2\textwidth}	
+	\input{figures/gp-prior-post.tex}
+	\caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building for \(12\) hrs. Initially the mean is constant because \(\mu(x)\) is constant, and we observe a high variance. The posterior agrees with the actual power consumption with high confidence.}
+	\captionsetup{justification=centering}
+	\label{F:gp:prior:posterior}
+\end{figure}
+
 GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
 Specifically, in control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
 \begin{math}
@@ -61,29 +71,19 @@ Note that \(u_t\) and \(w_t\) are the current control and disturbance inputs.
 The vector of all autoregressive inputs can be thought of as the current state of the model.
 A dynamical GP can then be trained from data in the same way as any other GPs.
 
-\iffalse
 When a GP is used for control or optimization, it is usually necessary to simulate the model over a finite number of future steps and predict its multistep-ahead behavior.
 Because the output of a GP is a distribution rather than a point estimate, the autoregressive outputs fed to the model beyond the first step are random variables, resulting in more and more complex output distributions as we go further.
 Therefore, a multistep simulation of a GP involves the propagation of uncertainty through the model.
-There exist several methods for uncertainty propagation in GPs \cite{girard04approximate,Kocijan2016}. 
-We mention here two simulation methods for autoregressive GPs.
-\begin{itemize}
-	\item The \emph{Monte-Carlo method} obtains samples of the output distribution under input uncertainty, which can be seen as a Gaussian mixture.  This Gaussian mixture becomes more complex in later steps of the simulation, therefore efficient numerical algorithms must be implemented.  This method can achieve good prediction accuracy at the expense of high computational load.  It is also general, \ie it can be used with any covariance functions.
-	\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
-\end{itemize}
+There exist several methods for uncertainty propagation in GPs \cite{Kocijan2016,girard04approximate}. 
 
-\fi
+We use the \emph{zero-variance method} that does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
 
-\begin{figure}[!tb]
-  \centering
-	\setlength\fwidth{0.4\textwidth}
-	\setlength\hwidth{0.2\textwidth}	
-	\input{figures/gp-prior-post.tex}
-    \todo[inline]{This figure is impossibe to see!!! You can truncate the length by half (show the result for 1 day, or 12 hours instead). Create two smaller plots side by side, or select colors better.}
-  \caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building for two days. Initially the mean is constant because \(\mu(x)\) is constant, and we observe a high variance. The posterior agrees with the actual power consumption with high confidence.}
-  \captionsetup{justification=centering}
-  \label{F:gp:prior:posterior}
-\end{figure}
+%\begin{enumerate}
+%	\item The \emph{Monte-Carlo method} obtains samples of the output distribution under input uncertainty, which can be seen as a Gaussian mixture.  This Gaussian mixture becomes more complex in later steps of the simulation, therefore efficient numerical algorithms must be implemented.  This method can achieve good prediction accuracy at the expense of high computational load.  It is also general, \ie it can be used with any covariance functions.
+%	\item The \emph{zero-variance method} does not propagate uncertainty.  At each step, the autoregressive outputs are replaced by their corresponding expected values.  Obviously, this method will underestimate the variances of the output distributions.  However, its computational simplicity is attractive, especially in optimization applications where the GP must be simulated for many times.  In such cases, if the prediction error caused by not propagating uncertainty is insignificant, the zero-variance method can and should be used.  For more detailed discussions on this topic, see \cite{Kocijan2016,girard04approximate}.
+%\end{enumerate}
+
+
 
 %%% Local Variables:
 %%% mode: latex

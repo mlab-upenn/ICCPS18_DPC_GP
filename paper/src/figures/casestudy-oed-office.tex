@@ -28,7 +28,9 @@ ymax=240,
 ylabel style={font=\color{white!15!black}},
 ylabel={RMSE [kW]},
 axis background/.style={fill=white},
-xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,legend style={at={(0,1)}}, align=center
+title style={font=\bfseries},
+title={OFFICE},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,title style={font=\normalsize},title style={yshift=1.5ex},legend style={at={(0,1)}}, align=center
 ]
 \addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}, forget plot]
   table[row sep=crcr]{%
@@ -80,54 +82,57 @@ xtick={1,2,3,4,5},
 xticklabels={{3},{7},{10},{14},{21}},
 xlabel style={font=\color{white!15!black}},
 xlabel={no of days},
-ymin=-1.5,
-ymax=1,
+ymin=0.7,
+ymax=0.95,
+ytick={0.5, 0.6, 0.7, 0.8, 0.9},
 ylabel style={font=\color{white!15!black}},
-ylabel={MSLL},
+ylabel={1-SMSE [\%]},
 axis background/.style={fill=white},
+title style={font=\bfseries},
+title={OFFICE},
 legend style={at={(0.5,1.03)}, anchor=south, legend columns=4, legend cell align=left, align=left, fill=none, draw=none},
-xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,legend style={at={(0,1)}}, align=center
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,title style={font=\normalsize},title style={yshift=1.5ex},legend style={at={(0,1)}}, align=center
 ]
 \addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}]
   table[row sep=crcr]{%
-1	-0.431251512591452\\
-2	-1.11219989870435\\
-3	-1.1970167867125\\
-4	-1.21292672943036\\
-5	-1.2674514749276\\
+1	0.757939596885657\\
+2	0.910600275142315\\
+3	0.922787874050633\\
+4	0.923663789333296\\
+5	0.931036989146124\\
 6	nan\\
 };
 \addlegendentry{IG}
 
 \addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}]
   table[row sep=crcr]{%
-1	-0.276374438592905\\
-2	-1.0815817558078\\
-3	-1.14376474427609\\
-4	-1.15149078446885\\
-5	-1.22773886044186\\
+1	0.833188049457844\\
+2	0.909737247138586\\
+3	0.919966837697047\\
+4	0.921095944313054\\
+5	0.931308252358214\\
 6	nan\\
 };
 \addlegendentry{MV}
 
 \addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}]
   table[row sep=crcr]{%
-1	0.759174120362543\\
-2	-0.944151441587627\\
-3	-1.12386652991089\\
-4	-1.15822269745498\\
-5	-1.27519098327653\\
+1	0.708845128632555\\
+2	0.892712313833069\\
+3	0.914138184505961\\
+4	0.917924032558296\\
+5	0.932833148474353\\
 6	nan\\
 };
 \addlegendentry{Uniform}
 
 \addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}]
   table[row sep=crcr]{%
-1	-0.140417197047048\\
-2	-1.10320385426257\\
-3	-1.14105547856784\\
-4	-1.15627502207335\\
-5	-1.10813518412733\\
+1	0.716958790532887\\
+2	0.899122486843102\\
+3	0.907487162213807\\
+4	0.910876796263175\\
+5	0.909447492273487\\
 6	nan\\
 };
 \addlegendentry{PRBS}

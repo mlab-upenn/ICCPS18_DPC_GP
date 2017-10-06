@@ -20,14 +20,14 @@ This is achieved by exploiting the predictive variance in GP regression \eqref{E
 The goal here is to update the hyperparameters \(\theta\) in the model \(y \sim \mathcal{GP}(\mu(x), k(x); \theta)\) as new samples are observed sequentially.
 One popular method for selecting the next sample is the point of Maximum Variance (MV), which is also widely used for Bayesian Optimization using GPs \cite{Snoek2012}.
 Since we can calculate the variance in \(y\) for any \(x\), OED based on MV can be directly computed using \eqref{E:gp-regression}.
-However, another approach which has been shown to result in better samples for learning the hyperparameters \(\theta\) is maximizing the Information Gain (IG) \cite{Krause2008}. 
+However, another approach which has been shown to result in better samples for learning the hyperparameters \(\theta\) is maximizing the Information Gain (IG) \cite{Krause2008}. In Sec.~\ref{S:casestudy}, we compare both approaches.
 
 The IG approach selects the sample which adds the maximum information to the model, i.e.~which reduces the maximum uncertainty in \(\theta\). If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
 \begin{align}
 \argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y),
 \label{E:ig:theta}
 \end{align}
-where \(H\) is the Shanon's Entropy given by
+where \(H\) is the Shannon's Entropy given by
 \begin{align}
 H(\theta|\D) = -\int p(\theta|\D) \log (p(\theta|\D))d\theta.
 \end{align}
@@ -71,7 +71,7 @@ If samples \(\D := (X,Y)\) are available, we can assign the prior distribution o
 Otherwise, the Gaussian priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\) are initialized manually.
 
 \begin{algorithm}[!tb]
-	\caption{Sequential sampling for OED}
+	\caption{Sequential sampling for OED based on IG}
 	\label{A:oed:sequential}
 	\begin{algorithmic}[1]
 		\Procedure{Initialization}{}
@@ -119,11 +119,10 @@ For short functional test durations, our OED methods achieve much more accurate 
 
 \begin{figure}[!tb]
   \centering
-  \todo[inline]{Is this plot still up-to-date?}
   \setlength\fwidth{0.44\textwidth}
   \setlength\hwidth{0.2\textwidth}	
   \input{figures/oed-acc.tex}
-  \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design initially. After one week of data is generated, the accuracy of OED is similar to random sampling.}
+  \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design based on information gain initially. After one week of data is generated, the accuracy of OED is similar to random sampling.}
   \captionsetup{justification=centering}
   \label{F:oed:example}
 \end{figure}

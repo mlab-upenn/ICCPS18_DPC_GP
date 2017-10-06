@@ -11,7 +11,7 @@
 
 \begin{axis}[%
 width=\fwidth,
-height=0.567\hwidth,
+height=0.537\hwidth,
 at={(0\fwidth,0.387\hwidth)},
 scale only axis,
 xmin=0,
@@ -23,10 +23,12 @@ ymax=450,
 ylabel style={font=\color{white!15!black}},
 ylabel={power [kW]},
 axis background/.style={fill=white},
+title style={font=\bfseries},
+title={RANDOM SAMPLING},
 xmajorgrids,
 ymajorgrids,
 legend style={at={(0.5,1.03)}, anchor=south, legend columns=3, legend cell align=left, align=left, fill=none, draw=none},
-xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},title style={font=\normalsize},title style={yshift=2ex},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
 
 \addplot[area legend, draw=mycolor1, fill=mycolor1]
@@ -447,7 +449,7 @@ ylabel={error [kW]},
 axis background/.style={fill=white},
 xmajorgrids,
 ymajorgrids,
-xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},title style={font=\normalsize},title style={yshift=2ex},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
 
 \addplot[area legend, draw=mycolor1, fill=mycolor1, forget plot]
