@@ -1,0 +1,14 @@
+#!/bin/bash
+if [ $# -eq 0 ]; then
+    echo "Number of runs must be provided"
+    exit 1
+fi
+
+export SMNCHAI_DIR=/Users/truong/work/working/obn/smnchai
+
+for i in `seq $1`;
+do
+  echo Run $i
+  ~/work/working/obn/smnchai/build/Debug/smnchai obnsim.chai
+  sleep 20
+done
