@@ -8,6 +8,7 @@ Building additional peak generation capacity is not environmentally or economica
 Furthermore, the traditional view of energy efficiency does not address this need for \emph{Energy Flexibility}.
 A promising solution lies with Demand Response (DR) from the customer side -- curtailing demand during peak capacity for financial incentives.
 However, it is a very hard problem for commercial, industrial and institutional plants -- the largest electricity consumers -- to decide which knobs to turn to achieve the required curtailment, due to the large scale and high complexity of these systems.
+\todo[inline]{UPenn examples}
 Therefore, the problem of energy management during a DR event makes an ideal case for our proposed approach of combining machine learning and control.
 In this section, we apply optimal experiment design, receding horizon control based on GPs, and evolving GPs on large scale EnergyPlus models to demonstrate the effectiveness of our approach. % can provide a desired power curtailment as well as a desired thermal comfort.
 %DPC builds predictive models of a building based on historical weather, schedule, set-points and electricity consumption data, while also learning from the actions of the building operator. These models are then used for synthesizing recommendations about the control actions that the operator needs to take, during a DR event, to obtain a given load curtailment while providing guarantees on occupant comfort and operations.
@@ -25,6 +26,7 @@ We use the following data to validate our results. We limit ourselves to data wh
 
 \begin{itemize}
 \item \textit{Weather variables \(d^w\):} outside temperature and humidity -- these features are defined in EnergyPlus.
+\todo[inline]{historic weather}
 \item \textit{Proxy features \(d^p\):} time of day, day of week -- these features are a good indicator of occupancy and periodic trends.
 %\textit{Fixed schedules  \(d^s\):} kitchen cooling set point, corridor cooling set point - these set points follow predefined rules. 
 \item \textit{Control variables \(u\):} cooling, supply air temperature and chilled water setpoints -- these will be optimized in the MPC problem. % for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
@@ -65,6 +67,7 @@ of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
 
 
 \subsection{Optimal Experiment Design}
+\label{SS:casestudy:oed}
 
 \begin{figure*}[t]
 	\centering
@@ -109,11 +112,16 @@ For OED based on information gain as well as maximum variance, the learning rate
 For the hotel building on the left, the IG method is the best in terms of accuracy. %RMSE and SMSE.
 Uniform random sampling and PRBS are far worse in both metrics for the first \(7-10\) days (\(\approx200\) hrs), beyond which we obtain sufficient data that it is hard to distinguish between the %performance and
 model accuracies.
+\todo[inline]{Such tests cannot be done during business hrs}
 For the office building on the right, IG is marginally better than MV in terms of SMSE for all days, while MV shows faster learning rate with lower RMSE. 
 Thus for the office building, OED based on IG and MV are comparable. 
 With the random sampling, we observe the same trend as before, i.e.~much worse for the first \(\approx200\) hrs of experiment, after which model accuracies are similar for IG, MV, Uniform and PRBS.
 
-It is observed that OED can be used to learn a model very fast. However, when random sampling can be done for sufficiently long time, the two approaches result in similar models. Due to operational constraints, function tests usually cannot be performed for sufficiently long time, in which case even few hours of periodic OED can provide far better models due to its ability to capture more information in the same amount of time.
+\todo[inline]{buildings have historic days, why would we need}
+\todo[inline]{compare to historic data or rule based}
+It is observed that OED can be used to learn a model very fast. 
+\todo{flip the statement, Random achives after only long time}
+However, when random sampling can be done for sufficiently long time, the two approaches result in similar models. Due to operational constraints, function tests usually cannot be performed for sufficiently long time, in which case even few hours of periodic OED can provide far better models due to its ability to capture more information in the same amount of time.
 
 
 \subsection{Power Reference Tracking Control}
@@ -222,6 +230,46 @@ The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follo
 
 \subsection{Online Model Update}
 \label{SS:casestudy:active}
+
+The GP model used in Sec.~\ref{SS:power_tracking} uses data generated from the OED procedure \(\D\) in Sec.~\ref{SS:casestudy:oed}.
+We now run the same controller in a closed loop with the building for 3 weeks and collect all the data \(\D'\) generated in the process.
+Since \(\D'\) does not use a wide range of excited inputs, it is equivalent to generating more historical data that does not capture the full model dynamics.
+Thus, \(\D'\) alone is not suitable to generate a high quality model for prediction and control. 
+Infact, a GP model built using \(\D'\) alone does not generalize well for unseen situations.
+Further, due to growing computational complexity of GPs with \(\mathcal{O}(n^3)\), it is not recommended to use \(\D \cup \D'\) to learn a new model, especially when \(|\D|\)  and \(|\D'|\) are large.
+So we learn evolving GPs by selecting the most informative subset of data \(\mathcal{S} \subset \{\D \cup \D' \} \).
+
+
+We consider two different GP models learned using OED for 14 days and 21 days in the month of June. 
+In the first case, we have \(14\times96\) samples and in the second case \(21\times96\) samples for training.
+We run each GP model in closed-loop with the building in a different month for further 14 days.
+To update the model for evolving GP, we use our algorithm in Algo.~\ref{A:oed:batch} for optimal subset of data selection to choose the most informative \(14\times96\) samples in the first case and \(21\times96\) samples in the second case. 
+These models are denoted by Evolving GP in Tab.~\ref{T:casestudy:evolving}. 
+We compare the performance of these models against the original model, referred to as an Outdated GP in Tab.~\ref{T:casestudy:evolving} since this model is being used in different months and perhaps different seasons of the year.
+We repeat this for the months of July, August and September.
+Finally, we test the prediction accuracy (RMSE) of both models on the remaining 14 days of the respective months. 
+For example, when the outdated GP model is used for control form Aug 1 to Aug 14, we calculate the prediction error form Aug 15 to Aug 28. 
+For the office building, our results show that the evolving GP model is better in all the cases with lower RMSE.
+
+
+ \begin{table}[htbp]
+	\centering
+	\caption{Comparison of Root Mean Square Error (RMSE) in kW between Evolving GP and Outdated GP models for different months. }
+	\scalebox{0.9}{
+		\begin{tabular}{c|cc|cc|cc}
+			\toprule
+			& \multicolumn{2}{c|}{July} & \multicolumn{2}{c|}{August} & \multicolumn{2}{c}{September} \\
+			\midrule
+		    & 14-day & 21-day & 14-day & 21-day  & 14-day & 21-day \\
+			\midrule
+			Evolving GP    & 58.9 & 59.4  & 86.4  &85.7  & 99.7 & 94.9  \\
+			\midrule
+			Outdated GP   & 65.2  & 63.8  & 91.81  & 93.2 &  103.2  & 101.4 \\
+			\bottomrule
+		\end{tabular}
+	}
+	\label{T:casestudy:evolving}
+\end{table}
 
 
 \todo[inline]{computational complexity}

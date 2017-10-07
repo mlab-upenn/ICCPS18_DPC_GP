@@ -111,10 +111,13 @@ For physical systems, very often, we must operate under strict actuation or oper
 \end{align}
 where \(x_t\) is a function of \(u_t\). The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
+\todo[inline]{MAP expand}
 
 As an example, in Sec.~\ref{S:casestudy} where we learn a dynamical model of a building, the proposed OED method is used to optimally sample the chilled water temperature, supply air temperature and zone-level cooling set-points, subject to operation constraints on the chiller system.
 The result is illustrated in Fig.~\ref{F:oed:example}, which shows the changes in model accuracy between several experiment design methods, for various durations of functional tests.
 For short functional test durations, our OED methods achieve much more accurate models compared to random sampling methods.  As the duration increases, the performance of all methods converges.
+
+\todo[inline]{historuc data is not sufficient add to fig 3 and intro. random sampling requires at least so many hrs to reahc this accuracy}
 
 \begin{figure}[!tb]
   \centering
