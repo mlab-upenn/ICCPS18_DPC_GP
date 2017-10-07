@@ -109,22 +109,19 @@ For physical systems, very often, we must operate under strict actuation or oper
 \maximize_{u_{t}} & \ \ \ \tilde{\sigma}^2(x_t)/{\sigma}^2(x_t) \\
 \st &  \ \ \ \   u_t \in \mathcal{U} \nonumber
 \end{align}
-where \(x_t\) is a function of \(u_t\). The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using MAP estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
+where \(x_t\) is a function of \(u_t\). The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using maximum a posteriori (MAP) estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 
 The algorithm for OED is summarized in Algo.~\ref{A:oed:sequential}.
-\todo[inline]{MAP expand}
 
 As an example, in Sec.~\ref{S:casestudy} where we learn a dynamical model of a building, the proposed OED method is used to optimally sample the chilled water temperature, supply air temperature and zone-level cooling set-points, subject to operation constraints on the chiller system.
 The result is illustrated in Fig.~\ref{F:oed:example}, which shows the changes in model accuracy between several experiment design methods, for various durations of functional tests.
-For short functional test durations, our OED methods achieve much more accurate models compared to random sampling methods.  As the duration increases, the performance of all methods converges.
-
-\todo[inline]{historuc data is not sufficient add to fig 3 and intro. random sampling requires at least so many hrs to reahc this accuracy}
+For short functional test durations, our OED methods achieve much more accurate models compared to random sampling methods. The random sampling requires more than 300 hours to reach the same accuracy. Since the historical data is unperturbed, it would require even longer to provide similar accuracy.
 
 \begin{figure}[!tb]
   \centering
   \setlength\fwidth{0.44\textwidth}
   \setlength\hwidth{0.2\textwidth}	
   \input{figures/oed-acc.tex}
-  \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design based on information gain initially; the difference decreases gradually.}
+  \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design based on information gain. The random sampling requires more than 300 hours to reach the same accuracy}
   \captionsetup{justification=centering}
   \label{F:oed:example}
 \end{figure}
