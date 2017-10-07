@@ -9,6 +9,7 @@ shift = 6;
 idx = 96*shift + (1:96);
 t = 1:96;
 
+battery = BatteryPower(idx)/1e6;
 system = TotalLoad(idx)/1e6;
 baseline = baseline(idx)/1e6;
 mu = PowerExpected(idx)/1e6;
@@ -107,7 +108,7 @@ ax.XTick = [40, 52, 56, 64, 68];
 ax.XTickLabel = {'10am', '1pm', '2pm', '4pm', '5pm'}';
 ylabel('error [kW]')
 
-hleg = legend([h2, h1], 'tracking error', '2\sigma');
+hleg = legend([h2, h1], 'prediction error', '2\sigma');
 set(hleg, 'box', 'on', 'Location', 'north', 'Orientation', 'Horizontal', 'EdgeColor',[1 1 1]);
 
 matlab2tikz('width', '\fwidth', 'height', '\hwidth', '../../paper/src/figures/control-error.tex',...

@@ -153,8 +153,8 @@ where \(b_{t+\tau}\) and \(s_{t+\tau}\) are Gaussian random variables whose mean
 \begin{gather}
 \bar{b}_{t+\tau}= r_{t} - \delta_{t+\tau} - \bar{y}_{t+\tau}, \ \ 
 \sigma^2_{b,t+\tau} =  \sigma^2_{y,t+\tau} \text, \label{E:battery_dist} \\
-\bar{s}_{t+\tau+1}\!=\! s_t \!+\! T \textstyle\sum_{k=t}^{t+\tau} \predict{k}{\bar{\Pbatt}}, \,
-\predict{s,\tau+1}{\sigma^2} \!=\! T^2 \textstyle\sum_{k=t}^{t+\tau} \predict{y,k}{\sigma^2} \text. \label{E:SoC_dist}
+\bar{s}_{t+\tau+1}\!=\! s_t \!+\! T \textstyle\sum_{k=t}^{t+\tau} \bar{\Pbatt}_{k}, \,
+\sigma^2_{s,\tau+1} \!=\! T^2 \textstyle\sum_{k=t}^{t+\tau} \sigma^2_{y,k} \text. \label{E:SoC_dist}
 \end{gather}
 For further details on modeling we refer the reader to our previous work \cite{nghiemetal16gp}.
 To track a given reference power signal, we solve the following stochastic optimization problem to optimize \(\delta_{\tau+t},u_{\mathrm{clg},\tau+t},u_{\mathrm{sat},\tau+t},u_{\mathrm{chw},\tau+t} \ \forall \tau \in \{0,\dots,N-1\}\)
@@ -197,7 +197,7 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 		\setlength\fwidth{0.44\textwidth}
 		\setlength\hwidth{0.1\textwidth}	
 		\input{figures/control-error.tex}
-		\caption{The tracking error during the DR event is always less \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)).}
+		\caption{The prediction error during the DR event is always less \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). This error is compensated by the battery.}
 		\label{F:control:error}
 	\end{subfigure}
 	\begin{subfigure}
@@ -205,7 +205,7 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 		\setlength\fwidth{0.44\textwidth}
 		\setlength\hwidth{0.15\textwidth}	
 		\input{figures/control-inputs.tex}	
-		\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}.}
+		\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}. All the temperatures are raised optimally to provide the desired curtailment.}
 		\label{F:control:inputs}
 	\end{subfigure}
 %	\caption{Sustained curtailment using predictive control with Gaussian Processes.}
@@ -216,17 +216,13 @@ Due to price volatility, the office receives a request from the aggregator to sh
 Now, the goal of the operators is to decide setpoints that would guarantee this curtailment while following stringent operation and thermal comfort constraints. 
 Rule-based strategies do not guarantee this curtailment and hence pose a huge financial risk. 
 Using our data-driven approach for control, we can synthesize optimal setpoint recommendations.
-Fig~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
+Fig.~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
 The baseline power consumption indicates the usage if there was no DR event, or in other words if the building would have continued to operate under normal conditions. The reference for tracking differs from baseline by \(90\) kW during 2-4pm.
-The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum tracking error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm increase the cooling set point, chilled water temperature and supply air temperature to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of kickback.
-\todo[inline]{Is the tracking error calculated by reference - actual building power? Does it also include the battery power (i.e., reference - (building + battery))? Anyways, 22.5 kW error is not 1.7\% but you must calculate the error as 22.5/90 = 25\% error, i.e., versus the curtailment, not the total power. I think it would be better to plot the HVAC power instead of the total power, to hide the small fraction of 90kW to the total power of 1.4 MW. And to plot the (building + battery) power instead of building-only power.}
+The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum prediction error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). While tracking the reference signal, the battery power compensates for this error to provide near perfect tracking. The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm and increases the cooling, chilled water temperature and supply air temperature setpoints to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of the kickback.
 
-\subsection{Active Learning}
+\subsection{Online Model Update}
 \label{SS:casestudy:active}
 
-\subsection{Discussion}
-
-MV and IG are better but the benefits marginal after \(\sim200\) hrs of functional testing.
 
 \todo[inline]{computational complexity}
 

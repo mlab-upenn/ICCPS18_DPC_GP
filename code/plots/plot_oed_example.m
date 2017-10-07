@@ -59,10 +59,10 @@ for idm = 1:numel(metrics)
         h4 = plot(1:numel(sim_samples), unif, '--dk', 'LineWidth', lw, 'MarkerSize', ms);
     end
     
-    xlabel('no of days');
+    xlabel('no of hours');
     ax = gca;
     ax.XTick = [1, 2, 3, 4];
-    ax.XTickLabel = {'3','7','10','14'}';
+    ax.XTickLabel = {'72','168','240','336'}';
     xlim([0.75, 4.25])
     ylim([10, 65])
 	ylabel('error [kW]')

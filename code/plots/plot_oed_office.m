@@ -8,7 +8,7 @@ sim_samples = 96*n_days;
 prefix = '../oedLargeOffice/';
 kernel = 'sqexp'; % choose 'truong' or 'sqexp'
 metrics = {'rmse', 'smse'};
-labels = {'RMSE [kW]', '1-SMSE [%]'};
+labels = {'RMSE [kW]', '100(1-SMSE) [%]'};
 
 figure;
 title('Office')
