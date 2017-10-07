@@ -5,7 +5,7 @@ In this section, we address the practical challenge of ``Computational complexit
 
 Consider a black-box model given by $x_{t+1}=f(x_t,u_t,d_t)$, where $x,u,d$ represent state, input and disturbance, respectively. Depending upon the learning algorithm, $f$ is typically nonlinear, nonconvex and sometimes nondifferentiable (as is the case with regression trees and random forests) with no closed-form expression. 
 Such functional representations learned through black-box modeling may not be directly suitable for control and optimization as the optimization problem can be computationally intractable, or due to nondifferentiabilities we may have to settle with a sub-optimal solution using evolutionary algorithms. 
-In our previous work, we use \textit{separation of variables} that allows us to approximate the Random Forests as affine models in the neighborhood of a given disturbance \cite{JainACC2017,JainCDC2017}. 
+In our previous work, we use \textit{separation of variables} that allows us to approximate the Random Forests as affine models in the neighborhood of a given disturbance \cite{JainCDC2017}. 
 The main drawback of this approach is that these models lead to a non-smooth input behavior. 
 Gaussian Processes overcome this problem.
 Further, GPs can generalize well using only a few samples while also providing an estimate for uncertainty in the predictions. 
@@ -34,7 +34,7 @@ We are interested in the following optimization problem with quadratic cost with
       \st\ \  & \bar{y}_{t+\tau} = \mu(x_{t+\tau}) + K_\star K^{-1} (Y - \mu(X)) \nonumber\\
       & \sigma^2_{y,t+\tau} = K_{\star \star} - K_\star K^{-1} K_\star^T \\
       & u_{t+\tau} \in \mathcal{U} \nonumber \\
-      & \mathbb{P}(y_{t+\tau} \in \mathcal{Y}) \geq 1 - \epsilon \nonumber
+      & \Pr(y_{t+\tau} \in \mathcal{Y}) \geq 1 - \epsilon \nonumber
     \end{aligned}
 \end{align}
 where the constraints hold for all \(\tau \in \{0,\dots,N-1\}\).

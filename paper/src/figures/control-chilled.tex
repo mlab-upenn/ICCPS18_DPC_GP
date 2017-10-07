@@ -1,0 +1,141 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.85000,0.32500,0.09800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.951\fwidth,
+height=\hwidth,
+at={(0\fwidth,0\hwidth)},
+scale only axis,
+xmin=28,
+xmax=80,
+xtick={40,52,56,64,68},
+xticklabels={{10am},{1pm},{2pm},{4pm},{5pm}},
+ymin=6,
+ymax=9.5,
+ylabel style={font=\color{white!15!black}},
+ylabel={$\text{temperature [}^\text{o}\text{C]}$},
+axis background/.style={fill=white},
+xmajorgrids,
+ymajorgrids,
+legend style={at={(0.03,0.5)}, anchor=west, legend columns=1, legend cell align=left, align=left, draw=white},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
+]
+\addplot [color=mycolor1, line width=0.8pt]
+  table[row sep=crcr]{%
+28	6.7\\
+29	6.7\\
+30	6.7\\
+31	6.7\\
+32	6.7\\
+33	6.7\\
+34	6.7\\
+35	6.7\\
+36	6.7\\
+37	6.7\\
+38	6.7\\
+39	6.7\\
+40	6.7\\
+41	6.7\\
+42	6.7\\
+43	6.7\\
+44	6.7\\
+45	6.7\\
+46	6.7\\
+47	6.7\\
+48	6.7\\
+49	6.7\\
+50	6.7\\
+51	6.7\\
+52	6.7\\
+53	6.68106534197597\\
+54	6.64905617515537\\
+55	6.8190596837857\\
+56	7.38419648861323\\
+57	7.76125673227166\\
+58	7.91071727376612\\
+59	8.77174751140269\\
+60	8.40217021063824\\
+61	7.67931744449659\\
+62	8.24957222529671\\
+63	8.8268932563618\\
+64	8.98071424781767\\
+65	7.99324388425106\\
+66	7.45317315803806\\
+67	6.97761610822872\\
+68	6.66788941197385\\
+69	6.7\\
+70	6.7\\
+71	6.7\\
+72	6.7\\
+73	6.7\\
+74	6.7\\
+75	6.7\\
+76	6.7\\
+77	6.7\\
+78	6.7\\
+79	6.7\\
+80	6.7\\
+};
+\addlegendentry{chilled water}
+
+\addplot [color=black, dashed, line width=0.8pt, forget plot]
+  table[row sep=crcr]{%
+52	0\\
+52	5.55555555555556\\
+52	11.1111111111111\\
+52	16.6666666666667\\
+52	22.2222222222222\\
+52	27.7777777777778\\
+52	33.3333333333333\\
+52	38.8888888888889\\
+52	44.4444444444444\\
+52	50\\
+};
+\addplot [color=black, dashed, line width=0.8pt, forget plot]
+  table[row sep=crcr]{%
+56	0\\
+56	5.55555555555556\\
+56	11.1111111111111\\
+56	16.6666666666667\\
+56	22.2222222222222\\
+56	27.7777777777778\\
+56	33.3333333333333\\
+56	38.8888888888889\\
+56	44.4444444444444\\
+56	50\\
+};
+\addplot [color=black, dashed, line width=0.8pt, forget plot]
+  table[row sep=crcr]{%
+64	0\\
+64	5.55555555555556\\
+64	11.1111111111111\\
+64	16.6666666666667\\
+64	22.2222222222222\\
+64	27.7777777777778\\
+64	33.3333333333333\\
+64	38.8888888888889\\
+64	44.4444444444444\\
+64	50\\
+};
+\addplot [color=black, dashed, line width=0.8pt, forget plot]
+  table[row sep=crcr]{%
+68	0\\
+68	5.55555555555556\\
+68	11.1111111111111\\
+68	16.6666666666667\\
+68	22.2222222222222\\
+68	27.7777777777778\\
+68	33.3333333333333\\
+68	38.8888888888889\\
+68	44.4444444444444\\
+68	50\\
+};
+\end{axis}
+\end{tikzpicture}%
