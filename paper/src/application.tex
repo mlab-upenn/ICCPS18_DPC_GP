@@ -75,6 +75,7 @@ of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
 	\input{figures/casestudy-oed-office.tex}
 	\caption{Comparison of model accuracies for different experiments: OED based on information gain (IG),  OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS) for two buildings: hotel (left) and office (right). RMSE denotes Root Mean Square Error and SMSE means Standardized Mean Square Error; lower RMSE and higher 1-SMSE indicate better prediction accuracy.}
 	\captionsetup{justification=centering}
+    \vspace{-10pt}
 	\label{F:casestudy:oed}
 \end{figure*}
 
@@ -164,7 +165,7 @@ For further details on modeling we refer the reader to our previous work \cite{n
 To track a given reference power signal, we solve the following stochastic optimization problem to optimize \(\delta_{\tau+t},u_{\mathrm{clg},\tau+t},u_{\mathrm{sat},\tau+t},u_{\mathrm{chw},\tau+t} \ \forall \tau \in \{0,\dots,N-1\}\)
 \begin{align}
 \label{E:casestudy:mpc}
-\minimize_{\delta, u} \quad & \sum_{\tau=0}^{N-1} (\delta_{\tau+t})^2 + \lambda \sigma_{y,\tau+t}^2\\
+\minimize_{\delta, u} \quad & \textstyle\sum_{\tau=0}^{N-1} (\delta_{\tau+t})^2 + \lambda \sigma_{y,\tau+t}^2\\
 \st \quad & \text{dynamics constraints } \eqref{E:gp:casestudy}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
 &  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
 \end{align}
@@ -242,6 +243,7 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 	\setlength\hwidth{0.3\textwidth}	
 	\input{figures/control-all.tex}	
 	\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}.}
+    \vspace{-10pt}    
 	\label{F:control:all}
 \end{subfigure}
 \end{figure}
@@ -297,6 +299,7 @@ For the office building, our results show that the updated GP model is better in
 		\end{tabular}
 	}
 	\label{T:casestudy:evolving}
+    \vspace{-10pt}
 \end{table}
 
 

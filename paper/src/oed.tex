@@ -90,7 +90,7 @@ Otherwise, the Gaussian priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\ma
 		\State Update \( \theta_{\mathrm{t}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{t-1}})\)
 		\EndWhile
 		\EndProcedure
-	\end{algorithmic}
+      \end{algorithmic}
 \end{algorithm}
 
 Now, consider a dynamical GP model introduced in Sec.~\ref{S:gp},
@@ -123,6 +123,7 @@ For short functional test durations, our OED methods achieve much more accurate 
   \input{figures/oed-acc.tex}
   \caption{Error in prediction of power consumption on test data set. RMSE: root mean square error. AE: Absolute error. The errors are much lower with optimal experiment design based on information gain. The random sampling requires more than 300 hours to reach the same accuracy}
   \captionsetup{justification=centering}
+  \vspace{-12pt}
   \label{F:oed:example}
 \end{figure}
 
