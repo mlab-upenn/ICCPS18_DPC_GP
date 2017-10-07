@@ -15,7 +15,7 @@ It is concluded in \cite{Sturzenegger2016} that the required effort for model de
 
 There are three main reasons for modeling complexity. 
 
-\noindent \textbf{(1) Model capture} using only historical data is not suitable for control. Historical data, as large as it may be, does not capture the full model dynamics as the control setpoints are based on rule-based strategies, thus lack in input excitation. Therefore, we need functional tests to excite the system with wide range of control inputs. However, in practice, functional tests are permitted only for a few hours in a week during non-business hours.
+\noindent \textbf{(1) Model capture} using only historical data is not suitable for control. Historical data, as large as it may be, does not capture the full model dynamics as the control setpoints are based on rule-based strategies, thus lack in input excitation. Therefore, we need functional tests to excite the system with wide range of control inputs. However, in practice, functional tests are permitted only for a few hours in a month.
 
 \noindent \textbf{(2) Change in model properties} over time - even if the model is identified once via an expensive route as in  \cite{Sturzenegger2016}, as the model changes with time, the system identification must be repeated to update the model. Thus, model adaptability or adaptive control is desirable for such systems. 
 
@@ -40,7 +40,7 @@ This paper proposes a procedure for OED using Gaussian Processes (GP) to recomme
 
 \noindent \textbf{(2) Computational complexity:} Depending upon the learning algorithm, the output from a learned model is a non-linear, non-convex and sometimes non-differentiable (eg.~Random Forests \cite{Friedman2001}) function of the inputs with no closed-form expression. 
 Using such models for control synthesis where some of the inputs must be optimized can lead to computationally intractable optimization. 
-Our previous work uses an adaptation of Random Forests which overcomes this problem by separation of variables to derive a linearized input-output mapping at each time step \cite{JainACC2017,JainCDC2017}.
+Our previous work uses an adaptation of Random Forests which overcomes this problem by separation of variables to derive a linearized input-output mapping at each time step \cite{JainCDC2017}.
 This paper uses GPs for receding horizon control where the output mean and variance are analytical functions of the inputs, albeit non-convex.
 
 \noindent \textbf{(3) Performance guarantees and robustness:} A desired characteristic for closed-loop control is to provide performance guarantees. 

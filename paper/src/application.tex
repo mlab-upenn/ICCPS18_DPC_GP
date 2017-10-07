@@ -70,7 +70,7 @@ of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
 \begin{figure*}[t]
 	\centering
 	\setlength\fwidth{0.46\textwidth}
-	\setlength\hwidth{0.2\textwidth}
+	\setlength\hwidth{0.18\textwidth}
 	\input{figures/casestudy-oed-hotel.tex}
 	\input{figures/casestudy-oed-office.tex}
 	\caption{Comparison of model accuracies for different experiments: OED based on information gain (IG),  OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS) for two buildings: hotel (left) and office (right). RMSE denotes Root Mean Square Error and SMSE means Standardized Mean Square Error; lower RMSE and higher 1-SMSE indicate better prediction accuracy.}
@@ -86,7 +86,7 @@ We use the lagged terms of the power consumption, proxy variables, weather varia
 We assume a practical operational constraint that the chilled water temperature set-point cannot be changed faster than \(0.13^o\mathrm{C}\) every minutes.
 Keeping this constraint and thermal comfort constraints into consideration, we consider the following operational constraints:
 \begin{gather}
-22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  26^o\mathrm{C}, \nonumber \\
+22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  27^o\mathrm{C}, \nonumber \\
 12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C}, \nonumber \\
  3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C},\label{E:operation_constraints} \\
 | u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C}. \nonumber
@@ -116,8 +116,8 @@ Random sampling, both uniform and PRBS require more than 200 hrs for functional 
 
 We have shown that OED can be used to learn a model very fast.
 In practice, due to operational constraints, the functional tests cannot be performed for sufficiently long time. 
-They are permitted only in a small window or during non-business hours. 
-Even a few hours of periodic OED can provide far better models due to its ability to capture more information in the same amount of time.
+They are permitted only in a small window, during non-business hours for only a few hours in a month. 
+Even short periodic tests based on OED can provide far better models due to its ability to capture more information in the same amount of time.
 Thus, OED can drastically reduce the duration for functional tests.
 
 \subsection{Power Reference Tracking Control}
@@ -193,7 +193,7 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 		\setlength\fwidth{0.44\textwidth}
 		\setlength\hwidth{0.15\textwidth}	
 		\input{figures/control-tracking.tex}
-		\caption{The reference power signal is closely tracked by GP model providing sustained curtailment of \(90\) kW (with respect to the baseline) during the Demand Response event 2-4pm. Due to \(1\)hr horizon in the control problem, the curtailment starts at 1:15pm, and the controller is further active until 5pm to reduce the effect of kickback.}
+		\caption{The reference power signal is closely tracked by GP model providing sustained curtailment of \(90\) kW (with respect to the baseline) during the Demand Response event 2-4pm. Due to \(1\)hr horizon in the control problem, the curtailment starts at 1:15pm, and the controller is further active until 5pm to reduce kickback.}
 		\label{F:control:tracking}
 	\end{subfigure}
 	\begin{subfigure}
@@ -204,15 +204,46 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 		\caption{The prediction error during the DR event is always less \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). This error is compensated by the battery.}
 		\label{F:control:error}
 	\end{subfigure}
-	\begin{subfigure}
-		\centering
-		\setlength\fwidth{0.44\textwidth}
-		\setlength\hwidth{0.15\textwidth}	
-		\input{figures/control-inputs.tex}	
-		\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}. All the temperatures are raised optimally to provide the desired curtailment.}
-		\label{F:control:inputs}
-	\end{subfigure}
-%	\caption{Sustained curtailment using predictive control with Gaussian Processes.}
+%	\begin{subfigure}
+%		\centering
+%		\setlength\fwidth{0.44\textwidth}
+%		\setlength\hwidth{0.15\textwidth}	
+%		\input{figures/control-inputs.tex}	
+%		\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}. All the temperatures are raised optimally to provide the desired curtailment.}
+%		\label{F:control:inputs}
+%	\end{subfigure}
+%\begin{subfigure}
+%	\centering
+%	\setlength\fwidth{0.44\textwidth}
+%	\setlength\hwidth{0.1\textwidth}	
+%	\input{figures/control-cooling.tex}	
+%	\caption{Optimal cooling setpoint}
+%	\label{F:control:cooling}
+%\end{subfigure}
+%\begin{subfigure}
+%	\centering
+%	\setlength\fwidth{0.44\textwidth}
+%	\setlength\hwidth{0.1\textwidth}	
+%	\input{figures/control-supplyair.tex}	
+%	\caption{Optimal supply air temperature.}
+%	\label{F:control:supplyair}
+%\end{subfigure}
+%\begin{subfigure}
+%	\centering
+%	\setlength\fwidth{0.44\textwidth}
+%	\setlength\hwidth{0.1\textwidth}	
+%	\input{figures/control-chilled.tex}	
+%	\caption{Optimal chilled water temperature.}
+%	\label{F:control:chilled}
+%\end{subfigure}
+\begin{subfigure}
+	\centering
+	\setlength\fwidth{0.44\textwidth}
+	\setlength\hwidth{0.3\textwidth}	
+	\input{figures/control-all.tex}	
+	\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}.}
+	\label{F:control:all}
+\end{subfigure}
 \end{figure}
 
 The office building has a large HVAC system, so for this building we consider the following Demand Response scenario. 
@@ -222,7 +253,7 @@ Rule-based strategies do not guarantee this curtailment and hence pose a huge fi
 Using our data-driven approach for control, we can synthesize optimal setpoint recommendations.
 Fig.~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
 The baseline power consumption indicates the usage if there was no DR event, or in other words if the building would have continued to operate under normal conditions. The reference for tracking differs from baseline by \(90\) kW during 2-4pm.
-The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum prediction error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). While tracking the reference signal, the battery power compensates for this error to provide near perfect tracking. The optimal setpoints are shown in Fig.~\ref{F:control:inputs}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm and increases the cooling, chilled water temperature and supply air temperature setpoints to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of the kickback.
+The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum prediction error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). While tracking the reference signal, the battery power compensates for this error to provide near perfect tracking. The optimal setpoints are shown in Fig.~\ref{F:control:all}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm and increases the cooling, chilled water temperature and supply air temperature setpoints to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of the kickback.
 
 \subsection{Online Model Update}
 \label{SS:casestudy:active}
@@ -234,30 +265,31 @@ Further, due to growing computational complexity of GPs with \(\mathcal{O}(n^3)\
 Therefore, we select the most informative subset of data \(\mathcal{S} \subset \{\D \cup \D' \} \).
 
 
-We consider two different GP models learned using OED for 14 days and 21 days in the month of June. 
+We consider two different GP models learned using OED for \(14\) days and \(21\) days in the month of June. 
 In the first case, we have \(14\times96\) samples and in the second case \(21\times96\) samples for training.
 We run each GP model in closed-loop with the building in a different month for further 14 days.
 To update the model for evolving GP, we use our algorithm in Algo.~\ref{A:oed:batch} for optimal subset of data selection to choose the most informative \(14\times96\) samples in the first case and \(21\times96\) samples in the second case. 
 These models are denoted by Updated GP in Tab.~\ref{T:casestudy:evolving}. 
 We compare the performance of these models against the original model, referred to as an Outdated GP in Tab.~\ref{T:casestudy:evolving} since this model does not include the most up to date data about the current system which has evolved due to seasonal and operational changes.
 We repeat this for the months of July, August and September.
-Finally, we test the prediction accuracy (RMSE) of both models on the remaining 14 days of the respective months. 
-For example, when the outdated GP model is used for control from Aug 1 to Aug 14, we calculate the prediction error from Aug 15 to Aug 28. 
-For the office building, our results show that the updated GP model is better in all the cases with lower RMSE.
+Finally, we test the prediction accuracy (RMSE) of both models on the remaining \(14 \)days of the respective months. 
+For example, when the outdated GP model is used for control from Aug \(1\) to Aug \(14\), we calculate the prediction error from Aug \(15\) to Aug \(28\). 
+For the office building, our results show that the updated GP model is better in all the cases with lower RMSE, decreasing the model errors by at least \(5\%\).
 
 
- \begin{table}[htbp]
+ \begin{table}[t]
 	\centering
-	\caption{Comparison of Root Mean Square Error (RMSE) in kW between Evolving GP and Outdated GP models for different months. }
+	\caption{Comparison of Root Mean Square Error (RMSE) in kW between Updated GP and Outdated GP models for different months. }
 	\scalebox{0.9}{
 		\begin{tabular}{c|cc|cc|cc}
 			\toprule
 			& \multicolumn{2}{c|}{July} & \multicolumn{2}{c|}{August} & \multicolumn{2}{c}{September} \\
 			\midrule
-		    & 14-day & 21-day & 14-day & 21-day  & 14-day & 21-day \\
+		    & \(14\)-day & \(21\)-day & \(14\)-day & \(21\)-day  & \(14\)-day & \(21\)-day \\
 			\midrule
-			Updated GP    & 58.9 & 59.4  & 86.4  &85.7  & 99.7 & 94.9  \\
 			Outdated GP   & 65.2  & 63.8  & 91.81  & 93.2 &  103.2  & 101.4 \\
+			Updated GP    & 58.9 & 59.4  & 86.4  &85.7  & 97.7 & 94.9  \\			
+			\% decrease   & 9.6 \(\% \downarrow\)  & 6.9 \(\%\downarrow\) & 5.9 \(\%\downarrow\)  & 7.9 \(\%\downarrow\) &  5.3 \(\%\downarrow\)  & 6.4 \(\%\downarrow\) \\
 			\bottomrule
 		\end{tabular}
 	}
