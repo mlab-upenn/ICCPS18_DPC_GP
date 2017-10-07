@@ -24,7 +24,7 @@ However, another approach which has been shown to result in better samples for l
 
 The IG approach selects the sample which adds the maximum information to the model, i.e.~which reduces the maximum uncertainty in \(\theta\). If we denote the existing data before sampling by \(\D\), then the goal is to select \(x\) that maximizes the information gain defined as
 \begin{align}
-\argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y),
+\textstyle\argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y),
 \label{E:ig:theta}
 \end{align}
 where \(H\) is the Shannon's Entropy given by
@@ -106,7 +106,7 @@ At time \(t\), the current disturbance, and the lagged terms of the output, the 
 For physical systems, very often, we must operate under strict actuation or operation constraints. Therefore, the new sampled inputs must lie within these constraints. To this end, we solve the following optimization problem to compute optimal control set point recommendations \(u^*_t\) for experiment design
 \begin{align}
 \label{E:oed:sampling}
-\maximize_{u_{t}} & \ \ \ \tilde{\sigma}^2(x_t)/{\sigma}^2(x_t) \\
+\textstyle\maximize_{u_{t}} & \ \ \ \tilde{\sigma}^2(x_t)/{\sigma}^2(x_t) \\
 \st &  \ \ \ \   u_t \in \mathcal{U} \nonumber
 \end{align}
 where \(x_t\) is a function of \(u_t\). The new control input \(u^*_t\) is applied to the physical system to generate the output \(y_t\), update the parameters \(\theta\) using maximum a posteriori (MAP) estimate \cite{Garnett2013}, and we proceed to time \(t+1\). 

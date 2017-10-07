@@ -25,7 +25,7 @@ We use the following data to validate our results. We limit ourselves to data wh
 
 \begin{itemize}
 \item \textit{Weather variables \(d^w\):} outside temperature and humidity -- these features are derived from historical weather data.
-\item \textit{Proxy features \(d^p\):} time of day, day of week -- these features are a good indicator of occupancy and periodic trends.
+\item \textit{Proxy features \(d^p\):} time of day, day of week -- these features are indicators of occupancy and periodic trends.
 %\textit{Fixed schedules  \(d^s\):} kitchen cooling set point, corridor cooling set point - these set points follow predefined rules. 
 \item \textit{Control variables \(u\):} cooling, supply air temperature and chilled water setpoints -- these will be optimized in the MPC problem. % for Power Tracking Reference Control in Sec.~\ref{SS:power_tracking}.
 \item \textit{Output variable \(y\):} total power consumption -- this is the output of interest which we will predict using all the above features in the GP model.
@@ -52,9 +52,9 @@ As for the mean and covariance functions of the GP, %to define the structure of 
 we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) as
 \begin{gather}
 k_1(x,x')  = k, \nonumber\\
-k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\frac{1}{2} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda_d^2}}^2 \right),
+k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\textstyle\frac{1}{2} \textstyle\sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda_d^2}}^2 \right),
  \nonumber\\
- k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \frac{1}{2\alpha} \sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
+ k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \textstyle\frac{1}{2\alpha} \textstyle\sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
 k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 \end{gather}
 Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}.
@@ -284,7 +284,7 @@ For the office building, our results show that the updated GP model is better in
 	\centering
 	\caption{Comparison of Root Mean Square Error (RMSE) in kW between Updated GP and Outdated GP models for different months. }
 	\scalebox{0.9}{
-		\begin{tabular}{c|cc|cc|cc}
+      \begin{tabular}{c|cc|cc|cc}
 			\toprule
 			& \multicolumn{2}{c|}{July} & \multicolumn{2}{c|}{August} & \multicolumn{2}{c}{September} \\
 			\midrule
@@ -292,7 +292,7 @@ For the office building, our results show that the updated GP model is better in
 			\midrule
 			Outdated GP   & 65.2  & 63.8  & 91.81  & 93.2 &  103.2  & 101.4 \\
 			Updated GP    & 58.9 & 59.4  & 86.4  &85.7  & 97.7 & 94.9  \\			
-			\% decrease   & 9.6 \(\% \downarrow\)  & 6.9 \(\%\downarrow\) & 5.9 \(\%\downarrow\)  & 7.9 \(\%\downarrow\) &  5.3 \(\%\downarrow\)  & 6.4 \(\%\downarrow\) \\
+			\% improved   & 9.6\%  & 6.9\% & 5.9\%  & 7.9\% &  5.3\%  & 6.4\% \\
 			\bottomrule
 		\end{tabular}
 	}

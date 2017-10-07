@@ -1,7 +1,7 @@
 \section{Model Predictive Control}
 \label{S:dpc}
 
-In this section, we address the practical challenge of ``Computational complexity" and ``Performance guarantees" listed in Sec.~\ref{SS:practical_challenges}.
+This section addresses the challenge of ``Computational complexity" and ``Performance guarantees" listed in Sec.~\ref{SS:practical_challenges}.
 
 Consider a black-box model given by $x_{t+1}=f(x_t,u_t,d_t)$, where $x,u,d$ represent state, input and disturbance, respectively. Depending upon the learning algorithm, $f$ is typically nonlinear, nonconvex and sometimes nondifferentiable (as is the case with regression trees and random forests) with no closed-form expression. 
 Such functional representations learned through black-box modeling may not be directly suitable for control and optimization as the optimization problem can be computationally intractable, or due to nondifferentiabilities we may have to settle with a sub-optimal solution using evolutionary algorithms. 

@@ -63,8 +63,14 @@
 
 % some fixes
 \linespread{0.97}
-%\setlength{\textfloatsep}{4pt}
+% \setlength{\textfloatsep}{4pt}
 
+\AtBeginDocument{%
+ \abovedisplayskip=6pt plus 3pt minus 6pt
+ \abovedisplayshortskip=0pt plus 3pt
+ \belowdisplayskip=6pt plus 3pt minus 6pt
+ \belowdisplayshortskip=3pt plus 3pt minus 3pt
+}
 
 % make algo small
 \makeatletter
