@@ -1,0 +1,59 @@
+// -*- mode: javascript; -*-
+// OBN server script for co-simulation optimal experiments to get data for training and validation.
+// 2016 by Truong X. Nghiem (xuan.nghiem@epfl.ch)
+
+//run_simulation(false);  // Do not run simulation, we only want to test
+var main_dir = "/Users/truong/work/working/ICCPS18_DPC_GP/code/control_LargeOffice_evolving"; // The main folder
+var eplus_binary = "${main_dir}/starteplus84.sh";
+var eplus_models = "${main_dir}/energyPlusModels";
+
+var docker_machine_ep = ["path" : "${main_dir}",
+						 "eplus" : "obneplus.sh"];
+
+workspace("gpdr2");
+
+settings.default_comm("mqtt");	// Select the default communication (yarp, mqtt)
+//settings.MQTT_server("tcp://128.178.5.139:1883");
+settings.MQTT_server("tcp://localhost:1883");
+settings.time_unit(minute);
+settings.final_time(3*day); // 13*day + 23.5*hour);
+
+var Tgrid = 15*minute;
+
+// Add the aggregator = controller
+var aggregator = node(["name": "aggregator",
+					   "inputs": ["bldgin"],
+					   "outputs": ["setpoints"],
+					   "blocks": [
+						   ["name": "computesp",
+							"id": 0,
+							"sampling": Tgrid,
+							"outputs": ["setpoints"],
+							"inputs": ["bldgin"]]
+						   ]
+						  ], false);
+aggregator.need_updateX(false);
+add_node(aggregator);
+
+// Add the building node
+var bldgName = "LargeOffice";
+var buildingX = node(["name" : bldgName,
+					  "inputs" : ["in"],
+					  "outputs" : ["out"],
+					  "updates" : [["sampling" : Tgrid, "inputs": ["in": false], "outputs": ["out"]]]
+					 ], true);
+	
+// Start E+
+start_remote_node(buildingX,
+				  "/truongpc",
+				  eplus_binary,
+				  "${eplus_models}/${bldgName} Building USA_IL_Chicago-OHare.Intl.AP.725300_TMY3",
+				  "");
+
+connect(buildingX.port("out"), aggregator.port("bldgin"));
+connect(aggregator.port("setpoints"), buildingX.port("in"));
+	
+print_system();
+//export2graphml("system.graphml");
+
+waitfor_all_nodes(120);
