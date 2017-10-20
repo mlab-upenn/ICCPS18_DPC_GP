@@ -242,6 +242,7 @@ classdef DRtrackingWithStorage_SOCP_singlegp < OBNNode
             
             obj.wdelta = wdelta;
             obj.wPb = wPb;
+            obj.wvar = wvar;
             
             % Calculate the normalized ramp limit
             % -r/Delta <= x' - x <= r/Delta where Delta = (max-min)/2
