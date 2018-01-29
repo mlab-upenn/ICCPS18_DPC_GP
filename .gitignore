@@ -10,7 +10,6 @@ utilSocket.cfg
 *.aux
 *.blg
 *.out
-*.pdf
 *.gz
 *.dbg
 *.idd

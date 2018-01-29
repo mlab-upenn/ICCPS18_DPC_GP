@@ -1,7 +1,8 @@
 % This file was created by matlab2tikz.
+% Minimal pgfplots version: 1.3
 %
 %The latest updates can be retrieved from
-%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz
 %where you can also make suggestions and rate matlab2tikz.
 %
 \definecolor{mycolor1}{rgb}{0.97647,0.89804,1.00000}%
@@ -10,7 +11,7 @@
 \begin{tikzpicture}
 
 \begin{axis}[%
-width=0.951\fwidth,
+width=0.95092\fwidth,
 height=\hwidth,
 at={(0\fwidth,0\hwidth)},
 scale only axis,
@@ -19,18 +20,16 @@ xmin=28,
 xmax=80,
 xtick={40,52,56,64,68},
 xticklabels={{10am},{1pm},{2pm},{4pm},{5pm}},
+xmajorgrids,
 ymin=0,
 ymax=150,
-ylabel style={font=\color{white!15!black}},
 ylabel={error [kW]},
-axis background/.style={fill=white},
-xmajorgrids,
 ymajorgrids,
-legend style={at={(0.5,0.97)}, anchor=north, legend columns=2, legend cell align=left, align=left, draw=white},
+legend style={at={(0.5,0.97)},anchor=north,legend columns=2,legend cell align=left,align=left,draw=white},
 xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,
 ]
 
-\addplot[area legend, draw=mycolor1, fill=mycolor1]
+\addplot[area legend,solid,fill=mycolor1,draw=mycolor1]
 table[row sep=crcr] {%
 x	y\\
 28	97.6098920017012\\
@@ -140,9 +139,10 @@ x	y\\
 29	0\\
 28	0\\
 }--cycle;
-\addlegendentry{$\text{2}\sigma$}
 
-\addplot [color=mycolor2, line width=0.8pt]
+\addlegendentry{$\text{2}\sigma$};
+
+\addplot [color=mycolor2,solid,line width=0.8pt]
   table[row sep=crcr]{%
 28	nan\\
 29	nan\\
@@ -198,9 +198,9 @@ x	y\\
 79	nan\\
 80	nan\\
 };
-\addlegendentry{prediction error}
+\addlegendentry{prediction error};
 
-\addplot [color=black, dashed, line width=0.8pt, forget plot]
+\addplot [color=black,dashed,line width=0.8pt,forget plot]
   table[row sep=crcr]{%
 52	0\\
 52	16.6666666666667\\
@@ -213,7 +213,7 @@ x	y\\
 52	133.333333333333\\
 52	150\\
 };
-\addplot [color=black, dashed, line width=0.8pt, forget plot]
+\addplot [color=black,dashed,line width=0.8pt,forget plot]
   table[row sep=crcr]{%
 56	0\\
 56	16.6666666666667\\
@@ -226,7 +226,7 @@ x	y\\
 56	133.333333333333\\
 56	150\\
 };
-\addplot [color=black, dashed, line width=0.8pt, forget plot]
+\addplot [color=black,dashed,line width=0.8pt,forget plot]
   table[row sep=crcr]{%
 64	0\\
 64	16.6666666666667\\
@@ -239,7 +239,7 @@ x	y\\
 64	133.333333333333\\
 64	150\\
 };
-\addplot [color=black, dashed, line width=0.8pt, forget plot]
+\addplot [color=black,dashed,line width=0.8pt,forget plot]
   table[row sep=crcr]{%
 68	0\\
 68	16.6666666666667\\

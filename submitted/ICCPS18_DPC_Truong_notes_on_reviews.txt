@@ -1,0 +1,31 @@
+1.A. In my EPFL/ACC17 paper, I compared the prediction accuracy between zero-variance and propagation. We can cite it rather than repeat it here (lack of space).
+
+1.B. Not clear what did the reviewer mean by multiple training datasets.
+
+1.C. It has insights explained in my EPFL/ACC17 paper. We can either elaborate here, or refer to my EPFL/ACC17 paper.
+
+1.D. Good comment. We may keep the current paper as-is, but for future versions, need to do proper literature review.
+
+1.E. Yeah, title too broad, but if we can, keep it that way :-)
+
+
+3. Dealing with real world data and systems is another beast. We have to do real experiments to talk about this.
+
+3.1. Right, remove Eq. (14).
+
+3.2. Good question. No study yet. This is just a short validation sequence. We would need to perform longer validation to compare the two approaches fairly.
+
+3.3. In ML, it’s a general rule that more data gives better models, but it’s not always true. Unlike in formal math, including control theory, it’s hard to have results that are always true.
+
+3.4. Which method? Random sampling is usually what is used in practice.
+
+3.5. 21x96 is not large! And it’s the maximum we used, but we also studied smaller datasets. Generally the larger the dataset is, the better model we get. So optimal dataset size depends on the desired model quality.
+
+3.7. Yeah, we should discuss more clearly the drawbacks. Maybe for a later paper.
+
+3.8. I think we are first to develop this type of OED for buildings (not first for general OED, or even OED idea for buildings). For later version, do more literature review or highlight our novelty.
+
+
+4.1. We should add numbers.
+
+4.2. Yeah, we kinda skipped details of this part because we didn’t have much to say about. This part is a bit sloppy.

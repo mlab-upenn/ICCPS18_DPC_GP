@@ -1,0 +1,84 @@
+----------------------- REVIEW 1 ---------------------
+PAPER: 99
+TITLE: Learning and Control using Gaussian Processes
+AUTHORS: Achin Jain, Truong Nghiem, Manfred Morari and Rahul Mangharam
+
+Overall evaluation: 2 (accept)
+
+----------- Overall evaluation -----------
+The authors of this paper tackle the problem of controlling dynamic systems in the absence of a model using data-driven and machine learning methods to construct black-box system descriptions. In order to cope with limited system availability, which makes experimental data scarce and costly, they propose an optimal experiment design method for Gaussian processes, which achieves substantial improvement on the learning rate of the system, compared to rudimentary approaches. The black-box Gaussian Process model is used for a receding horizon optimal control problem, which encompasses probabilistic constraint satisfaction. Finally, they present an online algorithm that updates the model when new data become available by selecting the subset of the data that provides the highest information gain. To illustrate the practical usability of their method, the authors present simulation results applied to load curtailment for Demand Response in the energy control of building, achieving!
+  low prediction error while keeping the time required to obtain the experimental data low.
+
+Overall, the paper is well-written and structured, efficiently conveys the high-level ideas as well as the mathematical implications and gives an efficient solution to a problem of high practical interest. The following remarks could help the authors strengthen it.
+A) The zero-variance assumption made at the end of the second section needs to further be justified and explained. The computational simplicity is not sufficient to justify that choice and, as the author says, it should and can be used when the prediction error caused by not propagating variance is insignificant. Yet, no quantification of this error is presented, not in the theoretical analysis or in the case studies. Could it be the case that the variance of the predicted model explodes as time grows? What about the other uncertainty propagation methods discussed in reference [18]? Does a change in the method affect the approach proposed? The authors may consider a comparison between the zero-variance method used in this paper and another method in the literature.
+B) In this paper, the authors propose a data-driven system identification approach, which even though leads to a learned model for the system dynamics, lacks the ability to incorporate multiple training datasets. Hence, their claim that the paper bridges machine learning and control needs further elaboration.
+C) What is the physical insight behind assuming the choice of the mean and covariance functions to be a combination of a squared exponential and rational quadratic kernel, done while solving the minimization problem (12)?
+D) The related work section is rather inadequate and lists very few relevant publications in a seemingly vast area of research. For example, there have been efforts in the CPS community for proposing data driven strategies that exploit information gain maximization: “Constructing compact causal mathematical models for complex dynamics” (ICCPS '17). More discussion of prior publsihed papers should be provided in this section and ideally compared with the method proposed in this paper, in order for the reader to be able to properly review different approaches used in learning data-driven model for control and for the authors to differentiate themselves from similar methods.
+E) A paragraph that details the outline of the paper is missing. In my opinion, the format of the title does not sound correct. The authors may consider to change it. Some minor typos: Please use “Algorithm” when referring to an algorithm.
+In summary, I believe that if some, or all, of the above issues are addressed, the paper would be substantially stronger and of high merit.
+
+
+----------------------- REVIEW 2 ---------------------
+PAPER: 99
+TITLE: Learning and Control using Gaussian Processes
+AUTHORS: Achin Jain, Truong Nghiem, Manfred Morari and Rahul Mangharam
+
+Overall evaluation: 2 (accept)
+
+----------- Overall evaluation -----------
+This is an interesting paper that makes a good effort to bridge the machine learning and control systems. In particular, it proposes the use of Gaussian Processes for learning control-oriented models. It also proposes an online method for continuously improving the GP model in closed-loop with a real-time controller. The proposed GP controller was evaluated in a real world case study of building energy control and demand response. The pros and cons are summarized as below.
+
++ This is a nice CPS paper with an exciting vision of bridging machine learning and control system communities.
++ The technical challenges of bridging these two communities are clearly discussed and well justified.
++ The GP and OED components are presented in a clear and logical way.
++ The proposed GP controller has been evaluated on the real world data traces.
+
+
+- The related work could be extended a bit to discuss more about the relevant literature of applying data-driven models in controlled systems.
+- It would also be nice to show additional application scenarios where the GP based controller can be applied.
+
+
+----------------------- REVIEW 3 ---------------------
+PAPER: 99
+TITLE: Learning and Control using Gaussian Processes
+AUTHORS: Achin Jain, Truong Nghiem, Manfred Morari and Rahul Mangharam
+
+Overall evaluation: 2 (accept)
+
+----------- Overall evaluation -----------
+- Short summary:
+Authors address bridging machine learning and control with a case study of building energy control and demand response. This paper proposes the use of Gaussian Processes for learning control-oriented models.
+The main contributions are: 1) develop a procedure for optimal experiment design using Gaussian Processes to recommend strategies for functional test. 2) use the variance in predictions from GP model to formulate a stochastic optimization problem to design an MPC controller. 3) propose an online method to update the GP model as new data are generated by running the GP-based controller in a closed-loop with the physical system.
+
+- Points in favor:
+This paper highlights interesting and promising work of bridging machine learning and control. Overall, the paper is well organized, from problem statement, solid explanations, proposed method, and to simulation. Every section and sub-section, the authors mentioned objectives what are they would deal in that section and that makes the paper easy to follow. The proposed method shows quite improvement in reducing the duration of required functional test by 50% and maximum prediction error by 1.7% from the simulations.
+
+- Points against:
+The proposed methods are evaluated via simulation. Although the authors considered weather variables and proxy features as disturbances, it is not clear the proposed methods would be effective in an actual system. Understanding the difficulty of real experiment, is there any further considerations for real world problem? Such as the impact of erroneous data which may have a bad effect on the model accuracy from sensor error or physical system failure. For effectively reduce the prediction error, selecting informative and good data is essential procedure. How the bad data would be addressed?
+
+- Other comments for the authors:
+1) Equation (11) and (14) is perfectly same but the numbering is separately assigned. It is expected to add comma or punctuation for the equations.
+2) In figure 4, optimal selection shows better performance in mean prediction error and prediction variance than random sampling. However, optimal selection has temporal peak error value which is bigger than random sampling. Is there any possibility or study that temporal peak error is fatal to the physical system?
+3) As authors wrote in this paper, it is intuitive that with more training samples, the model accuracy is increasing. However, in July of Table 1, RMSE performance of 21-day updated GP is worse than 14-day updated GP. It should be added the analysis of this phenomenon.
+4) Figure 5 is a comparison of model accuracies for different methods. There is a big performance gap between OED based methods (IG and MV) and random (uniform and PRBS) because the comparison group (uniform and PRBS) do not have strategies. It is expected to add another sampling method, not based on randomness, and compare the result.
+5) The authors mentioned that since the computational complexity of training and predicting with Gaussian Processes is O(n^3), obtaining the best GP model with the least amount data is highly desired. In this paper, the authors use at most 21x96 samples which seems large size of data set. Is it optimized maximum size of data set? How large size of data set is acceptable?
+6) Deliberatively check the format of reference style.
+7) It is expected to add some threats to proposed method. Also, the overhead and limitation of proposed method should be described more clearly.
+8) The authors introduced related work about data-driven methods and control methods for DR with buildings. If the proposed OED and online update method is novel, highlight them. Or not, add other works in related work.
+
+
+----------------------- REVIEW 4 ---------------------
+PAPER: 99
+TITLE: Learning and Control using Gaussian Processes
+AUTHORS: Achin Jain, Truong Nghiem, Manfred Morari and Rahul Mangharam
+
+Overall evaluation: 1 (weak accept)
+
+----------- Overall evaluation -----------
+Strength:
++++ This paper addresses the various challenges associated in bridging machine learning and controls, which is a practical problem.
++++ The authors achieved fast learning rate than uniform random sampling or pseudo binary sampling by maximizing information gain or variance.
++++ Additionally, an online updating model is proposed for continuous model updating.
+Weakness:
+--- In figure 4, no major improvement is observed between random sampling and optimal selection.
+--- It is not clear how the authors select the most informative subset of old data set D and new data set D' for model updating. What's the ratio between old data and new data? Is there any metric for that?

@@ -40,16 +40,18 @@ The time step for modeling and control is 15 minutes.
 We learn a single GP model of the building and use the \emph{zero-variance method} to predict the outputs \(y\) at the future time steps following the current time step.
 For each prediction step $t+\tau$, where $t$ is the current time and \( \tau \ge 0\), %\in \{0,\dots,,N-1\}\),
 the output \(y_{t+\tau}\) is a Gaussian random variable given by \eqref{eq:dpc:prediction}.
-\begin{gather}
-\label{E:gp:casestudy}
-y_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau} = g_{\mathrm m}(x_{t+\tau})}{\sigma^2_{y, t+\tau} = g_{\mathrm v}(x_{t+\tau})}, \\
-x_{t + \tau} = [\bar y_{t+ \tau-l}, \dots, \bar y_{t+ \tau-1}, u_{t+ \tau-m}, \dots, u_{t+ \tau}, \nonumber \\
-\qquad\qquad\qquad\qquad  w_{t+ \tau-p}, \dots, w_{t+ \tau-1}, w_{t+ \tau}]\text. \nonumber
-\end{gather}
-where \(w:=[d^w, d^p]\). We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
+% \begin{gather}
+% \label{eq:dpc:prediction}
+% y_{t+\tau} \sim \GaussianDist{\bar{y}_{t+\tau} = g_{\mathrm m}(x_{t+\tau})}{\sigma^2_{y, t+\tau} = g_{\mathrm v}(x_{t+\tau})}, \\
+% x_{t + \tau} = [\bar y_{t+ \tau-l}, \dots, \bar y_{t+ \tau-1}, u_{t+ \tau-m}, \dots, u_{t+ \tau}, \nonumber \\
+% \qquad\qquad\qquad\qquad  w_{t+ \tau-p}, \dots, w_{t+ \tau-1}, w_{t+ \tau}]\text. \nonumber
+% \end{gather}
+% where \(w:=[d^w, d^p]\).
+We assume that at time \(t\), \(w_{t+\tau}\) are available \(\forall \tau \) from forecasts or fixed rules as applicable.
 
 As for the mean and covariance functions of the GP, %to define the structure of GP in \eqref{E:gp:prior},
-we use a constant mean \(\mu\) and a kernel function \(k(x,x')\) which is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) as
+we use a constant mean \(\mu\) and the kernel function \(k(x,x')\) proposed in \cite{nghiemetal16gp}.
+The kernel function is a mixture of constant kernel \(k_1(x,x')\), squared exponential kernel \(k_2(x,x')\) and rational quadratic kernel \(k_3(x,x')\) as
 \begin{gather}
 k_1(x,x')  = k, \nonumber\\
 k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\textstyle\frac{1}{2} \textstyle\sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda_d^2}}^2 \right),
@@ -57,9 +59,10 @@ k_2(x,x') = \sigma_{f_2}^2 \exp \left( -\textstyle\frac{1}{2} \textstyle\sum_{d=
  k_3(x,x') = \sigma_{f_3}^2  \left( 1+ \textstyle\frac{1}{2\alpha} \textstyle\sum_{d=1}^D \frac{(x_d-x_d')}{{\lambda^2}}^2 \right)^{-\alpha},  \nonumber\\
 k(x,x') = \left(k_1(x,x') + k_2(x,x')\right)*k_3(x,x').
 \end{gather}
-Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features as proposed in \cite{nghiemetal16gp}.
+Here, \(D\) is the dimension of \(x\), \(k_3(x,x')\) is applied to only temporal features like time of day and day of week, while \(k_1(x,x')\) and \(k_2(x,x')\) are applied to all the remaining features.
+The insight of this kernel choice, as discussed in \cite{nghiemetal16gp}, is that $k_{3}$ represents the temporal pattern of the energy usage of the building, $k_{1}$ represents the base power demand, and $k_{2}$ represents the influence of non-temporal features (\eg weather conditions and temperature setpoints) on the power demand.
 We optimize the hyperparameters \(\theta\) % = [\mu, k, \sigma_{f_2}, \lambda_d, \sigma_{f_3}, \alpha, \lambda] \)
-of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
+of the model in \eqref{eq:dpc:prediction} using GPML \cite{Rasmussen2010}.
 % After training, the less important features, i.e.~features with high length scales \(\lambda_d\) are removed and the models are trained again. 
 
 
@@ -81,7 +84,7 @@ of the model in \eqref{E:gp:casestudy} using GPML \cite{Rasmussen2010}.
 
 OED is powerful when limited data are available for training. 
 To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to the kernel hyperparameters. %\(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
-For OED, we only consider the one-step-ahead model with \(\tau=0\) in \eqref{E:gp:casestudy}.
+For OED, we only consider the one-step-ahead model with \(\tau=0\) in \eqref{eq:dpc:prediction}.
 The goal at time \(t\) is to determine what should be the optimal cooling set-point \(u_{\mathrm{clg},t}\), supply air temperature set-point \(u_{\mathrm{sat},t}\), and chilled water temperature set-point \(u_{\mathrm{chw},t}\) which, when applied to the building, will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
 We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
 We assume a practical operational constraint that the chilled water temperature set-point cannot be changed faster than \(0.13^o\mathrm{C}\) every minutes.
@@ -101,6 +104,7 @@ Finally, we solve the optimization \eqref{E:oed:batch}, subject to the operation
 
 The results for experiment design in closed-loop with the EnergyPlus building models described in Sec.~\ref{SS:casestudy:building} are shown in Fig.~\ref{F:casestudy:oed}.
 We compare 4 different methods: OED based on maximum information gain (IG), OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS).
+The last two methods are frequently used in practical applications for model training.
 The inputs \(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}}\) generated via OED or random sampling are applied to the building every \(15 \mathrm{min}\).
 We repeat OED/random sampling continuously for \(14\) days and learn a model at the end of each day using the data generated until that time. 
 For example, at the end day of day \(3\) we have \(3\times96\) samples, at day \(7\) we have \(7\times96\) samples and so on. 
@@ -166,7 +170,7 @@ To track a given reference power signal, we solve the following stochastic optim
 \begin{align}
 \label{E:casestudy:mpc}
 \minimize_{\delta, u} \quad & \textstyle\sum_{\tau=0}^{N-1} (\delta_{\tau+t})^2 + \lambda \sigma_{y,\tau+t}^2\\
-\st \quad & \text{dynamics constraints } \eqref{E:gp:casestudy}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
+\st \quad & \text{dynamics constraints } \eqref{eq:dpc:prediction}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
 &  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
 \end{align}
 The term \( \sigma_{y,\tau+t}^2\) in the objective functions ensures control setpoints where model is more confident.
