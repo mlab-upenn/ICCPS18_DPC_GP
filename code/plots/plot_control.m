@@ -118,4 +118,20 @@ matlab2tikz('width', '\fwidth', 'height', '\hwidth', '../../paper/src/figures/co
                        'ticklabel style={font=\footnotesize},'...
                        'ylabel shift = -5 pt,'...
                        'xlabel shift = -5 pt,']);
+
                    
+%% Save the results to a MAT file for replay
+load('random_uniform_ramped2_ahead00_21days_truongisokernel_battery_20171005_0500.mat')
+idx = idx - 1;
+timestamps = Time(idx,:);
+battery = BatteryPower(idx)/1e6;
+system = TotalLoad(idx)/1e6;
+baseline = baseline(idx)/1e6;
+mu = PowerExpected(idx)/1e6;
+std = sqrt(PowerVariance(idx))/1e6;
+reference = ref(idx)/1e6;
+ClgSP = ClgSP(idx);
+SupplyAirSP = SupplyAirSP(idx);
+ChwSP = ChwSP(idx);
+save control_results battery system baseline mu std reference ...
+    ClgSP SupplyAirSP ChwSP timestamps
