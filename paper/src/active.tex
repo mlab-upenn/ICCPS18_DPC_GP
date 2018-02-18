@@ -28,7 +28,7 @@ we loop through the full data set \(\D\) to identify which sample maximizes the 
 \maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \tilde{\sigma}^2(x_j)/{\sigma}^2(x_j) 
 \end{align}
 Then, we add this sample to \(\mathcal{S}\), update \(\theta\) and proceed until \(|\mathcal{S}|=k\).
-This algorithm is summarized in Algo.~\ref{A:oed:batch}. 
+This algorithm is summarized in Algorithm \ref{A:oed:batch}. 
 
 The proposed method is used in a case study in Sec.~\ref{SS:casestudy:active} to update the learned model from time to time as a controller runs in a closed loop and we generate more data.
 Fig.~\ref{F:active:example} shows the improvement in mean prediction error and prediction variance obtained after optimal selection, starting with a model trained on uniformly random sampled data. %  using selection based on uniform sampling. 
@@ -59,7 +59,7 @@ Fig.~\ref{F:active:example} shows the improvement in mean prediction error and p
 	\setlength\hwidth{0.22\textwidth}
 	\input{figures/batch-rand.tex} \hspace{0.5cm}
 	\input{figures/batch-oed.tex}
-	\caption{Left: Selection using random sampling. Right: Optimal subset of data selection. Starting with the random sampling, we use the model parameters and apply Algo.~\ref{A:oed:batch} to improve the model accuracy. Both the mean prediction error and the prediction variance are lower for optimal selection based on information gain. }
+	\caption{Left: Selection using random sampling. Right: Optimal subset of data selection. Starting with the model parameters obtained using random sampling, we apply Algorithm \ref{A:oed:batch} to improve the model accuracy. Both the mean prediction error and the prediction variance are lower for optimal selection based on information gain. }
 	\captionsetup{justification=centering}
     \vspace{-10pt}    
 	\label{F:active:example}

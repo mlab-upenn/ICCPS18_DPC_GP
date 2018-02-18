@@ -76,24 +76,24 @@ of the model in \eqref{eq:dpc:prediction} using GPML \cite{Rasmussen2010}.
 	\setlength\hwidth{0.18\textwidth}
 	\input{figures/casestudy-oed-hotel.tex}
 	\input{figures/casestudy-oed-office.tex}
-	\caption{Comparison of model accuracies for different experiments: OED based on information gain (IG),  OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS) for two buildings: hotel (left) and office (right). RMSE denotes Root Mean Square Error and SMSE means Standardized Mean Square Error; lower RMSE and higher 1-SMSE indicate better prediction accuracy.}
+	\caption{Comparison of model accuracies for different experiments: OED based on information gain (IG),  OED based on maximum variance (MV), uniform random sampling (Uniform) and pseudo random binary sampling (PRBS) for two buildings: hotel and office. RMSE denotes root mean square error and SMSE standardized mean square error; lower RMSE and higher 1-SMSE indicate better prediction accuracy.}
 	\captionsetup{justification=centering}
     \vspace{-10pt}
 	\label{F:casestudy:oed}
 \end{figure*}
 
 OED is powerful when limited data are available for training. 
-To demonstrate this, using Algo.~\ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to the kernel hyperparameters. %\(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
+To demonstrate this, using Algorithm \ref{A:oed:sequential}, we begin the experiment by assigning \(\GaussianDist{0}{1}\) priors to the kernel hyperparameters. %\(\log (\theta) \) elementwise, except for \(\mu\), since GPML applies gradient descent directly on \(\log \theta\).
 For OED, we only consider the one-step-ahead model with \(\tau=0\) in \eqref{eq:dpc:prediction}.
 The goal at time \(t\) is to determine what should be the optimal cooling set-point \(u_{\mathrm{clg},t}\), supply air temperature set-point \(u_{\mathrm{sat},t}\), and chilled water temperature set-point \(u_{\mathrm{chw},t}\) which, when applied to the building, will require power consumption \(y_t\) such that \((x_t,y_t)\) can be used to learn \(\theta\) as efficiently as possible.
 We use the lagged terms of the power consumption, proxy variables, weather variables and their lagged terms to define \(x_t(u_{\mathrm{clg,t}},u_{\mathrm{sat,t}},u_{\mathrm{chw,t}})\).
-We assume a practical operational constraint that the chilled water temperature set-point cannot be changed faster than \(0.13^o\mathrm{C}\) every minutes.
+We assume a practical operational constraint that the chilled water temperature set-point cannot be changed faster than \(0.13^\circ\mathrm{C/min}\).
 Keeping this constraint and thermal comfort constraints into consideration, we consider the following operational constraints:
 \begin{gather}
-22^o\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  27^o\mathrm{C}, \nonumber \\
-12^o\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^o\mathrm{C}, \nonumber \\
- 3.7^o\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^o\mathrm{C},\label{E:operation_constraints} \\
-| u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^o\mathrm{C}. \nonumber
+22^\circ\mathrm{C} \leq u_{\mathrm{clg,t}} \leq  27^\circ\mathrm{C}, \nonumber \\
+12^\circ\mathrm{C} \leq u_{\mathrm{sat,t}} \leq  14^\circ\mathrm{C}, \nonumber \\
+ 3.7^\circ\mathrm{C} \leq u_{\mathrm{chw,t}} \leq  9.7^\circ\mathrm{C},\label{E:operation_constraints} \\
+| u_{\mathrm{chw},t} - u_{\mathrm{chw},t-1}| \leq  2^\circ\mathrm{C}. \nonumber
 \end{gather}
 Finally, we solve the optimization \eqref{E:oed:batch}, subject to the operational constraints \eqref{E:operation_constraints}, every \(15 \mathrm{min}\) to calculate optimal inputs for OED.
 % \begin{align}
@@ -129,11 +129,11 @@ Thus, OED can drastically reduce the duration for functional tests.
 \label{SS:power_tracking}
 
 This section formulates an MPC approach for the following demand tracking problem.
-Consider a building, which responds to various setpoints resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
+Consider a building, which responds to various set-points resulting in power demand variations, and a battery, whose state of charge (SoC) can be measured and whose charge/discharge power can be controlled.
 Given a power reference trajectory, for example a curtailed demand trajectory from the nominal energy consumption profile (the \emph{baseline}), our objective is to control the building and the battery to track the reference trajectory as closely as possible without violating the operational constraints.
 The building's response to the setpoint changes is modeled by a GP.
 The battery helps improve the tracking quality by absorbing the prediction uncertainty of the GP.
-An MPC based on the GP model computes the setpoints for the building and the power of the battery to optimally track the reference demand signal.
+An MPC based on the GP model computes the set-points for the building and the power of the battery to optimally track the reference demand signal.
 
 For simplicity, we assume an ideal lossless battery model
 \begin{equation}
@@ -173,7 +173,7 @@ To track a given reference power signal, we solve the following stochastic optim
 \st \quad & \text{dynamics constraints } \eqref{eq:dpc:prediction}, \eqref{E:battery_chance} - \eqref{E:SoC_dist} \nonumber \\
 &  \text{operation constraints } \eqref{E:operation_constraints}. \nonumber
 \end{align}
-The term \( \sigma_{y,\tau+t}^2\) in the objective functions ensures control setpoints where model is more confident.
+The term \( \sigma_{y,\tau+t}^2\) in the objective functions ensures control set-points where model is more confident.
 At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first input \(u^*_{t} \) to the building, and proceed to the next time step.
 
 %\textit{\begin{figure}[!tb]
@@ -209,44 +209,12 @@ At time \(t\), we solve for \(u^*_{t},\dots,u^*_{t+N-1} \), apply the first inpu
 		\caption{The prediction error during the DR event is always less \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). This error is compensated by the battery.}
 		\label{F:control:error}
 	\end{subfigure}
-%	\begin{subfigure}
-%		\centering
-%		\setlength\fwidth{0.44\textwidth}
-%		\setlength\hwidth{0.15\textwidth}	
-%		\input{figures/control-inputs.tex}	
-%		\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}. All the temperatures are raised optimally to provide the desired curtailment.}
-%		\label{F:control:inputs}
-%	\end{subfigure}
-%\begin{subfigure}
-%	\centering
-%	\setlength\fwidth{0.44\textwidth}
-%	\setlength\hwidth{0.1\textwidth}	
-%	\input{figures/control-cooling.tex}	
-%	\caption{Optimal cooling setpoint}
-%	\label{F:control:cooling}
-%\end{subfigure}
-%\begin{subfigure}
-%	\centering
-%	\setlength\fwidth{0.44\textwidth}
-%	\setlength\hwidth{0.1\textwidth}	
-%	\input{figures/control-supplyair.tex}	
-%	\caption{Optimal supply air temperature.}
-%	\label{F:control:supplyair}
-%\end{subfigure}
-%\begin{subfigure}
-%	\centering
-%	\setlength\fwidth{0.44\textwidth}
-%	\setlength\hwidth{0.1\textwidth}	
-%	\input{figures/control-chilled.tex}	
-%	\caption{Optimal chilled water temperature.}
-%	\label{F:control:chilled}
-%\end{subfigure}
 \begin{subfigure}
 	\centering
 	\setlength\fwidth{0.44\textwidth}
 	\setlength\hwidth{0.3\textwidth}	
 	\input{figures/control-all.tex}	
-	\caption{Optimal set points obtained after solving optimization \eqref{E:casestudy:mpc}.}
+	\caption{Optimal set-points obtained after solving optimization \eqref{E:casestudy:mpc}.}
     \vspace{-10pt}    
 	\label{F:control:all}
 \end{subfigure}
@@ -259,7 +227,7 @@ Rule-based strategies do not guarantee this curtailment and hence pose a huge fi
 Using our data-driven approach for control, we can synthesize optimal setpoint recommendations.
 Fig.~\ref{F:control:tracking} shows the load shedding between 2-4pm. 
 The baseline power consumption indicates the usage if there was no DR event, or in other words if the building would have continued to operate under normal conditions. The reference for tracking differs from baseline by \(90\) kW during 2-4pm.
-The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum prediction error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). While tracking the reference signal, the battery power compensates for this error to provide near perfect tracking. The optimal setpoints are shown in Fig.~\ref{F:control:all}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm and increases the cooling, chilled water temperature and supply air temperature setpoints to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of the kickback.
+The mean prediction denoted by \(\mu\) is the output \(\bar{y}_{t}\) which follows the reference signal closely as the input constraints are never active. The actual (system) building power consumption differs only marginally from the reference as shown in Fig.~\ref{F:control:error}. The maximum prediction error during the DR event is \(22.5\) kW (\(1.7\%\)) and the mean absolute error is \(7.9\) kW (\(0.6\%\)). While tracking the reference signal, the battery power compensates for this error to provide near perfect tracking. The optimal setpoints are shown in Fig.~\ref{F:control:all}. The controller has a prediction horizon of \(1\) hr. It kicks in at 1:15pm and increases the cooling, chilled water temperature and supply air temperature set-points to meet the requirement of \(90\) kW. After 4pm, we continue to follow the baseline signal for the next one hour to reduce the effect of the kickback.
 
 \subsection{Online Model Update}
 \label{SS:casestudy:active}
@@ -277,7 +245,7 @@ Therefore, we select the most informative subset of data \(\mathcal{S} \subset \
 We consider two different GP models learned using OED for \(14\) days and \(21\) days in the month of June. 
 In the first case, we have \(14\times96\) samples and in the second case \(21\times96\) samples for training.
 We run each GP model in closed-loop with the building in a different month for further 14 days.
-To update the model for evolving GP, we use our algorithm in Algo.~\ref{A:oed:batch} for optimal subset of data selection to choose the most informative \(14\times96\) samples in the first case and \(21\times96\) samples in the second case. 
+To update the model for evolving GP, we use Algorithm \ref{A:oed:batch} for optimal subset of data selection to choose the most informative \(14\times96\) samples in the first case and \(21\times96\) samples in the second case. 
 These models are denoted by ``Updated GP'' in Tab.~\ref{T:casestudy:evolving}. 
 We compare the performance of these models against the original model, referred to as an ``Outdated GP'' in Tab.~\ref{T:casestudy:evolving} since this model does not include the most up-to-date data about the current system which has evolved due to seasonal and operational changes.
 We repeat this for the months of July, August and September.

@@ -36,17 +36,6 @@ It is therefore highly flexible and can capture complex behavior with fewer para
 An example of GP prior and posterior is shown in Fig.~\ref{F:gp:prior:posterior}. We use a constant mean function and a combination of squared exponential kernel and rational quadratic kernel as described in Sec.~\ref{SS:casestudy:gp}.
 There exists a wide range of covariance functions and combinations to choose from \cite{Rasmussen2006}. 
 
-GPs offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems.
-\begin{enumerate}
-\item GPs provide an estimate of uncertainty or confidence in the
-  predictions through the predictive variance.  While the predictive mean is often used as the best guess of the output, the full distribution can be used in a meaningful way. For example, we can estimate a 95\% confidence bound for the predictions which can be used to measure control performance.
-\item GPs work well with small data sets.  This ability is generally useful for any learning application.
-\item GPs allow including prior knowledge of the system behavior by defining priors on the hyperparameters or constructing a particular structure of the covariance function.  This feature enables incorporating domain knowledge into the GP model to improve its accuracy.
-\end{enumerate}
-
-\subsection{Gaussian Processes for Dynamical Systems}
-\label{SS:intro-gp:control}
-
 \begin{figure}[!tb]
 	\centering
 	\setlength\fwidth{0.36\textwidth}
@@ -54,9 +43,20 @@ GPs offer several advantages over other machine learning algorithms that make th
 	\input{figures/gp-prior-post.tex}
 	\caption{Example of priors calculated using \eqref{E:gp:prior} and posteriors using \eqref{E:gp-regression} for predicting power consumption of a building for \(12\) hrs. Initially the mean is constant because \(\mu(x)\) is constant, and we observe a high variance. The posterior agrees with the actual power consumption with high confidence.}
 	\captionsetup{justification=centering}
-    \vspace{-12pt}
+	\vspace{-12pt}
 	\label{F:gp:prior:posterior}
 \end{figure}
+
+GPs offer several advantages over other machine learning algorithms that make them more suitable for identification of dynamical systems.
+\begin{enumerate}
+\item GPs provide an estimate of uncertainty or confidence in the
+  predictions through the predictive variance.  While the predictive mean is often used as the best guess of the output, the full distribution can be used in a meaningful way. For example, we can estimate a 95\% confidence bound for the predictions which can be used to measure control performance.
+\item GPs work well with small data sets.  This capability is generally useful for any learning application.
+\item GPs allow including prior knowledge of the system behavior by defining priors on the hyperparameters or constructing a particular structure of the covariance function.  This feature enables incorporating domain knowledge into the GP model to improve its accuracy.
+\end{enumerate}
+
+\subsection{Gaussian Processes for Dynamical Systems}
+\label{SS:intro-gp:control}
 
 GPs can be used for modeling nonlinear dynamical systems, by feeding autoregressive, or time-delayed, input and output signals back to the model as regressors \cite{Kocijan2016}.
 Specifically, in control systems, it is common to use an autoregressive GP to model a dynamical system represented by the nonlinear function
