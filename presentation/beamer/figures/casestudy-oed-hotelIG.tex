@@ -1,0 +1,133 @@
+% This file was created by matlab2tikz.
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\definecolor{mycolor1}{rgb}{0.00000,0.44700,0.74100}%
+\definecolor{mycolor2}{rgb}{0.85000,0.32500,0.09800}%
+\definecolor{mycolor3}{rgb}{0.49400,0.18400,0.55600}%
+\definecolor{mycolor4}{rgb}{0.46600,0.67400,0.18800}%
+%
+\begin{tikzpicture}
+
+\begin{axis}[%
+width=0.411\fwidth,
+height=\hwidth,
+at={(0\fwidth,0\hwidth)},
+scale only axis,
+unbounded coords=jump,
+xmin=0.75,
+xmax=4.25,
+xtick={1,2,3,4},
+xticklabels={{3},{7},{10},{14}},
+xlabel style={font=\color{white!15!black}},
+xlabel={no of days},
+ymin=20,
+ymax=65,
+ylabel style={font=\color{white!15!black}},
+ylabel={RMSE [kW]},
+axis background/.style={fill=white},
+title style={font=\bfseries},
+title={HOTEL},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,title style={font=\normalsize},title style={yshift=1.5ex},legend style={at={(0,0)}}, align=center
+]
+\addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}, forget plot]
+  table[row sep=crcr]{%
+1	38.3577768196538\\
+2	23.5762131941091\\
+3	22.2379994094524\\
+4	22.0269257238242\\
+5	nan\\
+};
+\addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}, forget plot]
+  table[row sep=crcr]{%
+1	42.5373542684555\\
+2	26.3609622756066\\
+3	24.4584853322209\\
+4	23.5534349154775\\
+5	nan\\
+};
+\addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}, forget plot]
+  table[row sep=crcr]{%
+1	60.5953168967942\\
+2	33.7867759715775\\
+3	25.1122218421038\\
+4	23.931187395704\\
+5	nan\\
+};
+\addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}, forget plot]
+  table[row sep=crcr]{%
+1	56.9865000401714\\
+2	38.0806145496609\\
+3	31.0863921959231\\
+4	26.9411116227271\\
+5	nan\\
+};
+\end{axis}
+
+\begin{axis}[%
+width=0.411\fwidth,
+height=\hwidth,
+at={(0.54\fwidth,0\hwidth)},
+scale only axis,
+unbounded coords=jump,
+xmin=0.75,
+xmax=4.25,
+xtick={1,2,3,4},
+xticklabels={{3},{7},{10},{14}},
+xlabel style={font=\color{white!15!black}},
+xlabel={no of days},
+ymin=50,
+ymax=95,
+ytick={50, 60, 70, 80, 90},
+ylabel style={font=\color{white!15!black}},
+ylabel={100(1-SMSE) [\%]},
+axis background/.style={fill=white},
+title style={font=\bfseries},
+title={HOTEL},
+legend style={at={(0.5,1.03)}, anchor=south, legend columns=4, legend cell align=left, align=left, fill=none, draw=none},
+xlabel style={font=\footnotesize},ylabel style={font=\footnotesize},legend style={font=\footnotesize},ticklabel style={font=\footnotesize},ylabel shift = -5 pt,xlabel shift = -5 pt,title style={font=\normalsize},title style={yshift=1.5ex},legend style={at={(0,0)}}, align=center
+]
+\addplot [color=mycolor1, line width=1.0pt, mark=diamond, mark options={solid, mycolor1}]
+  table[row sep=crcr]{%
+1	80.3327193943855\\
+2	92.5700556917536\\
+3	93.3895825369972\\
+4	93.5144735780913\\
+5	nan\\
+};
+%\addlegendentry{IG}
+
+\addplot [color=mycolor2, line width=1.0pt, mark=diamond, mark options={solid, mycolor2}]
+  table[row sep=crcr]{%
+1	75.8132003718017\\
+2	90.7111921826193\\
+3	92.0035619815826\\
+4	92.5844057134119\\
+5	nan\\
+};
+%\addlegendentry{MV}
+
+\addplot [color=mycolor3, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor3}]
+  table[row sep=crcr]{%
+1	50.918753883645\\
+2	84.7408282015279\\
+3	91.5703850575905\\
+4	92.3446340971381\\
+5	nan\\
+};
+%\addlegendentry{Uniform}
+
+\addplot [color=mycolor4, dashed, line width=1.0pt, mark=o, mark options={solid, mycolor4}]
+  table[row sep=crcr]{%
+1	56.5908354542458\\
+2	80.615912780776\\
+3	87.0825109483225\\
+4	90.297838916829\\
+5	nan\\
+};
+%\addlegendentry{PRBS}
+
+\end{axis}
+\end{tikzpicture}%

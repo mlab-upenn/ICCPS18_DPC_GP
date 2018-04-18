@@ -1,0 +1,211 @@
+\section{Optimal Experiment Design}
+
+\begin{frame}[t]
+	
+	\frametitle{Optimal Experiment Design}
+	
+	\begin{block}{Goal}
+		Learn the hyperparameters \(\theta\) in \(y \sim \mathcal{GP}(m(x), k(x); \theta)\) as fast as possible as we add new samples.
+	\end{block}
+	
+	\begin{block}{Formal Definition}
+		\setlength\abovedisplayskip{0pt}
+		\begin{gather*}
+			H(\theta|\D) = -\int p(\theta|\D) \log (p(\theta|\D))d\theta \\
+			\textstyle \argmax_x H(\theta|\D) - \EE_{y \sim \GaussianDist{\bar{y}(x)}{\sigma^2(x)}}H(\theta|\D,x,y)
+			\label{E:ig:theta}
+		\end{gather*}
+	\end{block}
+
+	\begin{block}{Equivalent Definition}
+	\setlength\abovedisplayskip{0pt}
+		\begin{gather*}
+			\argmax_x H(y|x,\D) - \EE_{\theta \sim p(\theta|\D)}H(y|x,\theta) \\
+			\text{using} \ H(\theta) - H(\theta|y) = H(y) - H(y|\theta), \ \text{and} \\
+			p(y|x,\D) = \int p(y|x,\theta, \D)p(\theta|\D)d\theta \approx \GaussianDist{\tilde{y}(x)}{\tilde{\sigma}^2(x)}
+			\label{E:ig:y}
+		\end{gather*}
+	\end{block}
+
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{Optimal Experiment Design}
+	
+	\begin{block}{Goal}
+		Learn the hyperparameters \(\theta\) in \(y \sim \mathcal{GP}(m(x), k(x); \theta)\) as fast as possible as we add new samples.
+	\end{block}
+	
+	\begin{block}{Equivalent Definition}
+		\setlength\abovedisplayskip{0pt}
+		\begin{gather*}
+		\argmax_x H(y|x,\D) - \EE_{\theta \sim p(\theta|\D)}H(y|x,\theta) \\
+		\text{using} \ H(\theta) - H(\theta|y) = H(y) - H(y|\theta), \ \text{and} \\
+		p(y|x,\D) = \int p(y|x,\theta, \D)p(\theta|\D)d\theta \approx \GaussianDist{\tilde{y}(x)}{\tilde{\sigma}^2(x)}
+		\label{E:ig:y}
+		\end{gather*}
+	\end{block}
+
+	\begin{block}{Sequential sampling for OED}
+	\setlength\abovedisplayskip{0pt}
+	\begin{align*}
+		\label{E:oed:sampling}
+		\maximize_{u_{t}} & \ \ \ \tilde{\sigma}^2(x_t)/{\sigma}^2(x_t) \\
+		\st &  \ \ \ x_{t}\!=\![y_{t-l}, \dots, y_{t-1}, u_{t-m}, \dots, u_t, w_{t-p}, \dots, w_t] \\
+		&  \ \ \ u_t \in \mathcal{U} \nonumber
+	\end{align*}
+\end{block}
+	
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{OED + Evolving Gaussian Processes}
+	
+	\begin{block}{Sequential sampling for OED}
+		\setlength\abovedisplayskip{0pt}
+		\begin{align*}
+		\maximize_{x} & \ \ \  \text{information gain / variance}(x) \\
+			\subjectto & \ \ \ \text{operation constraints}(x)
+		\end{align*}
+	\end{block}
+
+	\begin{block}{Optimal subset of data selection}
+		\setlength\abovedisplayskip{0pt}
+		\begin{align*}
+		\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \  \text{information gain / variance}(x)
+		\end{align*}
+	\end{block}
+	
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{Sequential sampling for OED based on Information Gain}
+	
+	\begin{block}{Initialization}
+			\begin{algorithmic}
+%				\Procedure{Initialization}{}
+				\If{initial \(\D := (X,Y)\)}
+				\State Compute \( \theta_{\mathrm{MLE}} = \argmax_{\theta^{\mathrm{MLE}}} \Pr(Y \vert X, \theta)\)
+				\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\)
+				\Else 
+				\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\)
+				\EndIf
+%				\EndProcedure
+%				\Procedure{Sampling}{}
+%				\While{\(t<t_{\mathrm{max}}\)}
+%				\State Calculate features \(x_t\) in \eqref{E:GP:features} as a function of \(u_t\)
+%				\State Solve \eqref{E:oed:sampling} to calculate optimal \(u^*_t\)
+%				\State Apply \(u^*_t\) to the system and measure \(y_t\)
+%				\State \(\D = \D \cup (x_t,y_t) \)
+%				\State Update \( \theta_{\mathrm{t}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{t-1}})\)
+%				\EndWhile
+%				\EndProcedure
+			\end{algorithmic}
+	\end{block}
+
+	\begin{block}{Sampling}
+		\setlength\textwidth{0.9\textwidth}
+		\begin{algorithmic}
+%			\Procedure{Initialization}{}
+%			\If{initial \(\D := (X,Y)\)}
+%			\State Compute \( \theta_{\mathrm{MLE}} = \argmax_{\theta^{\mathrm{MLE}}} \Pr(Y \vert X, \theta)\)
+%			\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\theta_{\mathrm{MLE}}}{\sigma^2_{\mathrm{init}}}\)
+%			\Else 
+%			\State Assign priors \(\theta_{\mathrm{0}} \sim \GaussianDist{\mu_{\mathrm{{init}}}}{\sigma^2_\mathrm{init}}\)
+%			\EndIf
+%			\EndProcedure
+%			\Procedure{}{Sampling}
+			\While{\(t<t_{\mathrm{max}}\)}
+			\State Calculate features \(x_t\) in \eqref{E:GP:features} as a function of \(u_t\)
+			\State Solve \eqref{E:oed:sampling} to calculate optimal \(u^*_t\)
+			\State Apply \(u^*_t\) to the system and measure \(y_t\)
+			\State \(\D = \D \cup (x_t,y_t) \)
+			\State Update \( \theta_{\mathrm{t}} = \argmax_{\theta^{\mathrm{MAP}}} \Pr(Y \vert X, \theta_{\mathrm{t-1}})\)
+			\EndWhile
+%			\EndProcedure
+		\end{algorithmic}
+	\end{block}
+
+\end{frame}
+
+\begin{frame}[t]
+	
+	\begin{block}{Optimization for Sequential Experiment Design}
+		\setlength\abovedisplayskip{0pt}
+		\begin{align*}
+		\textstyle\maximize_{ \color{red} \mathbf{u_{t}}} & \ \ \ \text{information gain}(x_t) \\
+		\subjectto &  \ \ \ x_{t}\!=\![P_{t-l}, \dots, P_{t-1}, w_{t-m}, \dots, w_{t}, u_{t-p}, \dots, \color{red} \mathbf{u_{t}} \color{black}] \\
+		&  \ \ \ 22^\circ\mathrm{C} \leq \color[RGB]{29,73,153} \text{cooling set-point} \color{black} \leq  27^\circ\mathrm{C}, \\
+		&  \ \ \ 12^\circ\mathrm{C} \leq \color[RGB]{74,133,34} \text{supply air set-point} \color{black} \leq  14^\circ\mathrm{C}, \\
+		&  \ \ \ 3.7^\circ\mathrm{C} \leq \color[RGB]{190,81,8} \text{chilled water set-point} \color{black} \leq  9.7^\circ\mathrm{C}, \\
+		&  \ \ \ \text{rate of change in chilled water set-point} \leq  2^\circ\mathrm{C/15min}.
+		\end{align*}
+	\end{block}
+	
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{Evolving Gaussian Processes}
+	
+	\begin{block}{Optimal subset of data selection}
+		\setlength\abovedisplayskip{0pt}
+		\begin{align*}
+		\maximize_{x_{j}|(x_j,y_j) \in \mathcal{D} \setminus \mathcal{S}} & \ \ \ \tilde{\sigma}^2(x_j)/{\sigma}^2(x_j) 
+		\end{align*}
+	\end{block}
+
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{OED Example}
+	
+\begin{figure}[t]
+	\centering
+	\setlength\fwidth{0.8\textwidth}
+	\setlength\hwidth{0.3\textwidth}
+	\input{figures/casestudy-oed-hotelPRBS.tex}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{OED Example}
+	
+	\begin{figure}[t]
+		\centering
+		\setlength\fwidth{0.8\textwidth}
+		\setlength\hwidth{0.3\textwidth}
+		\input{figures/casestudy-oed-hotelUniform.tex}
+	\end{figure}
+	
+\end{frame}
+
+\begin{frame}[t]
+	
+\begin{figure}[t]
+	\centering
+	\setlength\fwidth{0.8\textwidth}
+	\setlength\hwidth{0.3\textwidth}
+	\input{figures/casestudy-oed-hotelMV.tex}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[t]
+
+\frametitle{OED Example}
+
+\begin{figure}[t]
+	\centering
+	\setlength\fwidth{0.8\textwidth}
+	\setlength\hwidth{0.3\textwidth}
+	\input{figures/casestudy-oed-hotelIG.tex}
+\end{figure}
+
+\end{frame}

@@ -1,0 +1,118 @@
+\begin{frame}[t]
+	
+	\frametitle{Gaussian Processes}
+	
+		\begin{itemize}
+		\item A Gaussian Process is a collection of random variables that are jointly Gaussian and is fully characterized by its mean and covariance
+		\begin{align*}
+		f(\mathbf{x}) & \sim \mathcal{GP} (m(\mathbf{x}), k(\mathbf{x},\mathbf{x}')) \\
+		m(\mathbf{x}) & = \mathbb{E}[f(\mathbf{x})] \\
+		k(\mathbf{x},\mathbf{x}') & = \mathbb{E}[(f(\mathbf{x})-m(\mathbf{x}))(f(\mathbf{x}')-m(\mathbf{x}'))]
+		\end{align*}
+	\end{itemize}
+
+	\begin{itemize}
+		\item example with two observations:
+		\begin{align*}
+		m(\mathbf{x}) & = 0 \\
+		k(\mathbf{x},\mathbf{x}') & = \exp\left(-\frac{1}{2} (\mathbf{x}-\mathbf{x}')^T \Sigma (\mathbf{x}-\mathbf{x}') \right) \\
+		(y_1,y_2) & \sim \mathcal{N}(\mathbf{0}, K), \ \ K=\begin{bmatrix}
+		k(\mathbf{x}_1,\mathbf{x}_1), k(\mathbf{x}_1,\mathbf{x}_2) \\
+		k(\mathbf{x}_2,\mathbf{x}_1), k(\mathbf{x}_2,\mathbf{x}_2)
+		\end{bmatrix}
+		\end{align*}
+	\end{itemize}
+	
+\end{frame}
+
+
+\begin{frame}[t]
+	
+	\frametitle{Training Gaussian Processes}
+	
+	\begin{itemize}
+		\item suppose we want to identify the model \(f\) in 
+			\begin{gather*}
+				y = f(\mathbf{x}) + \epsilon, \ \ \epsilon \sim \mathcal{N}(0,\sigma_n^2)
+			\end{gather*}
+
+	\end{itemize}
+	\begin{itemize}
+		\item we observe \(n\) points from this model \(\{\mathbf{x}_i,y_i\}_{i=1}^n\)
+	\end{itemize}
+	
+	\begin{itemize}
+		\item our goal is to identify \(\mu\), \(\Sigma\) and \(\sigma_n^2\) such that
+		\begin{gather*}
+		(y_1,y_2,\dots,y_n) \sim \mathcal{N}(\mu, \Sigma+\sigma_n^2 I)
+		\end{gather*}
+	\end{itemize}
+
+	\begin{itemize}
+	\item we can parametrize the function \(f\) by
+	\begin{gather*}
+	f(\mathbf{x}) \sim \mathcal{GP} (m(\mathbf{x}), k(\mathbf{x},\mathbf{x}'))
+	\end{gather*}
+	\end{itemize}
+
+	\begin{itemize}
+	\item we optimize parameters \(\theta\) in \(m\), \(k\) and \(\sigma_n^2\) by maximizing the log likelihood
+	\begin{gather*}
+	\log(p(\mathbf{y} \mid X, \theta)) = -\frac{1}{2}\mathbf{y}^T {(K+\sigma_n^2I)}^{-1} \mathbf{y} -\frac{1}{2} \log {|K+\sigma_n^2I|} -\frac{n}{2} \log{2\pi}
+	\end{gather*}
+\end{itemize}	
+	
+\end{frame}
+
+\begin{frame}[t]
+	
+	\frametitle{Prediction using Gaussian Processes}
+	
+	
+	\begin{itemize}
+		\item once we optimize \(m\), \(k\) and \(\sigma_n^2\), we can predict on new observations \(X_\star\)
+		\begin{align*}
+		\begin{bmatrix}
+		\mathbf{y} \\
+		\mathbf{y}_\star
+		\end{bmatrix} \sim \mathcal{N} \left(
+		\begin{bmatrix}
+		m(X) \\
+		m(X_\star)
+		\end{bmatrix},
+		\begin{bmatrix}
+		K(X,X)+\sigma_n^2I \ \ K(X,X_\star) \\
+		\ \ K(X_\star,X) \ \ \ \ \ \ \ K(X_\star,X_\star) \\
+		\end{bmatrix}
+		 \right)
+		\end{align*}
+		\item \(\mathbf{y}_\star|\mathbf{y}\) is normally distributed with mean and variance
+		\begin{align*}
+		\bar{\mathbf{y}}_\star &= m(X_\star) + K(X_\star,X){(K+\sigma_n^2I)}^{-1} (\mathbf{y}-m(X_\star))\\
+		\sigma^2_{\mathbf{y}_\star} &= K(X_\star,X_\star) - K(X_\star,X){(K+\sigma_n^2I)}^{-1} K(X,X_\star)
+		\end{align*}
+	\end{itemize}
+	
+\end{frame}
+
+
+\begin{frame}[t]
+	
+	\frametitle{Gaussian Process Model}
+	
+	\begin{align*}
+	\underbrace{P_t}_{Y \in \mathbb{R}^n} = f_P(\underbrace{P_{t-l}, \dots, P_{t-1}, w_{t-m}, \dots, w_{t}, u_{t-p}, \dots, u_{t}}_{X \in \mathbb{R}^{n \times d}})
+	\end{align*}
+	
+	\begin{align*}
+		x_{t} &= [P_{t-l}, \dots, P_{t-1}, w_{t-m}, \dots, w_t, u_{t-p}, \dots, u_t]
+	\end{align*}
+	
+	\begin{align*}
+	P_t &\sim \GaussianDist{\bar{P}_{t}}{\sigma^2_{t}} \\
+	\bar{P}_{t} &= \color{red}\mu \color{black} (x_{t}) + K_\star K^{-1} (Y -\color{red}\mu \color{black}(X)) \\
+	\sigma^2_{t} &= K_{\star \star} - K_\star K^{-1} K_\star^T \\
+	K_\star &= [\color{red}k\color{black}(x_{t}, x_1), \dots, \color{red}k\color{black}(x_{t}, x_N)], K_{\star \star} = \color{red}k\color{black}(x_{t}, x_{t})
+	\end{align*}
+	
+\end{frame}
